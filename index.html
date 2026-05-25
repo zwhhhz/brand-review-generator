@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>口碑评论生成器 v2.5</title>
+<title>口碑评论生成器 v2.6</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -179,6 +179,44 @@ textarea{min-height:50px;resize:vertical}
 .generating{text-align:center;padding:40px;color:var(--primary)}
 .generating .spin{display:inline-block;width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* AI chat panel */
+.ai-chat-panel{border:1px solid var(--primary);border-radius:12px;overflow:hidden;margin-bottom:16px;background:#fff;transition:all .3s}
+.ai-chat-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(135deg,#f0efff,#ede9fe);cursor:pointer;user-select:none}
+.ai-chat-hdr:hover{background:linear-gradient(135deg,#e8e7ff,#ddd6fe)}
+.ai-chat-hdr-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--primary)}
+.ai-chat-hdr-left .pulse{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse-dot 1.5s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-chat-hdr-right{display:flex;align-items:center;gap:8px}
+.ai-chat-badge{padding:2px 8px;border-radius:10px;font-size:11px;background:var(--primary);color:#fff}
+.ai-chat-toggle{font-size:18px;color:var(--primary);transition:transform .3s}
+.ai-chat-toggle.collapsed{transform:rotate(180deg)}
+.ai-chat-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.ai-chat-body.open{max-height:600px}
+.ai-chat-messages{padding:12px 16px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.ai-chat-msg{display:flex;gap:8px;align-items:flex-start;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.ai-chat-msg.user{flex-direction:row-reverse}
+.ai-chat-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-chat-msg.ai .ai-chat-avatar{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}
+.ai-chat-msg.user .ai-chat-avatar{background:#f0f0f0;color:#666}
+.ai-chat-bubble{max-width:80%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.6;word-break:break-word}
+.ai-chat-msg.ai .ai-chat-bubble{background:#f0efff;color:#333;border-bottom-left-radius:4px}
+.ai-chat-msg.user .ai-chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.ai-chat-rules{margin:6px 0;padding:6px 10px;background:#fffbeb;border:1px dashed var(--warning);border-radius:8px;font-size:12px;color:#92400e}
+.ai-chat-rules-title{font-weight:600;margin-bottom:3px}
+.ai-chat-input-area{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:#fafafa;align-items:flex-end}
+.ai-chat-input-area textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;min-height:38px;max-height:80px;font-family:inherit;line-height:1.4}
+.ai-chat-input-area textarea:focus{border-color:var(--primary)}
+.ai-chat-send{padding:8px 14px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .2s}
+.ai-chat-send:hover{background:var(--primary-h)}
+.ai-chat-send:disabled{opacity:.5;cursor:not-allowed}
+.ai-chat-quick{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap}
+.ai-chat-quick button{padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:11px;color:#666;cursor:pointer;transition:all .2s}
+.ai-chat-quick button:hover{border-color:var(--primary);color:var(--primary)}
+.ai-chat-empty{text-align:center;padding:20px;color:#ccc;font-size:13px}
+.ai-chat-rules-list{padding:0 16px 12px}
+.ai-chat-rule-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fffbeb;border-radius:6px;margin-bottom:6px;font-size:12px;color:#92400e;border:1px dashed #fde68a}
+.ai-chat-rule-item .del{color:#ccc;cursor:pointer;margin-left:auto;flex-shrink:0}.ai-chat-rule-item .del:hover{color:var(--danger)}
 /* comp edit modal */
 .comp-form{padding:16px 0}
 /* count badge */
@@ -290,6 +328,41 @@ textarea{min-height:50px;resize:vertical}
       <button class="btn btn-p" onclick="copyAll()">📋 复制全部</button>
       <button class="btn btn-o" onclick="generateFor(curPlatform)">🔄 换一批</button>
       <button class="btn btn-o" onclick="saveToHistory()">💾 保存到历史</button>
+    </div>
+
+    <!-- AI 对话面板 -->
+    <div class="ai-chat-panel" id="aiChatPanel">
+      <div class="ai-chat-hdr" onclick="toggleAiChat()">
+        <div class="ai-chat-hdr-left">
+          <span class="pulse"></span>
+          🤖 AI 助手 — 跟我提意见，我会记住并应用
+        </div>
+        <div class="ai-chat-hdr-right">
+          <span class="ai-chat-badge" id="aiRuleCount">0 条规则</span>
+          <span class="ai-chat-toggle" id="aiChatToggle">▼</span>
+        </div>
+      </div>
+      <div class="ai-chat-body" id="aiChatBody">
+        <div class="ai-chat-messages" id="aiChatMessages">
+          <div class="ai-chat-empty" id="aiChatEmpty">👋 跟我说说你希望话术怎么改，我会记住你的意见并应用到所有话术生成中</div>
+        </div>
+        <div class="ai-chat-rules-list" id="aiRuleListArea" style="display:none">
+          <div style="font-size:12px;color:var(--warning);font-weight:600;margin-bottom:6px;padding:0 2px">📌 已记住的规则：</div>
+          <div id="aiRuleList"></div>
+        </div>
+        <div class="ai-chat-quick" id="aiChatQuick">
+          <button onclick="quickChat('话术太假了，像机器人写的')">话术太假</button>
+          <button onclick="quickChat('评论不要出现品牌名全称')">不加品牌全称</button>
+          <button onclick="quickChat('多加一些具体使用场景')">多用场景</button>
+          <button onclick="quickChat('评论要更短更简洁')">更短更简洁</button>
+          <button onclick="quickChat('不要用感叹号')">不用感叹号</button>
+          <button onclick="quickChat('抖音的话术要更口语化')">抖音更口语</button>
+        </div>
+        <div class="ai-chat-input-area">
+          <textarea id="aiChatInput" placeholder="输入你的修改意见，比如"话术太假了""不要出现品牌名"…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChat()}" oninput="autoResizeChat(this)"></textarea>
+          <button class="ai-chat-send" id="aiChatSendBtn" onclick="sendAiChat()">发送</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -452,6 +525,8 @@ textarea{min-height:50px;resize:vertical}
       </div>
       <div class="form-actions">
         <button class="btn btn-p" onclick="reCleanAllMaterials()">🧹 重新清洗所有PDF资料</button>
+        <button class="btn btn-o" onclick="clearAiChat()">🗑 清空AI对话记录</button>
+        <button class="btn btn-o" onclick="S.save('aiRules',[]);renderAiRuleList();refreshStats();toast('已清空AI规则')">🗑 清空AI规则</button>
         <button class="btn btn-d" onclick="clearAllData()">🗑 清空所有数据</button>
         <button class="btn btn-o" onclick="exportAll()">📤 导出备份</button>
       </div>
@@ -464,6 +539,7 @@ textarea{min-height:50px;resize:vertical}
         <div class="fb-stat-item">修改意见 <span class="num" id="statFb">0</span></div>
         <div class="fb-stat-item">品类 <span class="num" id="statCat">0</span></div>
         <div class="fb-stat-item">历史记录 <span class="num" id="statHist">0</span></div>
+        <div class="fb-stat-item" style="color:var(--primary)">AI规则 <span class="num" id="statAiRules">0</span></div>
       </div>
     </div>
   </section>
@@ -558,6 +634,8 @@ const S = {
   feedback:   () => JSON.parse(localStorage.getItem('brg_feedback')   || '[]'),
   history:    () => JSON.parse(localStorage.getItem('brg_history')    || '[]'),
   settings:   () => JSON.parse(localStorage.getItem('brg_settings')   || '{}'),
+  chatHistory:() => JSON.parse(localStorage.getItem('brg_chatHistory')|| '[]'),
+  aiRules:    () => JSON.parse(localStorage.getItem('brg_aiRules')   || '[]'),
   save(key, data){ localStorage.setItem('brg_'+key, JSON.stringify(data)); },
 };
 const saveProducts   = () => S.save('products', S.products());
@@ -1268,6 +1346,7 @@ function refreshStats() {
   document.getElementById('statFb').textContent = S.feedback().length;
   document.getElementById('statCat').textContent = S.categories().length;
   document.getElementById('statHist').textContent = S.history().length;
+  document.getElementById('statAiRules').textContent = S.aiRules().length;
 
   genCount = +(s.genCount||10);
   toneLevel = +(s.defTone||50);
@@ -1299,7 +1378,7 @@ function saveSettings() {
 
 function clearAllData() {
   if(!confirm('确定清空所有数据？此操作不可恢复！')) return;
-  ['products','categories','methods','feedback','history','settings'].forEach(k=>localStorage.removeItem('brg_'+k));
+  ['products','categories','methods','feedback','history','settings','chatHistory','aiRules'].forEach(k=>localStorage.removeItem('brg_'+k));
   localStorage.removeItem('brg_ai_key');
   selectedProductId = null;
   toast('已清空');
@@ -1318,8 +1397,10 @@ function exportAll() {
     methods: S.methods(),
     feedback: S.feedback(),
     settings: S.settings(),
+    chatHistory: S.chatHistory(),
+    aiRules: S.aiRules(),
     exportedAt: new Date().toISOString(),
-    version: '2.0',
+    version: '2.6',
   };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
@@ -1340,6 +1421,8 @@ function importAll(event) {
       if(data.methods) S.save('methods', data.methods);
       if(data.feedback) S.save('feedback', data.feedback);
       if(data.settings) S.save('settings', data.settings);
+      if(data.chatHistory) S.save('chatHistory', data.chatHistory);
+      if(data.aiRules) S.save('aiRules', data.aiRules);
       toast('导入成功！');
       refreshStats();
       renderProductChips();
@@ -1894,6 +1977,13 @@ async function generateWithAI_FromLink(platform, info, count, isAttack) {
     methodBlock = `\n━━━ 运营方法论策略（必须严格遵守！这是最高优先级的策略指导） ━━━\n${methodHints}\n要求：每条评论必须体现上述方法论中的至少1条策略要点，将策略自然融入评论内容中。`;
   }
 
+  // 构建AI对话规则注入块
+  const aiRulesHints = getAiRulesHints(info.name, platform);
+  let aiRulesBlock = '';
+  if(aiRulesHints) {
+    aiRulesBlock = `\n━━━ 用户定制规则（必须严格遵守！这是用户明确提出的修改意见） ━━━\n${aiRulesHints}\n要求：每条评论必须遵守上述所有规则，不能违反任何一条。如果规则和方法论冲突，以用户定制规则优先。`;
+  }
+
   let systemPrompt, userPrompt;
   if (isAttack) {
     systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
@@ -1902,7 +1992,8 @@ async function generateWithAI_FromLink(platform, info, count, isAttack) {
 2. 必须同时提到我方产品的具体优势，形成对比
 3. 每条评论角度不同
 4. 如果有链接上下文，评论要贴合链接的内容和讨论氛围
-5. 如果有方法论策略，每条评论必须体现至少1条策略要点`;
+5. 如果有方法论策略，每条评论必须体现至少1条策略要点
+6. 如果有用户定制规则，必须严格遵守，不得违反`;
     const attackMatBlock = matParsed ? (() => {
       const parts = [];
       if (matParsed.dataPoints.length) parts.push(`【我方技术指标】${matParsed.dataPoints.slice(0, 4).join('；')}`);
@@ -1919,6 +2010,7 @@ ${attackMatBlock}
 竞品卖点（攻击靶子）：${(info.compFeatures || []).join('、') || '参数一般'}
 ${linkBlock}
 ${methodBlock}
+${aiRulesBlock}
 
 生成要求：
 - ${platGuide[platform]}
@@ -1927,6 +2019,7 @@ ${methodBlock}
 ${fbHints ? `- 避免以下问题：${fbHints}` : ''}
 - 若有链接上下文，评论要像在这条内容下方留言
 - 若有方法论策略，每条拉踩评论必须体现至少1条策略要点
+- 若有用户定制规则，每条评论必须严格遵守所有规则
 
 请严格按照以下JSON格式返回（不要有其他文字）：
 {"comments": ["评论1", "评论2", ...]}`;
@@ -1937,7 +2030,8 @@ ${fbHints ? `- 避免以下问题：${fbHints}` : ''}
 2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述
 3. 技术参数要具体，场景要真实
 4. 如果有链接上下文，评论要贴合这条链接的内容和讨论氛围，像是在这条内容的评论区留言
-5. 如果有方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点`;
+5. 如果有方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点
+6. 如果有用户定制规则，必须严格遵守，不得违反`;
 
     userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
 
@@ -1951,6 +2045,7 @@ ${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(inf
 ${matBlock}
 ${linkBlock}
 ${methodBlock}
+${aiRulesBlock}
 
 生成要求：
 - ${platGuide[platform]}
@@ -1960,6 +2055,7 @@ ${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
 - 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述
 - 若有方法论策略，每条评论必须体现至少1条策略要点，自然融入评论中
 - 若有链接上下文，评论要贴合链接主题，像是在这条链接的评论区互动
+- 若有用户定制规则，每条评论必须严格遵守所有规则
 - 不同评论的角度要多样
 
 请严格按照以下JSON格式返回（不要有其他文字）：
@@ -2426,6 +2522,73 @@ function getFeedbackHints(prodName, platform) {
     .join('\n');
 }
 
+// ---- AI规则后处理（模板引擎生成后应用） ----
+function applyAiRules(text, platform) {
+  const rules = S.aiRules();
+  if(!rules.length) return text;
+
+  let result = text;
+  const ruleTexts = rules.map(r=>r.text.toLowerCase());
+
+  // 规则：不要感叹号
+  if(ruleTexts.some(r=>r.includes('感叹号')||r.includes('不用！')||r.includes('不用感叹'))) {
+    result = result.replace(/！/g, '').replace(/!/g, '');
+  }
+  // 规则：更短/更简洁
+  if(ruleTexts.some(r=>r.includes('更短')||r.includes('更简洁')||r.includes('简洁'))) {
+    // 截取到第一个句号后的内容，减少到约70%长度
+    const maxLen = platform === 'douyin' ? 40 : platform === 'xhs' ? 70 : 90;
+    if(result.length > maxLen) {
+      // 找最近的断句点截断
+      const truncated = result.substring(0, maxLen);
+      const lastPunc = Math.max(truncated.lastIndexOf('。'), truncated.lastIndexOf('，'), truncated.lastIndexOf('、'), truncated.lastIndexOf(' '));
+      result = lastPunc > maxLen * 0.5 ? truncated.substring(0, lastPunc + 1) : truncated;
+    }
+  }
+  // 规则：不用品牌全称
+  if(ruleTexts.some(r=>r.includes('品牌全称')||r.includes('品牌名'))) {
+    const products = S.products();
+    products.forEach(p => {
+      if(p.name && p.name.length > 2) {
+        // 只替换非句首位置的品牌名
+        const regex = new RegExp(p.name, 'g');
+        const matches = result.match(regex);
+        if(matches && matches.length > 1) {
+          // 保留第一次出现，后续替换为品类名或"这款"
+          let count = 0;
+          result = result.replace(regex, () => {
+            count++;
+            return count === 1 ? p.name : (p.category || '这款');
+          });
+        }
+      }
+    });
+  }
+  // 规则：更口语化
+  if(ruleTexts.some(r=>r.includes('口语')||r.includes('更口语'))) {
+    result = result.replace(/确实/g, '真的').replace(/非常/g, '特别').replace(/此外/g, '而且').replace(/因此/g, '所以').replace(/综上所述/g, '');
+    result = result.replace(/极其/g, '超').replace(/较为/g, '挺').replace(/尤为/g, '特别');
+  }
+  // 规则：多加场景
+  if(ruleTexts.some(r=>r.includes('场景')||r.includes('使用场景'))) {
+    const scenes = ['家里用', '平时用', '日常场景', '生活中', '实际用时'];
+    if(!result.includes('用') && !result.includes('场景')) {
+      result += '，' + R(scenes) + '感受很深';
+    }
+  }
+  // 规则：不要太假/像机器人
+  if(ruleTexts.some(r=>r.includes('太假')||r.includes('机器人')||r.includes('像广告'))) {
+    result = result.replace(/绝绝子/g, '真的不错').replace(/太绝了/g, '挺好的').replace(/yyds/g, '真心推荐');
+    result = result.replace(/强烈推荐/g, '感觉可以入').replace(/必须入手/g, '可以考虑');
+  }
+  // 规则：不要emoji
+  if(ruleTexts.some(r=>r.includes('不要emoji')||r.includes('不加emoji')||r.includes('不用emoji'))) {
+    result = result.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✨|💕|🌟|🔥|💡|🙅|🙋|🔍|📊|🥺/gu, '');
+  }
+
+  return result.trim();
+}
+
 // ================================================================
 // B站
 // ================================================================
@@ -2621,7 +2784,7 @@ function genBili(info, idx) {
     }
   }
 
-  return {text:text.trim(), name:R(NAMES_B), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(50,3200), hours:RI(1,12), platform:'bili'};
+  return {text:applyAiRules(text.trim(),'bili'), name:R(NAMES_B), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(50,3200), hours:RI(1,12), platform:'bili'};
 }
 
 // ================================================================
@@ -2726,7 +2889,7 @@ function genDouyin(info, idx) {
     }
   }
 
-  return {text:text.trim(), name:R(NAMES_D), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(20,5000), hours:RI(1,8), platform:'douyin'};
+  return {text:applyAiRules(text.trim(),'douyin'), name:R(NAMES_D), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(20,5000), hours:RI(1,8), platform:'douyin'};
 }
 
 // ================================================================
@@ -2833,7 +2996,7 @@ function genXhs(info, idx) {
     if(mIns) text += ` ${mIns}`;
   }
 
-  return {text:text.trim(), name:R(NAMES_X), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(10,800), hours:RI(1,24), platform:'xhs'};
+  return {text:applyAiRules(text.trim(),'xhs'), name:R(NAMES_X), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(10,800), hours:RI(1,24), platform:'xhs'};
 }
 
 // ================================================================
@@ -2876,12 +3039,20 @@ async function generateWithAI(platform, info, count) {
     methodBlock = `\n━━━ 运营方法论策略（必须严格遵守！这是最高优先级的策略指导） ━━━\n${methodHints}\n要求：每条评论必须体现上述方法论中的至少1条策略要点，不能忽略。将策略自然融入评论内容中，不要生硬照搬原文。`;
   }
 
+  // 构建AI对话规则注入块（用户通过对话提出的意见，必须遵守）
+  const aiRulesHints = getAiRulesHints(info.name, platform);
+  let aiRulesBlock = '';
+  if(aiRulesHints) {
+    aiRulesBlock = `\n━━━ 用户定制规则（必须严格遵守！这是用户明确提出的修改意见） ━━━\n${aiRulesHints}\n要求：每条评论必须遵守上述所有规则，不能违反任何一条。如果规则和方法论冲突，以用户定制规则优先。`;
+  }
+
   const systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。
 核心要求：
 1. 每条评论都要有独特的用户角色和视角，避免雷同
 2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述、体验词汇，不能只用泛泛而谈的通用话术
 3. 技术参数要具体（如"2000CVIA亮度"而不是"亮度很高"），场景要真实（如"客厅3米投白墙"而不是"使用体验好"）
-4. 如果提供了运营方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点`;
+4. 如果提供了运营方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点
+5. 如果提供了用户定制规则，这是绝对优先级，每条评论必须严格遵守，不得违反`;
 
   const userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
 
@@ -2894,6 +3065,7 @@ async function generateWithAI(platform, info, count) {
 ${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(info.compFeatures||[]).join('、')||'无'}）` : ''}
 ${matBlock}
 ${methodBlock}
+${aiRulesBlock}
 
 生成要求：
 - ${platGuide[platform]}
@@ -2902,6 +3074,7 @@ ${methodBlock}
 ${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
 - 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述，让评论有说服力和真实感
 - 若有方法论策略，每条评论必须体现至少1条策略要点，自然融入评论中
+- 若有用户定制规则，每条评论必须严格遵守所有规则
 - 不同评论的角度要多样：有人关注参数，有人关注使用场景，有人关注和竞品的对比，有人分享具体体验
 
 请严格按照以下JSON格式返回（不要有其他文字）：
@@ -2958,15 +3131,23 @@ async function generateWithAI_Attack(platform, info, count) {
     methodBlock = `\n━━━ 运营方法论策略（拉踩话术也必须遵守！） ━━━\n${methodHints}\n要求：在拉踩评论中体现上述策略，让攻击更有策略性和说服力。`;
   }
 
+  // AI对话规则注入
+  const aiRulesHints = getAiRulesHints(info.name, platform);
+  let aiRulesBlock = '';
+  if(aiRulesHints) {
+    aiRulesBlock = `\n━━━ 用户定制规则（必须严格遵守！） ━━━\n${aiRulesHints}\n要求：每条拉踩评论也必须遵守上述所有规则。`;
+  }
+
   const systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
 核心要求：
 1. 攻击要有理有据，不是无脑黑，要像真实用户吐槽
 2. 必须同时提到我方产品的具体优势，形成对比
 3. 每条评论角度不同：有人吐槽竞品参数虚标，有人吐槽竞品体验差，有人后悔买了竞品
 4. 如果有产品资料，引用具体技术参数作为攻击和背书的依据
-5. 如果有方法论策略，必须在拉踩评论中体现策略要点`;
+5. 如果有方法论策略，必须在拉踩评论中体现策略要点
+6. 如果有用户定制规则，必须严格遵守，不得违反`;
 
-  const finalUserPrompt = methodBlock ? `${userPrompt}\n${methodBlock}` : userPrompt;
+  const finalUserPrompt = `${userPrompt}\n${methodBlock}\n${aiRulesBlock}`;
 
   try {
     const resp = await fetch('https://api.deepseek.com/chat/completions', {
@@ -3091,7 +3272,7 @@ async function generateFor(platform) {
     // 拉踩模式
     curComments = [];
     for(let i=0;i<cnt;i++) {
-      const text = genAttack(platform, info, i);
+      const text = applyAiRules(genAttack(platform, info, i), platform);
       curComments.push({
         text: text.trim(),
         name: platform==='bili' ? R(NAMES_B) : platform==='douyin' ? R(NAMES_D) : R(NAMES_X),
@@ -3140,7 +3321,7 @@ function regenOne(idx) {
   }
   // 拉踩模式
   if(isAttackMode && info.competitor) {
-    const text = genAttack(curPlatform, info, idx+Math.floor(Math.random()*100));
+    const text = applyAiRules(genAttack(curPlatform, info, idx+Math.floor(Math.random()*100)), curPlatform);
     curComments[idx] = {
       text: text.trim(),
       name: curComments[idx].name,
@@ -3291,10 +3472,246 @@ function renderFeedbackModal() {
 }
 
 // ================================================================
+// AI 对话系统 — 用户提意见，AI记住并应用
+// ================================================================
+let aiChatOpen = false;
+
+function toggleAiChat() {
+  aiChatOpen = !aiChatOpen;
+  const body = document.getElementById('aiChatBody');
+  const toggle = document.getElementById('aiChatToggle');
+  if(aiChatOpen) {
+    body.classList.add('open');
+    toggle.classList.add('collapsed');
+    renderChatMessages();
+    renderAiRuleList();
+    setTimeout(()=>{ const msgEl = document.getElementById('aiChatMessages'); if(msgEl) msgEl.scrollTop = msgEl.scrollHeight; }, 100);
+  } else {
+    body.classList.remove('open');
+    toggle.classList.remove('collapsed');
+  }
+}
+
+function autoResizeChat(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+function quickChat(text) {
+  document.getElementById('aiChatInput').value = text;
+  sendAiChat();
+}
+
+function renderChatMessages() {
+  const msgs = S.chatHistory();
+  const container = document.getElementById('aiChatMessages');
+  const empty = document.getElementById('aiChatEmpty');
+  if(!msgs.length) {
+    empty.style.display = '';
+    container.querySelectorAll('.ai-chat-msg').forEach(el=>el.remove());
+    return;
+  }
+  empty.style.display = 'none';
+  // 只渲染消息，保留empty元素
+  const existingMsgs = container.querySelectorAll('.ai-chat-msg');
+  existingMsgs.forEach(el=>el.remove());
+  msgs.forEach(m => {
+    const div = document.createElement('div');
+    div.className = `ai-chat-msg ${m.role}`;
+    const avatarText = m.role === 'ai' ? '🤖' : '👤';
+    // 解析消息中的规则标记
+    let bubbleHtml = E(m.content);
+    if(m.role === 'ai' && m.rules && m.rules.length) {
+      bubbleHtml += `<div class="ai-chat-rules"><div class="ai-chat-rules-title">📌 已提取规则：</div>${m.rules.map(r=>`• ${E(r)}`).join('<br>')}</div>`;
+    }
+    div.innerHTML = `<div class="ai-chat-avatar">${avatarText}</div><div class="ai-chat-bubble">${bubbleHtml}</div>`;
+    container.appendChild(div);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderAiRuleList() {
+  const rules = S.aiRules();
+  const area = document.getElementById('aiRuleListArea');
+  const list = document.getElementById('aiRuleList');
+  const badge = document.getElementById('aiRuleCount');
+  badge.textContent = rules.length + ' 条规则';
+  if(!rules.length) { area.style.display = 'none'; return; }
+  area.style.display = '';
+  list.innerHTML = rules.map((r,i)=>`
+    <div class="ai-chat-rule-item">
+      <span>📌 ${E(r.text)}</span>
+      <span class="del" onclick="deleteAiRule(${i})">✕</span>
+    </div>
+  `).join('');
+}
+
+function deleteAiRule(idx) {
+  const rules = S.aiRules();
+  rules.splice(idx, 1);
+  S.save('aiRules', rules);
+  renderAiRuleList();
+}
+
+async function sendAiChat() {
+  const input = document.getElementById('aiChatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const key = localStorage.getItem('brg_ai_key');
+  if(!key) { toast('请先在设置中填写 DeepSeek API Key'); return; }
+
+  const sendBtn = document.getElementById('aiChatSendBtn');
+  sendBtn.disabled = true;
+  sendBtn.textContent = '思考中…';
+  input.value = '';
+  input.style.height = 'auto';
+
+  // 添加用户消息
+  const chat = S.chatHistory();
+  chat.push({ role:'user', content:text, time:Date.now() });
+  S.save('chatHistory', chat);
+  renderChatMessages();
+
+  try {
+    // 构建对话上下文（最近10轮）
+    const recentChat = chat.slice(-20);
+    const messages = [
+      { role:'system', content: buildChatSystemPrompt() },
+      ...recentChat.map(m=>({ role: m.role==='user'?'user':'assistant', content: m.content })),
+    ];
+
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` },
+      body: JSON.stringify({
+        model:'deepseek-chat',
+        messages,
+        temperature: 0.7,
+        max_tokens: 800,
+      }),
+    });
+
+    if(!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const aiContent = data.choices[0].message.content.trim();
+
+    // 让AI提取规则 — 第二次调用
+    const rulesResp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` },
+      body: JSON.stringify({
+        model:'deepseek-chat',
+        messages: [
+          { role:'system', content: `你是一个规则提取器。从用户对评论生成话术的意见中，提取出可以持久应用的明确规则。
+每条规则应该是一个简洁、可执行的指令，比如：
+- "评论中不要出现品牌全称，只用品类名"
+- "抖音评论不超过50字"
+- "多加入具体使用场景描述"
+- "不要用感叹号结尾"
+- "小红书评论要多加emoji"
+
+只提取明确、可执行的规则，忽略模糊的情感表达。
+如果用户意见中包含可提取的规则，返回JSON：{"rules":["规则1","规则2"]}
+如果没有可提取的规则，返回：{"rules":[]}
+只返回JSON，不要其他文字。` },
+          { role:'user', content: `用户最新意见："${text}"\n\n当前已有的规则：${JSON.stringify(S.aiRules().map(r=>r.text))}\n\n请提取新的规则（不要重复已有规则）：` },
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+      }),
+    });
+
+    let extractedRules = [];
+    if(rulesResp.ok) {
+      const rulesData = await rulesResp.json();
+      const rulesContent = rulesData.choices[0].message.content.trim();
+      const jsonMatch = rulesContent.match(/\{[\s\S]*\}/);
+      if(jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          extractedRules = parsed.rules || [];
+        } catch(e) { /* ignore parse error */ }
+      }
+    }
+
+    // 保存AI回复
+    chat.push({ role:'ai', content:aiContent, time:Date.now(), rules:extractedRules });
+    S.save('chatHistory', chat);
+
+    // 保存新规则
+    if(extractedRules.length) {
+      const rules = S.aiRules();
+      extractedRules.forEach(r => {
+        // 去重
+        if(!rules.some(existing=>existing.text===r)) {
+          rules.push({ text:r, time:Date.now(), source:text.substring(0,50) });
+        }
+      });
+      S.save('aiRules', rules);
+    }
+
+    renderChatMessages();
+    renderAiRuleList();
+
+  } catch(e) {
+    console.error('AI对话失败:', e);
+    const chat = S.chatHistory();
+    chat.push({ role:'ai', content:`抱歉，我遇到了问题：${e.message}`, time:Date.now() });
+    S.save('chatHistory', chat);
+    renderChatMessages();
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.textContent = '发送';
+  }
+}
+
+function buildChatSystemPrompt() {
+  const rules = S.aiRules();
+  const products = S.products();
+  const rulesText = rules.length ? rules.map(r=>`- ${r.text}`).join('\n') : '（暂无）';
+  const productsText = products.length ? products.map(p=>`${p.name}(${p.category||'未分类'})`).join('、') : '（暂无）';
+
+  return `你是"口碑评论生成器"的AI助手。你的职责是：
+1. 倾听用户对评论话术的意见和修改需求
+2. 理解用户的意图，给出简洁的回应确认
+3. 从用户意见中提取可持久应用的规则，这些规则会自动被记住并应用到所有话术生成中
+
+当前产品：${productsText}
+已有规则：
+${rulesText}
+
+对话原则：
+- 回应简洁，1-3句话即可
+- 确认你理解了用户的需求
+- 告诉用户你会怎么调整话术
+- 不要废话，不要客套`;
+}
+
+// 获取AI规则提示文本（注入到话术生成）
+function getAiRulesHints(prodName, platform) {
+  const rules = S.aiRules();
+  if(!rules.length) return '';
+  // 可以按产品和平台筛选（如果规则有标记的话），目前全部应用
+  return rules.map(r=>r.text).join('\n');
+}
+
+function clearAiChat() {
+  if(!confirm('清空全部对话记录？（已记住的规则不受影响）')) return;
+  S.save('chatHistory', []);
+  renderChatMessages();
+  toast('对话已清空');
+}
+
+// ================================================================
 // Init
 // ================================================================
 refreshStats();
 renderProductChips();
+renderAiRuleList();
 </script>
 </body>
 </html>
