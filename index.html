@@ -413,6 +413,7 @@ textarea{min-height:50px;resize:vertical}
         </select>
       </div>
       <div class="form-actions">
+        <button class="btn btn-p" onclick="reCleanAllMaterials()">🧹 重新清洗所有PDF资料</button>
         <button class="btn btn-d" onclick="clearAllData()">🗑 清空所有数据</button>
         <button class="btn btn-o" onclick="exportAll()">📤 导出备份</button>
       </div>
@@ -763,12 +764,14 @@ function deleteComp(prodId, compId) {
 // ---- 资料上传 ----
 async function uploadMaterial(prodId, input) {
   const file = input.files[0]; if(!file) return;
-  const text = await extractFileText(file);
+  const rawText = await extractFileText(file);
+  // 存储前先清洗（防止旧数据或特殊编码残留空格）
+  const text = cleanPdfText(rawText);
   const prods = S.products();
   const p = prods.find(p=>p.id===prodId);
   if(!p) return;
   p.materials = p.materials||[];
-  p.materials.push({id:Date.now(), name:file.name, text:text.substring(0,8000), time:new Date().toISOString()});
+  p.materials.push({id:Date.now(), name:file.name, text:text.substring(0,12000), time:new Date().toISOString()});
   S.save('products', prods);
   toast('资料已添加');
   refreshProductList();
@@ -781,15 +784,101 @@ async function extractFileText(file) {
       const buf = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({data:buf}).promise;
       let text = '';
-      for(let i=1;i<=Math.min(pdf.numPages,20);i++){
+      for(let i=1;i<=Math.min(pdf.numPages,30);i++){
         const pg = await pdf.getPage(i);
         const ct = await pg.getTextContent();
-        text += ct.items.map(it=>it.str).join(' ')+'\n';
+        // 按行分组：同一行的文本项y坐标接近
+        let lines = [];
+        let curLine = {y: null, items: []};
+        for(const item of ct.items) {
+          const y = Math.round(item.transform[5]); // y坐标
+          if(curLine.y === null || Math.abs(curLine.y - y) > 3) {
+            if(curLine.items.length) lines.push(curLine);
+            curLine = {y, items: [item]};
+          } else {
+            curLine.items.push(item);
+          }
+        }
+        if(curLine.items.length) lines.push(curLine);
+        // 每行内按x排序，拼接文本
+        for(const line of lines) {
+          line.items.sort((a,b) => a.transform[4] - b.transform[4]);
+          const lineText = line.items.map(it => it.str).join('');
+          text += lineText + '\n';
+        }
+        text += '\n';
       }
+      // 清洗文本
+      text = cleanPdfText(text);
       return text.trim()||'（PDF提取失败，请手动输入内容）';
     } catch(e){ return '（PDF解析失败: '+e.message+'）'; }
   }
   return await file.text();
+}
+
+// PDF文本清洗：修复PDF.js提取中文时字符间空格的问题
+function cleanPdfText(text) {
+  // 1. 修复被空格拆散的中文：如 "小 钢 炮" → "小钢炮"
+  let prev;
+  do { prev = text; text = text.replace(/([\u4e00-\u9fff])\s+([\u4e00-\u9fff])/g, '$1$2'); }
+  while(text !== prev);
+
+  // 2. 修复被空格拆散的数字：如 "1 6 0 0" → "1600"
+  do { prev = text; text = text.replace(/(\d)\s+(\d)/g, '$1$2'); }
+  while(text !== prev);
+
+  // 3. 修复被空格拆散的大写英文：如 "C V I A" → "CVIA", "D M D" → "DMD"
+  do { prev = text; text = text.replace(/([A-Z])\s+([A-Z])/g, '$1$2'); }
+  while(text !== prev);
+
+  // 4. 修复小数点被空格拆开：如 "0 . 4 7" → "0.47"
+  text = text.replace(/(\d)\s*\.\s*(\d)/g, '$1.$2');
+
+  // 5. 修复数字与单位之间的空格问题
+  // "4 K" → "4K"，"240 H z" → "240Hz"，"1600 CVIA" → "1600CVIA"，"1080 P" → "1080P"
+  text = text.replace(/(\d)\s+(K|k|Hz|hz|H\s*z|CVIA|cvia|ANSI|ansi|W|w|V|v|A|a|GB|gb|TB|tb|MB|mb|nm|NM|G|g|P|p)\b/g, '$1$2');
+  // 修复 H z → Hz 这种拆散的
+  do { prev = text; text = text.replace(/(\d)Hz\b/g, '$1Hz'); text = text.replace(/(\d)H\s*z/g, '$1Hz'); } while(text !== prev);
+
+  // 6. 修复中文与数字/英文之间的多余空格
+  text = text.replace(/([\u4e00-\u9fff])\s{2,}(\d)/g, '$1 $2');
+  text = text.replace(/([\u4e00-\u9fff])\s{2,}([A-Z])/g, '$1 $2');
+  text = text.replace(/(\d)\s{2,}([\u4e00-\u9fff])/g, '$1$2');
+  text = text.replace(/([A-Z]{2,})\s{2,}([\u4e00-\u9fff])/g, '$1 $2');
+
+  // 7. 清理PDF常见垃圾字符
+  text = text.replace(/||||●/g, '');  // PDF项目符号
+  text = text.replace(/\s{2,}/g, ' ');       // 多空格变单空格
+  // 但保留换行符
+  text = text.split('\n').map(l => l.replace(/\s{2,}/g, ' ')).join('\n');
+
+  // 8. 去掉行首行尾多余空白
+  text = text.split('\n').map(l => l.trim()).filter(l => l).join('\n');
+
+  // 9. 合并连续空行为单空行
+  text = text.replace(/\n{3,}/g, '\n\n');
+
+  return text;
+}
+
+// 重新清洗所有已存的PDF资料（修复之前上传的乱码）
+function reCleanAllMaterials() {
+  const prods = S.products();
+  let fixed = 0;
+  prods.forEach(p => {
+    if(p.materials && p.materials.length) {
+      p.materials.forEach(m => {
+        const cleaned = cleanPdfText(m.text);
+        if(cleaned !== m.text) {
+          m.text = cleaned;
+          fixed++;
+        }
+      });
+    }
+  });
+  S.save('products', prods);
+  refreshProductList();
+  toast(fixed > 0 ? `已清洗 ${fixed} 份资料，空格问题已修复` : '所有资料文本均正常，无需清洗');
 }
 
 function delMaterial(prodId, matId) {
@@ -1203,8 +1292,10 @@ function setPurchased(val) {
 function parseMaterials(materials) {
   if(!materials || !materials.length) return null;
 
-  // 合并所有资料文本（最多 6000 字用于解析）
-  const raw = materials.map(m => m.text).join('\n').substring(0, 6000);
+  // 合并所有资料文本，先做文本清洗
+  let rawText = materials.map(m => m.text).join('\n');
+  rawText = cleanPdfText(rawText); // 二次清洗，确保安全
+  const raw = rawText.substring(0, 8000); // 扩大到8000字
 
   // 1. 提取数字指标（亮度、功耗、续航、像素等带数字的句子）
   const dataPoints = [];
