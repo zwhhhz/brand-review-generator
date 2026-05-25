@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>口碑评论生成器 v2.4</title>
+<title>口碑评论生成器 v2.5</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1888,6 +1888,12 @@ async function generateWithAI_FromLink(platform, info, count, isAttack) {
     }
   }
 
+  // 构建方法论注入块（核心增强！方法论是最高优先级的策略指导）
+  let methodBlock = '';
+  if(methodHints) {
+    methodBlock = `\n━━━ 运营方法论策略（必须严格遵守！这是最高优先级的策略指导） ━━━\n${methodHints}\n要求：每条评论必须体现上述方法论中的至少1条策略要点，将策略自然融入评论内容中。`;
+  }
+
   let systemPrompt, userPrompt;
   if (isAttack) {
     systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
@@ -1895,7 +1901,8 @@ async function generateWithAI_FromLink(platform, info, count, isAttack) {
 1. 攻击要有理有据，不是无脑黑，要像真实用户吐槽
 2. 必须同时提到我方产品的具体优势，形成对比
 3. 每条评论角度不同
-4. 如果有链接上下文，评论要贴合链接的内容和讨论氛围`;
+4. 如果有链接上下文，评论要贴合链接的内容和讨论氛围
+5. 如果有方法论策略，每条评论必须体现至少1条策略要点`;
     const attackMatBlock = matParsed ? (() => {
       const parts = [];
       if (matParsed.dataPoints.length) parts.push(`【我方技术指标】${matParsed.dataPoints.slice(0, 4).join('；')}`);
@@ -1911,14 +1918,15 @@ ${attackMatBlock}
 竞品：${info.competitor || '别家同类产品'}
 竞品卖点（攻击靶子）：${(info.compFeatures || []).join('、') || '参数一般'}
 ${linkBlock}
+${methodBlock}
 
 生成要求：
 - ${platGuide[platform]}
 - 用户状态：${userState}
 - 语调：${toneDesc}
-${methodHints ? `- 风格指导：${methodHints}` : ''}
 ${fbHints ? `- 避免以下问题：${fbHints}` : ''}
 - 若有链接上下文，评论要像在这条内容下方留言
+- 若有方法论策略，每条拉踩评论必须体现至少1条策略要点
 
 请严格按照以下JSON格式返回（不要有其他文字）：
 {"comments": ["评论1", "评论2", ...]}`;
@@ -1928,7 +1936,8 @@ ${fbHints ? `- 避免以下问题：${fbHints}` : ''}
 1. 每条评论都要有独特的用户角色和视角，避免雷同
 2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述
 3. 技术参数要具体，场景要真实
-4. 如果有链接上下文，评论要贴合这条链接的内容和讨论氛围，像是在这条内容的评论区留言`;
+4. 如果有链接上下文，评论要贴合这条链接的内容和讨论氛围，像是在这条内容的评论区留言
+5. 如果有方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点`;
 
     userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
 
@@ -1941,14 +1950,15 @@ ${fbHints ? `- 避免以下问题：${fbHints}` : ''}
 ${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(info.compFeatures || []).join('、') || '无'}）` : ''}
 ${matBlock}
 ${linkBlock}
+${methodBlock}
 
 生成要求：
 - ${platGuide[platform]}
 - 用户状态：${userState}
 - 语调：${toneDesc}
-${methodHints ? `- 风格指导：${methodHints}` : ''}
 ${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
 - 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述
+- 若有方法论策略，每条评论必须体现至少1条策略要点，自然融入评论中
 - 若有链接上下文，评论要贴合链接主题，像是在这条链接的评论区互动
 - 不同评论的角度要多样
 
@@ -2366,10 +2376,46 @@ function pickScene(info, a) {
 
 // ---- 获取方法论提示词 ----
 function getMethodHints(platform) {
-  return S.methods()
-    .filter(m=>m.active&&(!m.platform||m.platform===platform))
-    .map(m=>m.content.substring(0,200))
-    .join('\n---\n');
+  const methods = S.methods().filter(m=>m.active&&(!m.platform||m.platform===platform));
+  if(!methods.length) return '';
+  return methods.map(m=>`【${m.name}】${m.content.substring(0, 300)}`).join('\n');
+}
+
+// ---- 从方法论中提取可用的策略短语（供模板引擎使用） ----
+function extractMethodPhrases(platform) {
+  const methods = S.methods().filter(m=>m.active&&(!m.platform||m.platform===platform));
+  if(!methods.length) return { phrases: [], sentences: [], styleTags: [] };
+
+  const fullText = methods.map(m=>m.content).join('\n');
+
+  // 提取关键策略短语（2-20字，中文为主）
+  const phrases = fullText
+    .split(/[，。、；\n！？：]/)
+    .map(s => s.trim().replace(/^[-•·\s*\d.]+/, ''))
+    .filter(s => s.length >= 4 && s.length <= 25)
+    .filter(s => /[\u4e00-\u9fff]{2,}/.test(s))
+    .slice(0, 20);
+
+  // 提取完整句子（包含策略要点）
+  const sentences = fullText
+    .split(/[。\n]/)
+    .map(s => s.trim().replace(/^[-•·\s*\d.]+/, ''))
+    .filter(s => s.length >= 8 && s.length <= 60)
+    .filter(s => /[\u4e00-\u9fff]{3,}/.test(s))
+    .filter(s => !/http|www|版权/.test(s))
+    .slice(0, 15);
+
+  // 推断风格标签
+  const styleTags = [];
+  if (/专业|硬核|参数|测评|评测|技术/.test(fullText)) styleTags.push('pro');
+  if (/种草|推荐|好物|入手|真实|分享/.test(fullText)) styleTags.push('recommend');
+  if (/对比|横评|选|vs|竞争/.test(fullText)) styleTags.push('compare');
+  if (/情感|共鸣|故事|场景|氛围/.test(fullText)) styleTags.push('emotional');
+  if (/数据|实测|跑分|测试|检验/.test(fullText)) styleTags.push('data');
+  if (/避坑|踩雷|翻车|注意|问题/.test(fullText)) styleTags.push('caution');
+  if (/体验|感受|上手|用了一/.test(fullText)) styleTags.push('experience');
+
+  return { phrases, sentences, styleTags };
 }
 
 // ---- 获取修改意见提示 ----
@@ -2415,14 +2461,35 @@ function genBili(info, idx) {
   const matDataLine = mat && mat.dataPoints.length ? R(mat.dataPoints.slice(0, 6)) : '';
   const matExpLine  = mat && mat.expSentences.length ? R(mat.expSentences.slice(0, 5)) : '';
   const matFeatLine = mat && mat.featSentences.length ? R(mat.featSentences.slice(0, 6)) : '';
+
+  // 方法论策略提取（深度融入模板）
+  const methodStrat = extractMethodPhrases('bili');
+  const methodPhrase = methodStrat.phrases.length ? R(methodStrat.phrases) : '';
+  const methodSentence = methodStrat.sentences.length ? R(methodStrat.sentences) : '';
+  // 方法论风格标签影响话术选择
+  const hasProMethod = methodStrat.styleTags.includes('pro');
+  const hasRecommendMethod = methodStrat.styleTags.includes('recommend');
+  const hasCompareMethod = methodStrat.styleTags.includes('compare');
+  const hasDataMethod = methodStrat.styleTags.includes('data');
+  const hasCautionMethod = methodStrat.styleTags.includes('caution');
+  const hasExperienceMethod = methodStrat.styleTags.includes('experience');
+  const hasEmotionalMethod = methodStrat.styleTags.includes('emotional');
+
   // 组合：资料描述 > 分析提取的hp
   const mainPoint = matFeatLine || matDataLine || featLine;
   const expDesc   = matExpLine  || `${scene.d}`;
 
-  // 权重选风格
-  const weights = isPurchased
+  // 权重选风格 —— 方法论可以影响风格权重
+  let weights = isPurchased
     ? {declare:.22,share:.28,evaluate:.30,compare:.15,ask:.05}
     : {ask:.20,ask_budget:.18,ask_dimension:.15,ask_device:.12,compare:.18,evaluate:.17};
+
+  // 根据方法论风格标签调整权重
+  if(hasProMethod || hasDataMethod) { weights.evaluate += .15; weights.ask -= .05; weights.share -= .05; }
+  if(hasCompareMethod) { weights.compare += .15; weights.declare -= .05; weights.ask -= .05; }
+  if(hasRecommendMethod || hasEmotionalMethod) { weights.share += .10; weights.declare += .05; weights.ask -= .08; }
+  if(hasCautionMethod) { weights.evaluate += .08; weights.share -= .04; }
+  if(hasExperienceMethod) { weights.share += .12; weights.evaluate -= .06; }
 
   let style = per.style;
   // 随机覆盖（30%概率使用权重随机）
@@ -2520,11 +2587,38 @@ function genBili(info, idx) {
     text = text.replace(/闭眼入/g,'推荐入手');
   }
 
-  // 方法论微调
-  if(methodHint && Math.random() > 0.6) {
-    // 简单注入：如果方法论提到某些词汇，适当引用风格
-    if(/深度测评|全方位/.test(methodHint)) text += R([' 全方位测了一遍', ' 深度测评下来']);
-    if(/实测|开箱/.test(methodHint)) text += R([' 实测感受', '']);
+  // 方法论深度融入话术（替代原来的简单微调）
+  if(methodStrat.phrases.length || methodStrat.sentences.length) {
+    // 策略1：在话术中自然引用方法论的策略短语或句子
+    if(Math.random() < 0.7) {
+      const methodInsert = methodStrat.sentences.length > 0 && Math.random() > 0.4
+        ? methodSentence
+        : methodPhrase;
+      if(methodInsert) {
+        // 根据风格标签决定插入方式
+        if(hasProMethod || hasDataMethod) {
+          text += ` ${R(['，从专业角度说', '，测评下来', '，参数上看'])}${methodInsert}`;
+        } else if(hasCompareMethod) {
+          text += ` ${R(['，对比下来', '，横向看', '，比了一圈'])}${methodInsert}`;
+        } else if(hasRecommendMethod || hasEmotionalMethod) {
+          text += ` ${R(['，真心', '，不得不说', '，真的'])}${methodInsert}`;
+        } else if(hasCautionMethod) {
+          text += ` ${R(['，提醒一下', '，注意', '，说个关键点'])}，${methodInsert}`;
+        } else if(hasExperienceMethod) {
+          text += ` ${R(['，实际体验', '，上手感受'])}，${methodInsert}`;
+        } else {
+          text += ` ${methodInsert}`;
+        }
+      }
+    }
+
+    // 策略2：方法论对整段话术的风格改造
+    if(hasDataMethod && mainPoint) {
+      text = text.replace(/效果不错|很好|很棒|不错/, mainPoint);
+    }
+    if(hasCautionMethod && !text.includes('注意') && !text.includes('避坑')) {
+      if(Math.random() > 0.5) text = '⚠️ ' + text;
+    }
   }
 
   return {text:text.trim(), name:R(NAMES_B), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(50,3200), hours:RI(1,12), platform:'bili'};
@@ -2560,6 +2654,17 @@ function genDouyin(info, idx) {
   const mainPoint   = matFeatLine || matDataLine || featLine;
   const expDesc     = matExpLine || `${scene.s}时${scene.d}`;
 
+  // 方法论策略提取（深度融入）
+  const methodStrat = extractMethodPhrases('douyin');
+  const methodPhrase = methodStrat.phrases.length ? R(methodStrat.phrases) : '';
+  const methodSentence = methodStrat.sentences.length ? R(methodStrat.sentences) : '';
+  const hasProMethod = methodStrat.styleTags.includes('pro');
+  const hasCompareMethod = methodStrat.styleTags.includes('compare');
+  const hasDataMethod = methodStrat.styleTags.includes('data');
+  const hasCautionMethod = methodStrat.styleTags.includes('caution');
+  const hasExperienceMethod = methodStrat.styleTags.includes('experience');
+  const hasEmotionalMethod = methodStrat.styleTags.includes('emotional');
+
   const opens = isPurchased ? [
     `${per.o}。`,
     `用了${R(['两周','一个月','半个月'])}，来说说真实感受。`,
@@ -2570,12 +2675,30 @@ function genDouyin(info, idx) {
     `有没有踩坑的，评论区聊聊。`,
   ];
 
+  // 方法论影响insights选择
   const insights = [
     `${mainPoint}在这价位${R(['香麻了','太能打了','真的顶'])}，${expDesc}。`,
     `就冲${mainPoint}这一点，${R(['值了','够了','比想的好'])}。${compRef}`,
     `${mainPoint}，这配置${R(['真卷','杀疯了'])}。${R(['冲不冲？','闭眼入了'])}`,
     `${mainPoint}实测没虚标，${expDesc}。${compRef}`,
   ];
+
+  // 方法论策略增强的insights
+  if(methodStrat.phrases.length) {
+    if(hasProMethod || hasDataMethod) {
+      insights.push(`${mainPoint}实测数据${R(['能打','到位','没水分'])}，${methodPhrase}。`);
+      insights.push(`参数党来了，${mainPoint}，${methodPhrase}，这波${R(['稳了','值了'])}。`);
+    }
+    if(hasCompareMethod) {
+      insights.push(`对比了${R(['好几款','一圈'])}，${methodPhrase}，${info.name}${R(['赢了','更香'])}。`);
+    }
+    if(hasExperienceMethod || hasEmotionalMethod) {
+      insights.push(`${expDesc}，${methodPhrase}，${R(['真心不错','绝了'])}！`);
+    }
+    if(hasCautionMethod) {
+      insights.push(`${methodPhrase}，这点${info.name}${R(['做到了','没问题'])}，别踩坑。`);
+    }
+  }
 
   const closes = isPurchased
     ? ['早买早享受。', '放心入，没什么坑。', '这波不亏。', '整体满意，推荐。']
@@ -2591,6 +2714,16 @@ function genDouyin(info, idx) {
   } else if(pro) {
     text = text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数能打');
     text = text.replace(/闭眼入/g,'可入');
+  }
+
+  // 方法论深度融入（额外策略短语注入）
+  if(methodStrat.phrases.length && Math.random() < 0.6) {
+    const mIns = methodSentence || methodPhrase;
+    if(mIns) {
+      if(hasProMethod) text += ` ${mIns}`;
+      else if(hasCautionMethod) text += ` ${mIns}`;
+      else text += ` ${mIns}`;
+    }
   }
 
   return {text:text.trim(), name:R(NAMES_D), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(20,5000), hours:RI(1,8), platform:'douyin'};
@@ -2626,6 +2759,18 @@ function genXhs(info, idx) {
   const expDesc     = matExpLine  || `${scene.s}时${scene.d}`;
   const featLine    = mainPoint + (a.hp2 ? `配合${a.hp2}` : '');
 
+  // 方法论策略提取（深度融入）
+  const methodStrat = extractMethodPhrases('xhs');
+  const methodPhrase = methodStrat.phrases.length ? R(methodStrat.phrases) : '';
+  const methodSentence = methodStrat.sentences.length ? R(methodStrat.sentences) : '';
+  const hasProMethod = methodStrat.styleTags.includes('pro');
+  const hasCompareMethod = methodStrat.styleTags.includes('compare');
+  const hasDataMethod = methodStrat.styleTags.includes('data');
+  const hasCautionMethod = methodStrat.styleTags.includes('caution');
+  const hasExperienceMethod = methodStrat.styleTags.includes('experience');
+  const hasEmotionalMethod = methodStrat.styleTags.includes('emotional');
+  const hasRecommendMethod = methodStrat.styleTags.includes('recommend');
+
   const opens = isPurchased ? [
     `用了${R(['两周','一个月'])}，来repo一下真实感受 ✨`,
     `${per.o}，${per.a} ～`,
@@ -2643,6 +2788,27 @@ function genXhs(info, idx) {
     `${expDesc}，${featLine}效果很惊喜 💕`,
   ];
 
+  // 方法论策略增强的insights
+  if(methodStrat.phrases.length) {
+    if(hasRecommendMethod || hasEmotionalMethod) {
+      insights.push(`${methodPhrase}，${mainPoint}真的${R(['太爱了','种草了','心动了'])} ✨`);
+      insights.push(`姐妹们听我一句，${methodPhrase}，${expDesc} 💕`);
+    }
+    if(hasProMethod || hasDataMethod) {
+      insights.push(`${methodPhrase}，${mainPoint}参数${R(['确实能打','硬核到位'])} 📊`);
+      insights.push(`做了功课的，${methodPhrase}，${mainPoint}${R(['靠谱','真的行'])} ✨`);
+    }
+    if(hasCompareMethod) {
+      insights.push(`对比了${R(['好几款','一圈'])}，${methodPhrase}，${compRef} ✨`);
+    }
+    if(hasExperienceMethod) {
+      insights.push(`${expDesc}，${methodPhrase}，${R(['亲测有效','真实分享','不是广'])} 💕`);
+    }
+    if(hasCautionMethod) {
+      insights.push(`${methodPhrase}，这点${info.name}${R(['没踩坑','做到了'])}，姐妹们放心 🙅`);
+    }
+  }
+
   const closes = isPurchased
     ? ['闭眼入没毛病 ✨', '提升生活幸福感的好物，推荐！', '之后继续分享使用感受～', '真的不后悔 ✨']
     : [
@@ -2659,6 +2825,12 @@ function genXhs(info, idx) {
   if(pro) {
     text = text.replace(/绝绝子|爱了|种草|太舒服了/g,'参数到位');
     if(Math.random()>.5) text += ' 做了详细功课才选的。';
+  }
+
+  // 方法论深度融入（额外策略注入）
+  if(methodStrat.phrases.length && Math.random() < 0.5) {
+    const mIns = methodSentence || methodPhrase;
+    if(mIns) text += ` ${mIns}`;
   }
 
   return {text:text.trim(), name:R(NAMES_X), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(10,800), hours:RI(1,24), platform:'xhs'};
@@ -2698,11 +2870,18 @@ async function generateWithAI(platform, info, count) {
     if(parts.length) matBlock = `\n产品白皮书/资料提取内容（请重点引用这些真实信息生成话术）：\n${parts.join('\n')}`;
   }
 
+  // 构建方法论注入块（核心增强！方法论是最高优先级的策略指导）
+  let methodBlock = '';
+  if(methodHints) {
+    methodBlock = `\n━━━ 运营方法论策略（必须严格遵守！这是最高优先级的策略指导） ━━━\n${methodHints}\n要求：每条评论必须体现上述方法论中的至少1条策略要点，不能忽略。将策略自然融入评论内容中，不要生硬照搬原文。`;
+  }
+
   const systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。
 核心要求：
 1. 每条评论都要有独特的用户角色和视角，避免雷同
 2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述、体验词汇，不能只用泛泛而谈的通用话术
-3. 技术参数要具体（如"2000CVIA亮度"而不是"亮度很高"），场景要真实（如"客厅3米投白墙"而不是"使用体验好"）`;
+3. 技术参数要具体（如"2000CVIA亮度"而不是"亮度很高"），场景要真实（如"客厅3米投白墙"而不是"使用体验好"）
+4. 如果提供了运营方法论策略，这是最高优先级的指导，每条评论必须体现方法论中的策略要点`;
 
   const userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
 
@@ -2714,14 +2893,15 @@ async function generateWithAI(platform, info, count) {
 - 产品描述：${info.desc||'无'}
 ${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(info.compFeatures||[]).join('、')||'无'}）` : ''}
 ${matBlock}
+${methodBlock}
 
 生成要求：
 - ${platGuide[platform]}
 - 用户状态：${userState}
 - 语调：${toneDesc}
-${methodHints ? `- 风格指导：${methodHints}` : ''}
 ${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
 - 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述，让评论有说服力和真实感
+- 若有方法论策略，每条评论必须体现至少1条策略要点，自然融入评论中
 - 不同评论的角度要多样：有人关注参数，有人关注使用场景，有人关注和竞品的对比，有人分享具体体验
 
 请严格按照以下JSON格式返回（不要有其他文字）：
@@ -2771,12 +2951,22 @@ async function generateWithAI_Attack(platform, info, count) {
 
   const userPrompt = buildAttackPrompt(platform, info, count);
 
+  // 方法论注入
+  const methodHints = getMethodHints(platform);
+  let methodBlock = '';
+  if(methodHints) {
+    methodBlock = `\n━━━ 运营方法论策略（拉踩话术也必须遵守！） ━━━\n${methodHints}\n要求：在拉踩评论中体现上述策略，让攻击更有策略性和说服力。`;
+  }
+
   const systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
 核心要求：
 1. 攻击要有理有据，不是无脑黑，要像真实用户吐槽
 2. 必须同时提到我方产品的具体优势，形成对比
 3. 每条评论角度不同：有人吐槽竞品参数虚标，有人吐槽竞品体验差，有人后悔买了竞品
-4. 如果有产品资料，引用具体技术参数作为攻击和背书的依据`;
+4. 如果有产品资料，引用具体技术参数作为攻击和背书的依据
+5. 如果有方法论策略，必须在拉踩评论中体现策略要点`;
+
+  const finalUserPrompt = methodBlock ? `${userPrompt}\n${methodBlock}` : userPrompt;
 
   try {
     const resp = await fetch('https://api.deepseek.com/chat/completions', {
@@ -2789,7 +2979,7 @@ async function generateWithAI_Attack(platform, info, count) {
         model: 'deepseek-chat',
         messages: [
           {role:'system', content:systemPrompt},
-          {role:'user', content:userPrompt},
+          {role:'user', content:finalUserPrompt},
         ],
         temperature: 0.9,
         max_tokens: 2000,
