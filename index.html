@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>口碑评论生成器 v2</title>
+<title>口碑评论生成器 v2.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -139,8 +139,9 @@ textarea{min-height:50px;resize:vertical}
 .link-input-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .link-input-bar input{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none}
 .link-input-bar input:focus{border-color:var(--primary)}
-.link-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
-.link-status.success{color:var(--success)}.link-status.error{color:var(--danger)}
+.link-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.link-status.success{color:var(--success)}.link-status.error{color:var(--danger)}.link-status.warn{color:var(--warning)}.link-status.loading{color:var(--info)}
+.link-status.loading::before{content:'';display:inline-block;width:12px;height:12px;border:2px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-right:4px}
 /* attack mode */
 .attack-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
 .attack-toggle label{font-size:13px;color:#991b1b;cursor:pointer;font-weight:500}
@@ -240,10 +241,10 @@ textarea{min-height:50px;resize:vertical}
     <div class="card">
       <!-- 链接智能识别 -->
       <div style="margin-bottom:14px">
-        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">🔗 链接智能识别（粘贴小红书/B站/抖音链接，自动匹配平台和产品）</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">🔗 链接智能识别（粘贴链接后自动读取页面内容，匹配产品/平台/风格，一键生成话术）</div>
         <div class="link-input-bar">
-          <input type="text" id="linkInput" placeholder="粘贴小红书、B站、抖音链接…" onpaste="onLinkPaste(event)">
-          <button class="btn btn-p" onclick="parseLink()">识别</button>
+          <input type="text" id="linkInput" placeholder="粘贴小红书、B站、抖音链接，自动读取内容生成话术…" onpaste="onLinkPaste(event)">
+          <button class="btn btn-p" onclick="parseLink()">🔍 识别</button>
         </div>
         <div class="link-status" id="linkStatus"></div>
       </div>
@@ -1401,43 +1402,593 @@ function onLinkPaste(event) {
   setTimeout(() => parseLink(), 100);
 }
 
-function parseLink() {
+// ---- CORS 代理获取页面内容 ----
+const CORS_PROXIES = [
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+async function fetchPageContent(url) {
+  for (const makeProxy of CORS_PROXIES) {
+    try {
+      const proxyUrl = makeProxy(url);
+      const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
+      if (!resp.ok) continue;
+      const html = await resp.text();
+      if (html && html.length > 200) return html;
+    } catch (e) { /* try next proxy */ }
+  }
+  return null;
+}
+
+// ---- 从HTML中提取有用文本 ----
+function extractPageInfo(html, platform) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  // 提取title
+  let title = '';
+  const titleEl = doc.querySelector('title');
+  if (titleEl) title = titleEl.textContent.trim();
+
+  // 提取meta description / og:description
+  let description = '';
+  const metaDesc = doc.querySelector('meta[name="description"]');
+  if (metaDesc) description = metaDesc.getAttribute('content') || '';
+  const ogDesc = doc.querySelector('meta[property="og:description"]');
+  if (ogDesc && !description) description = ogDesc.getAttribute('content') || '';
+
+  // 提取og:title（通常是分享标题，更准确）
+  const ogTitle = doc.querySelector('meta[property="og:title"]');
+  if (ogTitle) title = ogTitle.getAttribute('content') || title;
+
+  // 提取关键词
+  let keywords = '';
+  const metaKw = doc.querySelector('meta[name="keywords"]');
+  if (metaKw) keywords = metaKw.getAttribute('content') || '';
+
+  // 平台特定提取
+  let bodyText = '';
+  if (platform === 'xhs') {
+    // 小红书：尝试从JSON-LD或脚本中提取笔记内容
+    const scripts = doc.querySelectorAll('script');
+    for (const s of scripts) {
+      const txt = s.textContent || '';
+      if (txt.includes('"desc"') || txt.includes('"noteCard"') || txt.includes('"title"')) {
+        try {
+          // 尝试提取笔记描述
+          const descMatch = txt.match(/"desc"\s*:\s*"([^"]{5,})"/);
+          if (descMatch) bodyText = descMatch[1];
+          const titleMatch = txt.match(/"title"\s*:\s*"([^"]{5,})"/);
+          if (titleMatch && !title) title = titleMatch[1];
+        } catch (e) {}
+      }
+    }
+  } else if (platform === 'bili') {
+    // B站视频：提取视频标题和简介
+    const videoDesc = doc.querySelector('.desc-info-text, .basic-desc-info');
+    if (videoDesc) bodyText = videoDesc.textContent.trim();
+    // 尝试从脚本中提取
+    const scripts = doc.querySelectorAll('script');
+    for (const s of scripts) {
+      const txt = s.textContent || '';
+      if (txt.includes('"desc"') || txt.includes('"vDesc"')) {
+        try {
+          const descMatch = txt.match(/"desc"\s*:\s*"([^"]{5,})"/);
+          if (descMatch) bodyText = descMatch[1];
+        } catch (e) {}
+      }
+    }
+  } else if (platform === 'douyin') {
+    // 抖音：尝试提取视频描述
+    const scripts = doc.querySelectorAll('script');
+    for (const s of scripts) {
+      const txt = s.textContent || '';
+      if (txt.includes('"desc"') || txt.includes('"title"')) {
+        try {
+          const descMatch = txt.match(/"desc"\s*:\s*"([^"]{5,})"/);
+          if (descMatch) bodyText = descMatch[1];
+          const titleMatch = txt.match(/"title"\s*:\s*"([^"]{5,})"/);
+          if (titleMatch && !title) title = titleMatch[1];
+        } catch (e) {}
+      }
+    }
+  }
+
+  // 通用提取：从正文段落中提取文本
+  if (!bodyText) {
+    const paragraphs = doc.querySelectorAll('p, span.text, div.desc, article, .content, .text-content');
+    const texts = [];
+    paragraphs.forEach(p => {
+      const t = p.textContent.trim();
+      if (t.length >= 10 && t.length <= 500) texts.push(t);
+    });
+    bodyText = texts.slice(0, 5).join(' ');
+  }
+
+  // 合并所有可用文本
+  const fullText = [title, description, keywords, bodyText].filter(Boolean).join(' ');
+
+  return { title, description, keywords, bodyText, fullText };
+}
+
+// ---- 从页面内容中提取关键词用于匹配 ----
+function extractKeywords(text) {
+  if (!text) return [];
+  // 去掉常见停用词和符号
+  const cleaned = text
+    .replace(/[^\u4e00-\u9fff\w\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 提取2-6字的中文词组（简单分词：按标点和空格切分，过滤短词）
+  const segments = cleaned.split(/[\s,，。！？、；：""''（）【】《》\/\\|]+/);
+  const keywords = [];
+  for (const seg of segments) {
+    if (seg.length >= 2 && seg.length <= 20 && /[\u4e00-\u9fff]/.test(seg)) {
+      keywords.push(seg);
+    }
+  }
+  return [...new Set(keywords)];
+}
+
+// ---- 智能匹配产品 ----
+function matchProductFromContent(keywords, platform) {
+  const prods = S.products();
+  if (!prods.length) return null;
+
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const p of prods) {
+    let score = 0;
+    const pName = p.name || '';
+    const pCat = p.category || '';
+    const pFeats = (p.features || []).join(' ');
+    const pDesc = p.desc || '';
+    const pUrl = p.url || '';
+    const searchText = [pName, pCat, pFeats, pDesc].join(' ').toLowerCase();
+
+    // 1. 产品名完全匹配（最高权重）
+    for (const kw of keywords) {
+      if (pName && kw.includes(pName)) { score += 50; break; }
+      if (pName && pName.includes(kw) && kw.length >= 2) { score += 15; }
+    }
+
+    // 2. 产品名精确出现在关键词中
+    if (pName) {
+      for (const kw of keywords) {
+        if (kw === pName) { score += 40; break; }
+      }
+    }
+
+    // 3. 品类匹配
+    if (pCat) {
+      for (const kw of keywords) {
+        if (kw.includes(pCat) || pCat.includes(kw)) { score += 10; }
+      }
+    }
+
+    // 4. 卖点/特性匹配
+    for (const kw of keywords) {
+      if (pFeats.toLowerCase().includes(kw.toLowerCase())) { score += 5; }
+    }
+
+    // 5. URL匹配
+    if (pUrl) {
+      for (const kw of keywords) {
+        if (pUrl.includes(kw)) { score += 8; }
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = p;
+    }
+  }
+
+  // 阈值：至少需要一定分数才算匹配
+  return bestScore >= 5 ? bestMatch : null;
+}
+
+// ---- 从页面内容推断话术风格 ----
+function inferStyleFromContent(pageInfo, platform) {
+  const text = (pageInfo.fullText || '').toLowerCase();
+  const style = {
+    isReview: false,     // 测评向
+    isRecommend: false,  // 种草推荐向
+    isComparison: false, // 对比向
+    isExperience: false, // 体验分享向
+    isQuestion: false,   // 问答/求助向
+    tone: 'neutral',     // neutral / positive / negative
+    topicKeywords: [],   // 话题关键词
+  };
+
+  // 判断内容类型
+  if (/测评|评测|测试|对比|横评|硬核|详细/.test(text)) style.isReview = true;
+  if (/种草|推荐|值得|入手|必买|好物|安利|宝藏/.test(text)) style.isRecommend = true;
+  if (/对比|vs|比较|哪个好|选择|纠结|之间/.test(text)) style.isComparison = true;
+  if (/体验|感受|使用|上手|用了一段时间|真实/.test(text)) style.isExperience = true;
+  if (/\?|？|求助|请问|怎么选|值得买吗|怎么样/.test(text)) style.isQuestion = true;
+
+  // 判断情感倾向
+  if (/踩雷|避坑|垃圾|别买|后悔|翻车|坑|差/.test(text)) style.tone = 'negative';
+  else if (/香|超值|绝了|yyds|爱了|满分|优秀|赞/.test(text)) style.tone = 'positive';
+
+  // 提取产品类话题关键词
+  const topicPatterns = [
+    /([\u4e00-\u9fff]{2,6}(?:投影|电视|音响|耳机|空调|冰箱|洗衣机|手机|电脑|相机|扫地机|吸尘器|净化器|净水器|热水器|烤箱|微波炉|洗碗机))/g,
+    /([\u4e00-\u9fff]{2,4}(?:亮度|分辨率|色域|音质|续航|噪音|功率|容量|尺寸|画质|流畅|清晰))/g,
+    /(\d{3,4}[PpKk])|(\d+[\u4e00-\u9fff]{1,3}(?:Hz|W|寸|寸|L|dB|nit|CVIA|ANSI|流明))/g,
+  ];
+  for (const pat of topicPatterns) {
+    let m;
+    while ((m = pat.exec(text)) !== null) {
+      if (m[1]) style.topicKeywords.push(m[1]);
+    }
+  }
+  style.topicKeywords = [...new Set(style.topicKeywords)].slice(0, 10);
+
+  return style;
+}
+
+// ---- 基于链接内容构建增强的生成上下文 ----
+function buildLinkContext(pageInfo, style, matchedProduct) {
+  let ctx = '';
+  if (pageInfo.title) ctx += `链接标题：${pageInfo.title}\n`;
+  if (pageInfo.description) ctx += `链接描述：${pageInfo.description}\n`;
+  if (style.isReview) ctx += '内容类型：专业测评/评测\n';
+  if (style.isRecommend) ctx += '内容类型：种草推荐\n';
+  if (style.isComparison) ctx += '内容类型：产品对比/选购\n';
+  if (style.isExperience) ctx += '内容类型：真实体验分享\n';
+  if (style.isQuestion) ctx += '内容类型：问答/求推荐\n';
+  if (style.tone === 'positive') ctx += '整体情感：正面\n';
+  if (style.tone === 'negative') ctx += '整体情感：负面\n';
+  if (style.topicKeywords.length) ctx += `话题关键词：${style.topicKeywords.join('、')}\n`;
+  return ctx;
+}
+
+// ---- 全局变量：链接抓取的上下文 ----
+let linkPageInfo = null;  // 当前链接的页面信息
+let linkStyle = null;     // 当前链接推断的风格
+let linkContext = '';      // 当前链接的生成上下文
+
+// ---- 主入口：识别链接并抓取内容 ----
+async function parseLink() {
   const input = document.getElementById('linkInput');
   const status = document.getElementById('linkStatus');
   const url = input.value.trim();
-  if(!url) { status.innerHTML = ''; return; }
+  if (!url) { status.innerHTML = ''; linkPageInfo = null; linkStyle = null; linkContext = ''; return; }
 
   // 1. 识别平台
   const platform = detectPlatformFromLink(url);
-  if(!platform) {
+  if (!platform) {
     status.innerHTML = '<span class="link-status error">❌ 未识别到平台，请粘贴小红书/B站/抖音链接</span>';
+    linkPageInfo = null; linkStyle = null; linkContext = '';
     return;
   }
 
-  // 2. 显示识别到的平台
-  status.innerHTML = `<span class="link-status success">${PLATFORM_ICONS[platform]} 已识别：${PLATFORM_NAMES[platform]}平台</span>`;
+  // 2. 显示识别中的加载状态
+  status.innerHTML = `<span class="link-status loading">${PLATFORM_ICONS[platform]} 已识别：${PLATFORM_NAMES[platform]}平台 — 正在读取页面内容…</span>`;
 
-  // 3. 自动切换到对应平台按钮高亮（在生成时使用该平台）
+  // 3. 自动切换到对应平台
   curPlatform = platform;
 
-  // 4. 尝试从已有产品中匹配（通过URL匹配或名称模糊匹配）
-  const prods = S.products();
-  let matched = null;
-  // 先尝试URL匹配
-  for(const p of prods) {
-    if(p.url && url.includes(p.url)) { matched = p; break; }
+  // 4. 抓取页面内容
+  let pageInfo = null;
+  try {
+    const html = await fetchPageContent(url);
+    if (html) {
+      pageInfo = extractPageInfo(html, platform);
+    }
+  } catch (e) {
+    console.warn('页面抓取失败:', e);
   }
-  // 再尝试产品名在链接标题中（需要通过标题匹配，但纯前端无法获取页面标题，所以跳过）
 
-  if(matched) {
-    selectedProductId = matched.id;
-    renderProductChips();
-    status.innerHTML += ` <span class="link-status success">✅ 已匹配产品：${E(matched.name)}</span>`;
+  if (pageInfo && pageInfo.fullText.length > 10) {
+    linkPageInfo = pageInfo;
+
+    // 5. 提取关键词并智能匹配产品
+    const keywords = extractKeywords(pageInfo.fullText);
+    const matched = matchProductFromContent(keywords, platform);
+
+    // 6. 推断话术风格
+    linkStyle = inferStyleFromContent(pageInfo, platform);
+
+    // 7. 构建链接上下文
+    linkContext = buildLinkContext(pageInfo, linkStyle, matched);
+
+    // 8. 更新状态显示
+    let statusHtml = `<span class="link-status success">${PLATFORM_ICONS[platform]} ${PLATFORM_NAMES[platform]} — 页面内容已读取</span>`;
+
+    if (pageInfo.title) {
+      statusHtml += `<div style="font-size:11px;color:var(--text2);margin-top:4px;padding:4px 8px;background:#f8f8f8;border-radius:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${E(pageInfo.title)}</div>`;
+    }
+
+    if (matched) {
+      selectedProductId = matched.id;
+      renderProductChips();
+      statusHtml += ` <span class="link-status success">✅ 已匹配产品：${E(matched.name)}</span>`;
+    } else {
+      statusHtml += ` <span style="font-size:11px;color:var(--text3)">未能自动匹配产品，请手动选择</span>`;
+    }
+
+    // 显示风格识别结果
+    const styleTags = [];
+    if (linkStyle.isReview) styleTags.push('🔬测评');
+    if (linkStyle.isRecommend) styleTags.push('🌱种草');
+    if (linkStyle.isComparison) styleTags.push('⚖️对比');
+    if (linkStyle.isExperience) styleTags.push('💡体验');
+    if (linkStyle.isQuestion) styleTags.push('❓问答');
+    if (styleTags.length) {
+      statusHtml += `<div style="font-size:11px;margin-top:4px">🎯 话术风格：${styleTags.join(' ')}</div>`;
+    }
+
+    // 自动生成按钮
+    statusHtml += `<button class="btn btn-p btn-sm" style="margin-top:8px" onclick="generateFromLink()">✨ 根据链接内容自动生成话术</button>`;
+
+    status.innerHTML = statusHtml;
+    toast(`${PLATFORM_ICONS[platform]} 已读取页面内容，可自动生成话术`);
   } else {
-    status.innerHTML += ` <span style="font-size:11px;color:var(--text3)">请手动选择产品，或点击下方生成按钮</span>`;
+    // 抓取失败，降级为简单模式
+    linkPageInfo = null;
+    linkStyle = null;
+    linkContext = '';
+
+    let statusHtml = `<span class="link-status warn">${PLATFORM_ICONS[platform]} ${PLATFORM_NAMES[platform]} — 无法读取页面内容（可能需要登录）</span>`;
+
+    // 尝试简单产品匹配
+    const prods = S.products();
+    let matched = null;
+    for (const p of prods) {
+      if (p.url && url.includes(p.url)) { matched = p; break; }
+    }
+
+    if (matched) {
+      selectedProductId = matched.id;
+      renderProductChips();
+      statusHtml += ` <span class="link-status success">✅ 已匹配产品：${E(matched.name)}</span>`;
+    } else {
+      statusHtml += ` <span style="font-size:11px;color:var(--text3)">请手动选择产品后生成</span>`;
+    }
+
+    status.innerHTML = statusHtml;
+    toast(`${PLATFORM_ICONS[platform]} 已识别平台，但无法读取页面`);
+  }
+}
+
+// ---- 基于链接内容自动生成话术 ----
+async function generateFromLink() {
+  const pair = getProductPair();
+  if (!pair) {
+    toast('请先选择一个产品');
+    return;
   }
 
-  toast(`${PLATFORM_ICONS[platform]} 已识别${PLATFORM_NAMES[platform]}链接，将生成该平台话术`);
+  // 构建增强的info
+  const info = {
+    name: pair.myProduct.name,
+    category: pair.myProduct.category || '',
+    features: pair.myProduct.features || [],
+    price: pair.myProduct.price || '',
+    url: pair.myProduct.url || '',
+    desc: pair.myProduct.desc || '',
+    materials: pair.myProduct.materials || [],
+    competitor: pair.comp ? pair.comp.name : '',
+    compFeatures: pair.comp ? (pair.comp.features || []) : [],
+    compPrice: pair.comp ? (pair.comp.price || '') : '',
+    linkContext: linkContext,  // 链接内容上下文
+    linkStyle: linkStyle,     // 链接风格推断
+    linkPageInfo: linkPageInfo, // 链接页面信息
+  };
+
+  // 深度解析资料
+  const matParsed = parseMaterials(info.materials);
+  if (matParsed) {
+    const matFeats = [
+      ...matParsed.tagPhrases.slice(0, 6),
+      ...matParsed.dataPoints.slice(0, 4),
+    ].filter(f => f.length <= 30);
+    info.features = [...new Set([...info.features, ...matFeats])];
+    info.matParsed = matParsed;
+  }
+
+  const platform = curPlatform;
+  const cnt = Math.min(genCount, 15);
+
+  // 显示加载状态
+  document.getElementById('resultArea').innerHTML = `<div class="generating"><div class="spin"></div><div>正在根据链接内容生成话术…</div></div>`;
+  document.getElementById('resultActions').style.display = 'none';
+
+  // 尝试AI生成（带链接上下文）
+  const aiKey = localStorage.getItem('brg_ai_key');
+  if (aiKey) {
+    let aiComments;
+    if (isAttackMode && info.competitor) {
+      aiComments = await generateWithAI_FromLink(platform, info, cnt, true);
+    } else {
+      aiComments = await generateWithAI_FromLink(platform, info, cnt, false);
+    }
+    if (aiComments && aiComments.length > 0) {
+      curComments = aiComments.map((text, i) => ({
+        text,
+        name: platform === 'bili' ? R(NAMES_B) : platform === 'douyin' ? R(NAMES_D) : R(NAMES_X),
+        color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+        likes: RI(platform === 'douyin' ? 20 : 10, platform === 'douyin' ? 5000 : platform === 'bili' ? 3200 : 800),
+        hours: RI(1, platform === 'xhs' ? 24 : 12),
+        platform,
+        aiGenerated: true,
+        fromLink: true,
+      }));
+      renderComments();
+      document.getElementById('resultActions').style.display = 'flex';
+      return;
+    }
+    toast('AI生成失败，使用模板引擎生成');
+  }
+
+  // 降级到模板生成
+  const generators = { bili: genBili, douyin: genDouyin, xhs: genXhs };
+  curComments = [];
+  for (let i = 0; i < cnt; i++) curComments.push(generators[platform](info, i));
+  renderComments();
+  document.getElementById('resultActions').style.display = 'flex';
+}
+
+// ---- AI生成（带链接上下文） ----
+async function generateWithAI_FromLink(platform, info, count, isAttack) {
+  const key = localStorage.getItem('brg_ai_key');
+  if (!key) return null;
+
+  const platNames = { bili: 'B站', douyin: '抖音', xhs: '小红书' };
+  const platGuide = {
+    bili: '风格：B站评论区风格，真实用户口吻，可有弹幕/表情，有具体场景，偶尔发问，字数60-120字',
+    douyin: '风格：抖音短视频评论风格，简短有力，口语化，偶有感叹号，字数40-80字',
+    xhs: '风格：小红书种草风格，可加emoji，亲切自然，有真实体验感，字数60-100字',
+  };
+
+  const methodHints = getMethodHints(platform);
+  const fbHints = getFeedbackHints(info.name, platform);
+  const userState = isPurchased ? '已购买用户（侧重使用体验分享）' : '潜在购买用户（侧重购买决策、对比、发问）';
+  const toneDesc = toneLevel < 35 ? '偏口语（真实感强，接地气）' : toneLevel > 65 ? '偏专业（硬核评测风格）' : '适中（平衡口语和专业性）';
+
+  // 解析产品资料
+  const matParsed = parseMaterials(info.materials);
+
+  // 构建资料注入块
+  let matBlock = '';
+  if (matParsed) {
+    const parts = [];
+    if (matParsed.dataPoints.length) parts.push(`【技术指标】${matParsed.dataPoints.slice(0, 6).join('；')}`);
+    if (matParsed.featSentences.length) parts.push(`【核心卖点】${matParsed.featSentences.slice(0, 6).join('；')}`);
+    if (matParsed.sceneSentences.length) parts.push(`【使用场景】${matParsed.sceneSentences.slice(0, 4).join('；')}`);
+    if (matParsed.expSentences.length) parts.push(`【体验描述】${matParsed.expSentences.slice(0, 4).join('；')}`);
+    if (matParsed.tagPhrases.length) parts.push(`【亮点标签】${matParsed.tagPhrases.slice(0, 8).join('、')}`);
+    if (parts.length) matBlock = `\n产品白皮书/资料提取内容（请重点引用这些真实信息生成话术）：\n${parts.join('\n')}`;
+  }
+
+  // 构建链接上下文注入块（核心增强）
+  let linkBlock = '';
+  if (info.linkContext) {
+    linkBlock = `\n━━━ 链接内容上下文（重要！评论要贴合这条链接的内容和风格） ━━━\n${info.linkContext}`;
+    if (info.linkPageInfo && info.linkPageInfo.title) {
+      linkBlock += `\n要求：生成的评论要像是在这条内容下方的评论区留言，评论内容要与链接主题相关`;
+    }
+    if (info.linkStyle) {
+      if (info.linkStyle.isReview) linkBlock += '\n这条是测评内容，评论可以围绕测评观点展开讨论、补充实测数据';
+      if (info.linkStyle.isRecommend) linkBlock += '\n这条是种草推荐，评论可以呼应推荐、补充自己的使用感受';
+      if (info.linkStyle.isComparison) linkBlock += '\n这条是对比内容，评论可以表达自己的选择倾向、分享对比心得';
+      if (info.linkStyle.isExperience) linkBlock += '\n这条是体验分享，评论可以交流类似体验、追问细节';
+      if (info.linkStyle.isQuestion) linkBlock += '\n这条是求推荐/问答，评论可以给出建议、分享选购经验';
+      if (info.linkStyle.tone === 'positive') linkBlock += '\n链接整体偏正面，评论可以自然地表达认同';
+      if (info.linkStyle.tone === 'negative') linkBlock += '\n链接整体偏负面/吐槽，评论可以理性分析，不要盲目吹捧';
+      if (info.linkStyle.topicKeywords.length) {
+        linkBlock += `\n评论中可以自然提到这些话题：${info.linkStyle.topicKeywords.join('、')}`;
+      }
+    }
+  }
+
+  let systemPrompt, userPrompt;
+  if (isAttack) {
+    systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
+核心要求：
+1. 攻击要有理有据，不是无脑黑，要像真实用户吐槽
+2. 必须同时提到我方产品的具体优势，形成对比
+3. 每条评论角度不同
+4. 如果有链接上下文，评论要贴合链接的内容和讨论氛围`;
+    const attackMatBlock = matParsed ? (() => {
+      const parts = [];
+      if (matParsed.dataPoints.length) parts.push(`【我方技术指标】${matParsed.dataPoints.slice(0, 4).join('；')}`);
+      if (matParsed.featSentences.length) parts.push(`【我方核心卖点】${matParsed.featSentences.slice(0, 4).join('；')}`);
+      return parts.length ? `\n我方产品资料提取：\n${parts.join('\n')}` : '';
+    })() : '';
+
+    userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的拉踩评论：
+
+我方产品：${info.name}
+我方卖点：${(info.features || []).join('、') || '综合体验好'}
+${attackMatBlock}
+竞品：${info.competitor || '别家同类产品'}
+竞品卖点（攻击靶子）：${(info.compFeatures || []).join('、') || '参数一般'}
+${linkBlock}
+
+生成要求：
+- ${platGuide[platform]}
+- 用户状态：${userState}
+- 语调：${toneDesc}
+${methodHints ? `- 风格指导：${methodHints}` : ''}
+${fbHints ? `- 避免以下问题：${fbHints}` : ''}
+- 若有链接上下文，评论要像在这条内容下方留言
+
+请严格按照以下JSON格式返回（不要有其他文字）：
+{"comments": ["评论1", "评论2", ...]}`;
+  } else {
+    systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。
+核心要求：
+1. 每条评论都要有独特的用户角色和视角，避免雷同
+2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述
+3. 技术参数要具体，场景要真实
+4. 如果有链接上下文，评论要贴合这条链接的内容和讨论氛围，像是在这条内容的评论区留言`;
+
+    userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
+
+产品信息：
+- 名称：${info.name}
+- 品类：${info.category || '未分类'}
+- 核心卖点：${(info.features || []).join('、') || '（见资料）'}
+- 价格区间：${info.price || '未知'}
+- 产品描述：${info.desc || '无'}
+${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(info.compFeatures || []).join('、') || '无'}）` : ''}
+${matBlock}
+${linkBlock}
+
+生成要求：
+- ${platGuide[platform]}
+- 用户状态：${userState}
+- 语调：${toneDesc}
+${methodHints ? `- 风格指导：${methodHints}` : ''}
+${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
+- 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述
+- 若有链接上下文，评论要贴合链接主题，像是在这条链接的评论区互动
+- 不同评论的角度要多样
+
+请严格按照以下JSON格式返回（不要有其他文字）：
+{"comments": ["评论1", "评论2", ...]}`;
+  }
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.9,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const content = data.choices[0].message.content.trim();
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI返回格式异常');
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed.comments || [];
+  } catch (e) {
+    console.error('AI链接生成失败:', e);
+    return null;
+  }
 }
 
 // ================================================================
@@ -2287,6 +2838,10 @@ async function generateFor(platform) {
     competitor: pair.comp ? pair.comp.name : '',
     compFeatures: pair.comp ? (pair.comp.features||[]) : [],
     compPrice: pair.comp ? (pair.comp.price||'') : '',
+    // 传入链接上下文（如果有）
+    linkContext: linkContext || '',
+    linkStyle: linkStyle || null,
+    linkPageInfo: linkPageInfo || null,
   };
 
   // 深度解析资料
@@ -2303,17 +2858,20 @@ async function generateFor(platform) {
   }
 
   const cnt = Math.min(genCount, 15);
+  const hasLinkCtx = !!(info.linkContext && info.linkContext.length > 10);
 
   // 显示加载状态
-  document.getElementById('resultArea').innerHTML = `<div class="generating"><div class="spin"></div><div>正在生成中…</div></div>`;
+  document.getElementById('resultArea').innerHTML = `<div class="generating"><div class="spin"></div><div>${hasLinkCtx ? '正在根据链接内容生成话术…' : '正在生成中…'}</div></div>`;
   document.getElementById('resultActions').style.display = 'none';
 
   // 尝试 AI 生成
   const aiKey = localStorage.getItem('brg_ai_key');
   if(aiKey) {
-    // 拉踩模式使用专用Prompt
     let aiComments;
-    if(isAttackMode && info.competitor) {
+    if(hasLinkCtx) {
+      // 有链接上下文时使用增强版生成
+      aiComments = await generateWithAI_FromLink(platform, info, cnt, isAttackMode && !!info.competitor);
+    } else if(isAttackMode && info.competitor) {
       aiComments = await generateWithAI_Attack(platform, info, cnt);
     } else {
       aiComments = await generateWithAI(platform, info, cnt);
@@ -2328,6 +2886,7 @@ async function generateFor(platform) {
         hours: RI(1, platform==='xhs'?24:12),
         platform,
         aiGenerated: true,
+        fromLink: hasLinkCtx,
       }));
       renderComments();
       document.getElementById('resultActions').style.display = 'flex';
@@ -2378,6 +2937,9 @@ function regenOne(idx) {
     competitor: pair.comp ? pair.comp.name : '',
     compFeatures: pair.comp ? (pair.comp.features||[]) : [],
     compPrice: pair.comp ? (pair.comp.price||'') : '',
+    linkContext: linkContext || '',
+    linkStyle: linkStyle || null,
+    linkPageInfo: linkPageInfo || null,
   };
   // 单条重生成也要带资料解析
   const matParsed = parseMaterials(info.materials);
@@ -2421,8 +2983,9 @@ function renderComments() {
   const tone = `<span style="font-size:11px;color:#888;margin-left:4px">语调${toneLevel<35?'偏口语':toneLevel>65?'偏专业':'适中'}</span>`;
   const aiTag = curComments[0]?.aiGenerated ? '<span class="badge b-green" style="margin-left:6px">✨ AI生成</span>' : '';
   const attackTag = isAttackMode ? '<span class="badge" style="background:#e53e3e;margin-left:6px">⚔ 拉踩模式</span>' : '';
+  const linkTag = curComments[0]?.fromLink ? '<span class="badge b-blue" style="margin-left:6px">🔗 链接生成</span>' : '';
 
-  area.innerHTML = `<div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${badges[curPlatform]}${stat}${tone}${aiTag}${attackTag}</div>`
+  area.innerHTML = `<div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${badges[curPlatform]}${stat}${tone}${aiTag}${linkTag}${attackTag}</div>`
     + renderers[curPlatform](curComments);
 }
 
