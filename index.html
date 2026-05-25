@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>口碑评论生成器 v2.6</title>
+<title>口碑评论生成器 v2.6.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -39,8 +39,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-
 .select-bar{background:var(--card);border-radius:12px;padding:14px 18px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .select-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .select-label{font-size:13px;color:var(--text2);white-space:nowrap;font-weight:500}
-.product-chips{display:flex;gap:7px;flex-wrap:wrap}
-.product-chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:#555;transition:all .2s;font-weight:500}
+.product-chips{display:flex;flex-direction:column;gap:10px}
+.product-block{background:#fafafa;border-radius:10px;padding:10px 12px;border:1px solid #eee}
+.product-block-name{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.product-block-name .pbn-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);display:inline-block}
+.product-block-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.product-block-label{font-size:11px;color:#aaa;font-weight:500;white-space:nowrap}
+.product-chip{padding:6px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:#555;transition:all .2s;font-weight:500}
 .product-chip:hover{border-color:#bbb}
 .product-chip.mine.selected{border-color:var(--primary);background:#f0efff;color:var(--primary)}
 .product-chip.comp.selected{border-color:var(--warning);background:#fffbeb;color:#b45309}
@@ -714,7 +719,7 @@ function renderProductChips() {
     return;
   }
 
-  // 按品类分组渲染
+  // 按品类分组渲染，每个产品独立成块
   let html = '';
   const groups = {};
   filtered.forEach(p => {
@@ -724,18 +729,31 @@ function renderProductChips() {
   });
 
   Object.keys(groups).forEach(cat => {
-    html += `<div style="font-size:11px;color:var(--text3);margin:6px 8px 2px;font-weight:600;padding:2px 0;border-bottom:1px dashed #e0e0e0">${E(cat)}</div>`;
-    html += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:4px">`;
+    html += `<div style="font-size:11px;color:var(--text3);margin:4px 4px 8px;font-weight:600;padding:2px 0;border-bottom:1px dashed #e0e0e0">${E(cat)}</div>`;
     groups[cat].forEach(p => {
       const sel = p.id===selectedProductId ? ' selected' : '';
+      const comps = p.competitors||[];
+      html += `<div class="product-block">`;
+      // 产品名称 + 我品
+      html += `<div class="product-block-name"><span class="pbn-dot"></span>${E(p.name)}</div>`;
+      // 我品行
+      html += `<div class="product-block-row" style="margin-bottom:6px">`;
+      html += `<span class="product-block-label">我品</span>`;
       html += `<span class="product-chip mine${sel}" onclick="selProduct('${p.id}')"><span class="dot"></span>${E(p.name)}<span class="tag">我品</span></span>`;
-      (p.competitors||[]).forEach(c=>{
-        const cid = p.id+'__c__'+c.id;
-        const s2 = cid===selectedProductId ? ' selected' : '';
-        html += `<span class="product-chip comp${s2}" onclick="selProduct('${cid}')"><span class="dot"></span>${E(c.name)}<span class="tag">竞品</span></span>`;
-      });
+      html += `</div>`;
+      // 竞品行（如果有）
+      if(comps.length) {
+        html += `<div class="product-block-row">`;
+        html += `<span class="product-block-label">竞品</span>`;
+        comps.forEach(c=>{
+          const cid = p.id+'__c__'+c.id;
+          const s2 = cid===selectedProductId ? ' selected' : '';
+          html += `<span class="product-chip comp${s2}" onclick="selProduct('${cid}')"><span class="dot"></span>${E(c.name)}<span class="tag">竞品</span></span>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
     });
-    html += `</div>`;
   });
 
   chips.innerHTML = html;
@@ -1404,7 +1422,7 @@ function exportAll() {
     chatHistory: S.chatHistory(),
     aiRules: S.aiRules(),
     exportedAt: new Date().toISOString(),
-    version: '2.6',
+    version: '2.6.2',
   };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const a = document.createElement('a');
