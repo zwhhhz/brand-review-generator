@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>口碑评论生成器</title>
+<title>口碑评论生成器 v2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -14,41 +14,33 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .container{max-width:960px;margin:0 auto;padding:20px 16px}
-/* header */
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
 .header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .header-right{display:flex;gap:8px;flex-wrap:wrap}
-/* nav tabs */
-.nav-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px;gap:0}
-.nav-tab{padding:12px 20px;border:none;background:transparent;cursor:pointer;font-size:14px;color:var(--text2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:500;transition:all .2s}
+.nav-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px;gap:0;overflow-x:auto}
+.nav-tab{padding:12px 20px;border:none;background:transparent;cursor:pointer;font-size:14px;color:var(--text2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:500;transition:all .2s;white-space:nowrap}
 .nav-tab:hover{color:var(--primary)}
 .nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-/* section */
 .section{display:none}
 .section.active{display:block}
-/* buttons */
 .btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
 .btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
 .btn-o{border:1px solid var(--border);background:var(--card);color:#555}.btn-o:hover{background:#fafafa}
 .btn-s{background:var(--success);color:#fff}.btn-s:hover{opacity:.9}
 .btn-d{background:var(--card);color:var(--danger);border:1px solid #fecaca}.btn-d:hover{background:#fef2f2}
-.btn-ghost{background:transparent;color:var(--text2);padding:6px 10px;font-size:12px}.btn-ghost:hover{background:#f0f0f0}
 .btn-sm{padding:5px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:#fff;color:#555;transition:all .2s}
 .btn-sm:hover{background:#f5f5f5}
 .btn-sm.d{color:var(--danger);border-color:#fecaca}.btn-sm.d:hover{background:#fef2f2}
 .btn-sm.s{color:var(--success);border-color:#bbf7d0}.btn-sm.s:hover{background:#f0fdf4}
 .btn-sm.i{color:var(--info);border-color:#bfdbfe}.btn-sm.i:hover{background:#eff6ff}
 .btn-sm.w{color:var(--warning);border-color:#fde68a}.btn-sm.w:hover{background:#fffbeb}
-.btn-pdf{background:#dc2626;color:#fff;padding:5px 10px;font-size:11px;border-radius:4px;border:none;cursor:pointer}
-/* cards */
 .card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px}
-/* select bar */
 .select-bar{background:var(--card);border-radius:12px;padding:14px 18px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .select-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .select-label{font-size:13px;color:var(--text2);white-space:nowrap;font-weight:500}
 .product-chips{display:flex;gap:7px;flex-wrap:wrap}
-.product-chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:#555;transition:all .2s;font-weight:500;position:relative}
+.product-chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:#555;transition:all .2s;font-weight:500}
 .product-chip:hover{border-color:#bbb}
 .product-chip.mine.selected{border-color:var(--primary);background:#f0efff;color:var(--primary)}
 .product-chip.comp.selected{border-color:var(--warning);background:#fffbeb;color:#b45309}
@@ -60,34 +52,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-
 .product-chip.comp .tag{background:#fffbeb;color:#b45309}
 .no-product{font-size:13px;color:#bbb}
 .info-row{font-size:12px;color:var(--text2);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
-.info-row span{display:flex;align-items:center;gap:3px}
-/* controls */
 .controls-row{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
 .tone-group{display:flex;align-items:center;gap:8px;flex:1;min-width:180px}
 .tone-slider{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#ff6b6b,#ffa502,#7c5ce7,#2c3e50);cursor:pointer}
-.tone-slider::-webkit-slider-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--primary);cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.15)}
-.tone-ends{display:flex;justify-content:space-between;font-size:10px;color:#ccc;margin-top:2px}
+.tone-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--primary);cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.15)}
 .purchase-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.toggle-btn{padding:6px 14px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#999;transition:all .2s}
+.toggle-btn{padding:6px 14px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#999;transition:all .2s;white-space:nowrap}
 .toggle-btn:first-child{border-right:1px solid var(--border)}
 .toggle-btn.active{background:var(--primary);color:#fff}
-/* platforms */
-.platform-btns{display:flex;gap:10px;margin-bottom:16px}
+.platform-btns{display:flex;gap:10px;margin-bottom:4px}
 .platform-btn{flex:1;padding:14px 0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff}
 .platform-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .bili-btn{background:linear-gradient(135deg,#fb7299,#e84c7a)}
 .douyin-btn{background:linear-gradient(135deg,#1a1a2e,#000);border:2px solid #fe2c55}
 .douyin-btn:hover{border-color:#ff5c85;box-shadow:0 6px 20px rgba(254,44,85,.3)}
 .xhs-btn{background:linear-gradient(135deg,#ff2442,#e0203a)}
-/* link input */
-.link-row{display:flex;gap:8px;margin-bottom:10px}
-.link-row input{flex:1}
-.link-status{font-size:12px;color:var(--text2);margin-bottom:10px;padding:6px 10px;background:#f9f9f9;border-radius:6px;display:none}
-.link-status.show{display:block}
-.link-status.ok{color:var(--success);background:#f0fdf4}
-.link-status.err{color:var(--danger);background:#fef2f2}
-.link-status.loading{color:var(--text2);background:#f9f9f9}
-/* result */
 .result-area{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);min-height:200px;margin-bottom:14px}
 .result-header{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
 .badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;color:#fff}
@@ -109,7 +88,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-
 .dc-name{font-size:12px;color:#999;margin-bottom:2px}
 .dc-text{font-size:14px;color:#333;line-height:1.5}
 .dc-meta{font-size:11px;color:#bbb;margin-top:5px;display:flex;justify-content:space-between}
-.dc-heart{color:#ccc;cursor:pointer}
 .xc{padding:12px 0;border-bottom:1px solid #f5f5f5}
 .xc:last-child{border-bottom:none}
 .xc-header{display:flex;gap:8px;align-items:center;margin-bottom:6px}
@@ -117,57 +95,58 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-
 .xc-name{font-size:12px;color:#999}
 .xc-text{font-size:14px;color:#333;line-height:1.7;padding-left:36px}
 .xc-meta{font-size:11px;color:#bbb;margin-top:4px;padding-left:36px;display:flex;gap:10px}
+/* comment wrapper with copy & regen */
 .cc-wrap{position:relative}
-.copy-btn{position:absolute;top:8px;right:8px;padding:3px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:#fff;color:#999;cursor:pointer;opacity:0;transition:opacity .2s}
-.cc-wrap:hover .copy-btn{opacity:1}
-.copy-btn:hover{color:var(--primary);border-color:var(--primary)}
+.cc-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.cc-wrap:hover .cc-actions{opacity:1}
+.cc-act-btn{padding:3px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:#fff;color:#999;cursor:pointer;transition:all .2s}
+.cc-act-btn:hover{color:var(--primary);border-color:var(--primary)}
+/* history */
+.hist-item{padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:#fff;cursor:pointer;transition:all .2s}
+.hist-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);border-color:#bbb}
+.hist-meta{font-size:11px;color:#bbb;margin-bottom:4px;display:flex;gap:10px}
+.hist-preview{font-size:13px;color:#555;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 /* management */
-.mgr-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)}
-.mgr-tab{padding:8px 16px;border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.mgr-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);overflow-x:auto}
+.mgr-tab{padding:8px 16px;border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 .mgr-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-/* forms */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .form-full{width:100%;margin-bottom:10px}
 .form-g{margin-bottom:10px}
 .form-g label{display:block;font-size:12px;font-weight:500;color:#777;margin-bottom:4px}
-.form-g input,.form-g textarea,.form-g select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;font-family:inherit}
+.form-g input,.form-g textarea,.form-g select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;font-family:inherit;background:#fff}
 .form-g input:focus,.form-g textarea:focus,.form-g select:focus{border-color:var(--primary)}
 .form-g textarea{resize:vertical;min-height:60px}
-.form-g select{background:#fff}
 .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
 textarea{min-height:50px;resize:vertical}
-/* data list */
 .data-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:#fff;transition:all .2s}
 .data-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .data-item.mine{border-left:3px solid var(--primary)}
 .data-item.comp{border-left:3px solid var(--warning)}
-.data-item.info{flex:1}
 .data-item-title{font-size:14px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .data-item-title .sub{font-size:12px;font-weight:400;color:var(--text2)}
 .data-item-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-top:4px;max-width:500px}
 .data-item-meta{font-size:11px;color:#bbb;margin-top:3px}
 .data-item-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
-.data-item-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500}
 .tag-a{background:#f0efff;color:var(--primary)}.tag-i{background:#fff7e6;color:#b45309}.tag-p{background:#f0fdf4;color:#166534}.tag-d{background:#fef2f2;color:#991b1b}
-/* file upload */
 .file-upload{display:flex;align-items:center;gap:8px;margin-top:6px}
 .file-upload input[type=file]{font-size:12px;border:none;background:transparent}
 .mat-list{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
 .mat-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#555}
 .mat-chip .del{color:#ccc;cursor:pointer;font-size:13px}.mat-chip .del:hover{color:var(--danger)}
-/* feedback */
 .fb-stat{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
 .fb-stat-item{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#f9f9f9;border-radius:8px;font-size:13px}
 .fb-stat-item .num{font-size:18px;font-weight:700;color:var(--primary)}
-/* settings */
 .settings-box{background:#fffbeb;border:2px solid var(--warning);border-radius:12px;padding:16px 20px;margin-bottom:16px}
 .settings-box h4{color:var(--warning);font-size:14px;margin-bottom:6px}
 .settings-box p{font-size:12px;color:#666;margin-bottom:12px}
-/* toast */
+/* AI key */
+.ai-box{background:#f0efff;border:2px solid var(--primary);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.ai-box h4{color:var(--primary);font-size:14px;margin-bottom:6px}
+.ai-box p{font-size:12px;color:#666;margin-bottom:12px}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:#333;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;z-index:9999;transition:transform .3s;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
-/* modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
 .modal{background:#fff;border-radius:16px;width:100%;max-width:760px;max-height:88vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2)}
@@ -176,24 +155,26 @@ textarea{min-height:50px;resize:vertical}
 .modal-close{width:32px;height:32px;border-radius:50%;border:none;background:#f5f5f5;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#999;transition:all .2s}
 .modal-close:hover{background:#eee;color:#333}
 .modal-body{padding:24px}
-/* pdf viewer */
-.pdf-section{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
-.pdf-section-title{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text2)}
-.pdf-preview{background:#f9f9f9;border-radius:8px;padding:12px;font-size:12px;color:#555;line-height:1.7;max-height:150px;overflow-y:auto;white-space:pre-wrap;border:1px solid var(--border)}
-/* divider */
 .divider{border-top:1px dashed var(--border);margin:16px 0}
-/* method detail */
 .method-detail{font-size:12px;color:var(--text2);line-height:1.6;padding:8px 12px;background:#f9f9f9;border-radius:6px;margin-top:6px;max-height:80px;overflow:hidden;position:relative}
 .method-detail::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,#f9f9f9)}
-/* no data */
 .no-data{text-align:center;padding:30px;color:#ccc;font-size:13px}
-/* responsive */
+/* 生成中 loading */
+.generating{text-align:center;padding:40px;color:var(--primary)}
+.generating .spin{display:inline-block;width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* comp edit modal */
+.comp-form{padding:16px 0}
+/* count badge */
+.cnt-badge{display:inline-block;background:var(--primary);color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;margin-left:6px}
 @media(max-width:640px){
   .form-grid{grid-template-columns:1fr}
-  .controls-row{flex-direction:column;gap:10px}
+  .controls-row{flex-direction:column;align-items:flex-start;gap:10px}
+  .tone-group{width:100%}
   .platform-btns{flex-direction:column}
-  .nav-tabs{flex-wrap:wrap}
+  .nav-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .header{flex-direction:column;align-items:flex-start}
+  .platform-btn{padding:12px 0}
 }
 </style>
 </head>
@@ -202,11 +183,11 @@ textarea{min-height:50px;resize:vertical}
 
   <!-- Header -->
   <div class="header">
-    <h1>🔥 口碑评论生成器</h1>
+    <h1>🔥 口碑评论生成器 v2</h1>
     <div class="header-right">
       <button class="btn btn-o" onclick="openModal('methodModal')">📖 方法论库</button>
       <button class="btn btn-o" onclick="openModal('feedbackModal')">💬 修改意见</button>
-      <button class="btn btn-o" onclick="exportAll()">📤 导出全部</button>
+      <button class="btn btn-o" onclick="exportAll()">📤 导出</button>
       <button class="btn btn-o" onclick="document.getElementById('importAllInput').click()">📥 导入</button>
       <input type="file" id="importAllInput" accept=".json" style="display:none" onchange="importAll(event)">
     </div>
@@ -215,6 +196,7 @@ textarea{min-height:50px;resize:vertical}
   <!-- Nav -->
   <nav class="nav-tabs">
     <button class="nav-tab active" onclick="switchTab('generator',this)">✨ 生成文案</button>
+    <button class="nav-tab" onclick="switchTab('history',this)">📋 历史记录</button>
     <button class="nav-tab" onclick="switchTab('management',this)">⚙ 管理后台</button>
     <button class="nav-tab" onclick="switchTab('settings',this)">🔑 设置</button>
   </nav>
@@ -222,7 +204,7 @@ textarea{min-height:50px;resize:vertical}
   <!-- ===== 生成区 ===== -->
   <section class="section active" id="tab-generator">
 
-    <!-- 产品选择条 -->
+    <!-- 产品选择 -->
     <div class="select-bar">
       <div class="select-row">
         <span class="select-label">当前产品：</span>
@@ -233,21 +215,11 @@ textarea{min-height:50px;resize:vertical}
       <div class="info-row" id="infoRow" style="display:none"></div>
     </div>
 
-    <!-- 链接识别 -->
-    <div class="card" id="linkCard" style="display:none">
-      <div class="card-title">🔗 链接识别</div>
-      <div class="link-row">
-        <input type="url" id="linkInput" placeholder="粘贴小红书/B站/抖音链接，AI自动识别产品和平台">
-        <button class="btn btn-p" onclick="analyzeLink()">识别</button>
-      </div>
-      <div class="link-status" id="linkStatus"></div>
-    </div>
-
     <!-- 控制区 -->
     <div class="card">
       <div class="controls-row">
         <div class="tone-group">
-          <span class="select-label" style="font-size:12px">🗣 白话</span>
+          <span class="select-label" style="font-size:12px">🗣 口语</span>
           <input type="range" class="tone-slider" id="toneSlider" min="0" max="100" value="50" oninput="updateTone()">
           <span class="select-label" style="font-size:12px">专业 📊</span>
         </div>
@@ -255,6 +227,11 @@ textarea{min-height:50px;resize:vertical}
           <button class="toggle-btn active" id="btn-no" onclick="setPurchased(false)">🔍 未购（决策向）</button>
           <button class="toggle-btn" id="btn-yes" onclick="setPurchased(true)">✅ 已购（体验向）</button>
         </div>
+      </div>
+
+      <!-- AI 增强提示（如有key则展示） -->
+      <div id="aiHint" style="display:none;font-size:12px;color:var(--primary);margin-bottom:10px;padding:6px 10px;background:#f0efff;border-radius:6px">
+        ✨ AI 增强模式已启用 — 评论将通过 DeepSeek API 生成，更自然真实
       </div>
 
       <div class="platform-btns">
@@ -274,12 +251,22 @@ textarea{min-height:50px;resize:vertical}
     <div class="result-actions" id="resultActions" style="display:none">
       <button class="btn btn-p" onclick="copyAll()">📋 复制全部</button>
       <button class="btn btn-o" onclick="generateFor(curPlatform)">🔄 换一批</button>
+      <button class="btn btn-o" onclick="saveToHistory()">💾 保存到历史</button>
+    </div>
+  </section>
+
+  <!-- ===== 历史记录 ===== -->
+  <section class="section" id="tab-history">
+    <div class="card">
+      <div class="card-title">📋 生成历史
+        <button class="btn-sm d" style="margin-left:auto" onclick="clearHistory()">清空历史</button>
+      </div>
+      <div id="historyList"><div class="no-data">暂无历史记录</div></div>
     </div>
   </section>
 
   <!-- ===== 管理后台 ===== -->
   <section class="section" id="tab-management">
-
     <div class="mgr-tabs">
       <button class="mgr-tab active" onclick="switchMgrTab('products',this)">📦 产品管理</button>
       <button class="mgr-tab" onclick="switchMgrTab('methods',this)">📖 方法论</button>
@@ -290,41 +277,28 @@ textarea{min-height:50px;resize:vertical}
     <!-- 产品管理 -->
     <div id="mgr-products">
       <div class="card">
-        <div class="card-title">➕ 添加产品</div>
+        <div class="card-title" id="prodFormTitle">➕ 添加产品</div>
         <div class="form-grid">
-          <div class="form-g">
-            <label>产品名称 *</label>
-            <input type="text" id="prodName" placeholder="产品名称">
-          </div>
-          <div class="form-g">
-            <label>品类</label>
-            <select id="prodCat"></select>
-          </div>
+          <div class="form-g"><label>产品名称 *</label><input type="text" id="prodName" placeholder="产品名称"></div>
+          <div class="form-g"><label>品类</label><select id="prodCat"></select></div>
         </div>
         <div class="form-g">
           <label>核心卖点（每行一个）</label>
           <textarea id="prodFeatures" placeholder="三色激光&#10;2000CVIA亮度&#10;云台一体化设计&#10;杜比音响"></textarea>
         </div>
         <div class="form-grid">
-          <div class="form-g">
-            <label>价格区间</label>
-            <input type="text" id="prodPrice" placeholder="如：4000-5000">
-          </div>
-          <div class="form-g">
-            <label>参考链接</label>
-            <input type="text" id="prodUrl" placeholder="产品页面链接">
-          </div>
+          <div class="form-g"><label>价格区间</label><input type="text" id="prodPrice" placeholder="如：4000-5000"></div>
+          <div class="form-g"><label>参考链接</label><input type="text" id="prodUrl" placeholder="产品页面链接（可选）"></div>
         </div>
         <div class="form-g">
-          <label>产品描述（AI生成参考）</label>
-          <textarea id="prodDesc" placeholder="描述产品的使用场景、目标用户等"></textarea>
+          <label>产品描述（补充背景信息）</label>
+          <textarea id="prodDesc" placeholder="描述产品使用场景、目标用户、品牌背书等，AI生成时会参考"></textarea>
         </div>
         <div class="form-actions">
           <button class="btn btn-o" onclick="clearProdForm()">清空</button>
           <button class="btn btn-p" onclick="saveProduct()">💾 保存产品</button>
         </div>
       </div>
-
       <div id="productList"></div>
     </div>
 
@@ -332,10 +306,7 @@ textarea{min-height:50px;resize:vertical}
     <div id="mgr-methods" style="display:none">
       <div class="card">
         <div class="card-title">➕ 添加方法论</div>
-        <div class="form-g">
-          <label>方法论名称 *</label>
-          <input type="text" id="methodName" placeholder="如：B站测评风格、抖音带货风">
-        </div>
+        <div class="form-g"><label>方法论名称 *</label><input type="text" id="methodName" placeholder="如：B站测评风格、抖音带货风"></div>
         <div class="form-g">
           <label>适用平台</label>
           <select id="methodPlatform">
@@ -346,16 +317,12 @@ textarea{min-height:50px;resize:vertical}
           </select>
         </div>
         <div class="form-g">
-          <label>方法论内容（指导AI如何生成文案）</label>
-          <textarea id="methodContent" style="min-height:120px" placeholder="描述这个方法论的核心策略：
-1. 语气风格：...
-2. 内容结构：...
-3. 常用词汇：...
-4. 注意事项：..."></textarea>
+          <label>方法论内容（指导生成风格）</label>
+          <textarea id="methodContent" style="min-height:120px" placeholder="描述核心策略：&#10;1. 语气风格：...&#10;2. 内容结构：...&#10;3. 常用词汇：...&#10;4. 注意事项：..."></textarea>
         </div>
         <div class="form-actions">
           <button class="btn btn-o" onclick="clearMethodForm()">清空</button>
-          <button class="btn btn-p" onclick="saveMethod()">💾 保存方法论</button>
+          <button class="btn btn-p" onclick="saveMethod()">💾 保存</button>
         </div>
       </div>
       <div id="methodList"></div>
@@ -364,17 +331,14 @@ textarea{min-height:50px;resize:vertical}
     <!-- 修改意见 -->
     <div id="mgr-feedbacks" style="display:none">
       <div class="fb-stat">
-        <div class="fb-stat-item"><span class="num" id="fbTotal">0</span> 全部意见</div>
+        <div class="fb-stat-item"><span class="num" id="fbTotal">0</span> 全部</div>
         <div class="fb-stat-item" style="color:var(--warning)"><span class="num" id="fbPending">0</span> 待处理</div>
         <div class="fb-stat-item" style="color:var(--success)"><span class="num" id="fbDone">0</span> 已处理</div>
       </div>
       <div class="card">
         <div class="card-title">➕ 提交修改意见</div>
         <div class="form-grid">
-          <div class="form-g">
-            <label>产品名称</label>
-            <input type="text" id="fbProd" placeholder="产品名称">
-          </div>
+          <div class="form-g"><label>产品名称</label><input type="text" id="fbProd" placeholder="关联产品名称"></div>
           <div class="form-g">
             <label>平台</label>
             <select id="fbPlatform">
@@ -385,17 +349,9 @@ textarea{min-height:50px;resize:vertical}
             </select>
           </div>
         </div>
-        <div class="form-g">
-          <label>原始评论</label>
-          <textarea id="fbOriginal" placeholder="复制的原始评论内容"></textarea>
-        </div>
-        <div class="form-g">
-          <label>修改意见 *</label>
-          <textarea id="fbText" placeholder="哪里需要改？希望怎么调整？"></textarea>
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-p" onclick="saveFeedback()">💾 提交意见</button>
-        </div>
+        <div class="form-g"><label>原始评论（可选）</label><textarea id="fbOriginal" placeholder="复制的原始评论内容"></textarea></div>
+        <div class="form-g"><label>修改意见 *</label><textarea id="fbText" placeholder="哪里需要改？希望怎么调整？"></textarea></div>
+        <div class="form-actions"><button class="btn btn-p" onclick="saveFeedback()">💾 提交</button></div>
       </div>
       <div id="feedbackList"></div>
     </div>
@@ -407,7 +363,7 @@ textarea{min-height:50px;resize:vertical}
         <div class="form-g" style="max-width:400px">
           <label>品类名称</label>
           <div style="display:flex;gap:8px">
-            <input type="text" id="newCatName" placeholder="如：投影仪">
+            <input type="text" id="newCatName" placeholder="如：投影仪、扫地机器人">
             <button class="btn btn-p" onclick="saveCategory()">添加</button>
           </div>
         </div>
@@ -418,12 +374,20 @@ textarea{min-height:50px;resize:vertical}
 
   <!-- ===== 设置 ===== -->
   <section class="section" id="tab-settings">
-    <div class="settings-box">
-      <h4>⚡ 模板引擎说明</h4>
-      <p>本工具采用纯前端模板引擎生成评论，无需任何 API Key。所有数据保存在浏览器本地存储中。</p>
+    <div class="ai-box">
+      <h4>🤖 AI 增强模式（可选）</h4>
+      <p>填写 DeepSeek API Key 后，评论将由 AI 生成，质量更高、更自然。留空则使用内置模板引擎。</p>
+      <div class="form-g" style="max-width:500px">
+        <label>DeepSeek API Key</label>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="aiKey" placeholder="sk-xxxxxxxx（留空使用模板引擎）">
+          <button class="btn btn-p" onclick="saveAiKey()">保存</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">获取：<a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--primary)">platform.deepseek.com</a>（填写后立即测试可用性）</div>
     </div>
     <div class="card">
-      <div class="card-title">🔧 高级设置</div>
+      <div class="card-title">🔧 生成参数</div>
       <div class="form-g">
         <label>生成条数</label>
         <select id="genCount" onchange="saveSettings()">
@@ -440,6 +404,14 @@ textarea{min-height:50px;resize:vertical}
           <option value="80">偏专业（硬核评测）</option>
         </select>
       </div>
+      <div class="form-g">
+        <label>历史记录保存数量上限</label>
+        <select id="histLimit" onchange="saveSettings()">
+          <option value="20">20 批</option>
+          <option value="50" selected>50 批</option>
+          <option value="100">100 批</option>
+        </select>
+      </div>
       <div class="form-actions">
         <button class="btn btn-d" onclick="clearAllData()">🗑 清空所有数据</button>
         <button class="btn btn-o" onclick="exportAll()">📤 导出备份</button>
@@ -452,13 +424,14 @@ textarea{min-height:50px;resize:vertical}
         <div class="fb-stat-item">方法论 <span class="num" id="statMethod">0</span></div>
         <div class="fb-stat-item">修改意见 <span class="num" id="statFb">0</span></div>
         <div class="fb-stat-item">品类 <span class="num" id="statCat">0</span></div>
+        <div class="fb-stat-item">历史记录 <span class="num" id="statHist">0</span></div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- ===== 方法论弹窗 ===== -->
-<div class="modal-overlay" id="methodModal">
+<!-- 方法论弹窗 -->
+<div class="modal-overlay" id="methodModal" onclick="closeModal('methodModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-hdr">
       <span class="modal-hdr-title">📖 口碑方法论库</span>
@@ -468,8 +441,8 @@ textarea{min-height:50px;resize:vertical}
   </div>
 </div>
 
-<!-- ===== 修改意见弹窗 ===== -->
-<div class="modal-overlay" id="feedbackModal">
+<!-- 修改意见弹窗 -->
+<div class="modal-overlay" id="feedbackModal" onclick="closeModal('feedbackModal')">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-hdr">
       <span class="modal-hdr-title">💬 修改意见收集</span>
@@ -479,20 +452,53 @@ textarea{min-height:50px;resize:vertical}
   </div>
 </div>
 
+<!-- 竞品编辑弹窗 -->
+<div class="modal-overlay" id="compModal" onclick="closeModal('compModal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">⚔ 编辑竞品</span>
+      <button class="modal-close" onclick="closeModal('compModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="compEditProdId">
+      <input type="hidden" id="compEditCompId">
+      <div class="form-g"><label>竞品名称 *</label><input type="text" id="compEditName" placeholder="竞品名称"></div>
+      <div class="form-g"><label>核心卖点（每行一个）</label><textarea id="compEditFeatures" placeholder="卖点1&#10;卖点2"></textarea></div>
+      <div class="form-g"><label>价格区间</label><input type="text" id="compEditPrice" placeholder="如：3000-4000"></div>
+      <div class="form-actions">
+        <button class="btn btn-o" onclick="closeModal('compModal')">取消</button>
+        <button class="btn btn-p" onclick="saveCompEdit()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 历史详情弹窗 -->
+<div class="modal-overlay" id="histModal" onclick="closeModal('histModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title" id="histModalTitle">历史记录</span>
+      <button class="modal-close" onclick="closeModal('histModal')">✕</button>
+    </div>
+    <div class="modal-body" id="histModalBody"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 // ================================================================
-// 全局状态
+// 常量
 // ================================================================
 const AVATAR_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6','#f97316','#64748b'];
-const NAMES_B = ['柚子酱','野生摄影师','打工仔小王','硬核测评','追剧狂魔','露营爱好者','数码迷','影迷老张','游戏宅','吃瓜群众','云玩家','技术流','电影收割机','宅家小能手','数码圈老司机'];
-const NAMES_D = ['用户8372','小甜甜','快乐星球','大橙子','阿木','喵喵','老李说数码','追光者','周末露营','小鱼干','阿花','小李飞刀','看世界的眼','家电测评','光影猎人'];
-const NAMES_X = ['是橙子呀','小鹿爱家居','生活家Miya','宅家日记','露营少女','追剧的猫','设计师小Q','居家好物君','光影收藏家','周末玩家','好物种草','小确幸','理想家','森系生活','慢生活'];
+const NAMES_B = ['柚子酱','野生摄影师','打工仔小王','硬核测评','追剧狂魔','露营爱好者','数码迷','影迷老张','游戏宅','吃瓜群众','云玩家','技术流','电影收割机','宅家小能手','数码圈老司机','懒人科技控'];
+const NAMES_D = ['用户8372','小甜甜','快乐星球','大橙子','阿木','喵喵','老李说数码','追光者','周末露营','小鱼干','阿花','小李飞刀','看世界的眼','家电测评','光影猎人','佳佳不等'];
+const NAMES_X = ['是橙子呀','小鹿爱家居','生活家Miya','宅家日记','露营少女','追剧的猫','设计师小Q','居家好物君','光影收藏家','周末玩家','好物种草','小确幸','理想家','森系生活','慢生活日记','治愈系宅'];
 const R = arr => arr[Math.floor(Math.random()*arr.length)];
 const RI = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const E = s => (!s?'':(''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+const pickOne = pool => pool[Math.floor(Math.random()*pool.length)];
 
 let curPlatform = 'bili';
 let curComments = [];
@@ -506,19 +512,16 @@ let genCount = 10;
 // ================================================================
 const S = {
   products:   () => JSON.parse(localStorage.getItem('brg_products')   || '[]'),
-  categories:() => JSON.parse(localStorage.getItem('brg_categories') || '[]'),
-  methods:   () => JSON.parse(localStorage.getItem('brg_methods')    || '[]'),
-  feedback:  () => JSON.parse(localStorage.getItem('brg_feedback')  || '[]'),
-  settings:  () => JSON.parse(localStorage.getItem('brg_settings')   || '{}'),
-  save(key,val){localStorage.setItem('brg_'+key,JSON.stringify(val))},
-  loadObj(key){return JSON.parse(localStorage.getItem('brg_'+key)||'{}')},
+  categories: () => JSON.parse(localStorage.getItem('brg_categories') || '[]'),
+  methods:    () => JSON.parse(localStorage.getItem('brg_methods')    || '[]'),
+  feedback:   () => JSON.parse(localStorage.getItem('brg_feedback')   || '[]'),
+  history:    () => JSON.parse(localStorage.getItem('brg_history')    || '[]'),
+  settings:   () => JSON.parse(localStorage.getItem('brg_settings')   || '{}'),
+  save(key, data){ localStorage.setItem('brg_'+key, JSON.stringify(data)); },
 };
-const saveSettingsLocal = () => {
-  localStorage.setItem('brg_settings',JSON.stringify({
-    genCount: +document.getElementById('genCount').value,
-    defTone: +document.getElementById('defTone').value,
-  }));
-};
+const saveProducts   = () => S.save('products', S.products());
+const saveCategories = () => S.save('categories', S.categories());
+const saveMethods    = () => S.save('methods', S.methods());
 
 // ================================================================
 // 工具
@@ -526,7 +529,7 @@ const saveSettingsLocal = () => {
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),1800);
+  setTimeout(()=>t.classList.remove('show'), 1800);
 }
 function fmt(d) {
   if(!d) return '';
@@ -545,7 +548,9 @@ function switchTab(name, btn) {
   if(name==='management') refreshManagement();
   if(name==='generator') renderProductChips();
   if(name==='settings') refreshStats();
+  if(name==='history') refreshHistoryList();
 }
+
 function switchMgrTab(name, btn) {
   ['products','methods','feedbacks','categories'].forEach(n=>{
     document.getElementById('mgr-'+n).style.display = 'none';
@@ -556,7 +561,7 @@ function switchMgrTab(name, btn) {
 }
 
 // ================================================================
-// 产品 Chips (生成区)
+// 产品 Chips
 // ================================================================
 function renderProductChips() {
   const prods = S.products();
@@ -579,34 +584,36 @@ function renderProductChips() {
   });
   chips.innerHTML = html;
   updateInfoRow();
-  document.getElementById('linkCard').style.display = prods.length ? 'block' : 'none';
 }
+
 function selProduct(id) { selectedProductId = id; renderProductChips(); }
 
 function getSelectedProductInfo() {
   if(!selectedProductId) return null;
   const prods = S.products();
   if(selectedProductId.includes('__c__')) {
-    const [pid,cid] = selectedProductId.split('__c__');
+    const [pid, cid] = selectedProductId.split('__c__');
     const parent = prods.find(p=>p.id===pid);
     if(!parent) return null;
     const comp = (parent.competitors||[]).find(c=>c.id===cid);
-    return comp ? {...comp,isCompetitor:true,parentProduct:parent} : null;
+    return comp ? {...comp, isCompetitor:true, parentProduct:parent} : null;
   }
   return prods.find(p=>p.id===selectedProductId)||null;
 }
+
 function getProductPair() {
   const info = getSelectedProductInfo();
   if(!info) return null;
-  if(info.isCompetitor) return {myProduct:info.parentProduct,comp:info};
+  if(info.isCompetitor) return {myProduct:info.parentProduct, comp:info};
   const comp = (info.competitors||[]).length ? R(info.competitors) : null;
-  return {myProduct:info,comp};
+  return {myProduct:info, comp};
 }
+
 function updateInfoRow() {
   const row = document.getElementById('infoRow');
   const p = getSelectedProductInfo();
-  if(!p) {row.style.display='none';return;}
-  const feats = (p.features||[]).slice(0,3).join(' · ')+((p.features||[]).length>3?' …':'');
+  if(!p) { row.style.display='none'; return; }
+  const feats = (p.features||[]).slice(0,3).join(' · ') + ((p.features||[]).length>3?' …':'');
   row.style.display = 'flex';
   row.innerHTML = `<span>📦 ${E(p.name)}（${E(p.category||'未分类')}）</span>${p.price?`<span>💰 ${E(p.price)}</span>`:''}${feats?`<span>🎯 ${E(feats)}</span>`:''}`;
 }
@@ -629,7 +636,10 @@ function refreshManagement() {
 }
 
 function clearProdForm() {
-  ['prodName','prodCat','prodFeatures','prodPrice','prodUrl','prodDesc'].forEach(id=>document.getElementById(id).value='');
+  ['prodName','prodFeatures','prodPrice','prodUrl','prodDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('prodCat').value='';
+  window._editProdId = null;
+  document.getElementById('prodFormTitle').textContent = '➕ 添加产品';
 }
 
 function saveProduct() {
@@ -639,27 +649,25 @@ function saveProduct() {
   const price = document.getElementById('prodPrice').value.trim();
   const url = document.getElementById('prodUrl').value.trim();
   const desc = document.getElementById('prodDesc').value.trim();
-  if(!name) {toast('请填写产品名称');return;}
+  if(!name) { toast('请填写产品名称'); return; }
 
-  let prods = S.products();
+  const prods = S.products();
   const editId = window._editProdId;
   if(editId) {
     const p = prods.find(p=>p.id===editId);
-    if(p) {Object.assign(p,{name,category,features,price,url,desc});}
+    if(p) Object.assign(p, {name, category, features, price, url, desc});
     window._editProdId = null;
+    document.getElementById('prodFormTitle').textContent = '➕ 添加产品';
     toast('已更新');
   } else {
-    prods.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,category,features,price,url,desc,competitors:[],materials:[],time:new Date().toISOString()});
+    const newId = Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    prods.push({id:newId, name, category, features, price, url, desc, competitors:[], materials:[], time:new Date().toISOString()});
+    if(!selectedProductId) selectedProductId = newId;
     toast('已添加');
   }
-  // 直接写入当前修改后的数组，不依赖getter重新读取
-  localStorage.setItem('brg_products', JSON.stringify(prods));
+  S.save('products', prods);
   clearProdForm();
   refreshProductList();
-  renderProductChips();
-
-  // 如果还没选产品，自动选这个
-  if(!selectedProductId && prods.length) selectedProductId = prods[prods.length-1].id;
   renderProductChips();
 }
 
@@ -673,33 +681,73 @@ function editProduct(id) {
   document.getElementById('prodPrice').value = p.price||'';
   document.getElementById('prodUrl').value = p.url||'';
   document.getElementById('prodDesc').value = p.desc||'';
-  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('prodFormTitle').textContent = '✏️ 编辑产品';
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function deleteProduct(id) {
   if(!confirm('删除产品及其所有竞品？')) return;
   const prods = S.products().filter(p=>p.id!==id);
-  localStorage.setItem('brg_products',JSON.stringify(prods));
+  S.save('products', prods);
   if(selectedProductId===id||(selectedProductId||'').startsWith(id+'__c__')) selectedProductId=null;
   toast('已删除');
   refreshProductList();
   renderProductChips();
 }
 
-// ---- 竞品 CRUD ----
+// ---- 竞品 CRUD（带完整编辑） ----
 function showAddComp(prodId) {
-  const name = prompt('竞品名称：');
-  if(!name) return;
+  document.getElementById('compEditProdId').value = prodId;
+  document.getElementById('compEditCompId').value = '';
+  document.getElementById('compEditName').value = '';
+  document.getElementById('compEditFeatures').value = '';
+  document.getElementById('compEditPrice').value = '';
+  document.querySelector('#compModal .modal-hdr-title').textContent = '⚔ 添加竞品';
+  openModal('compModal');
+}
+
+function showEditComp(prodId, compId) {
+  const prods = S.products();
+  const p = prods.find(p=>p.id===prodId);
+  const c = p && (p.competitors||[]).find(c=>c.id===compId);
+  if(!c) return;
+  document.getElementById('compEditProdId').value = prodId;
+  document.getElementById('compEditCompId').value = compId;
+  document.getElementById('compEditName').value = c.name;
+  document.getElementById('compEditFeatures').value = (c.features||[]).join('\n');
+  document.getElementById('compEditPrice').value = c.price||'';
+  document.querySelector('#compModal .modal-hdr-title').textContent = '✏️ 编辑竞品';
+  openModal('compModal');
+}
+
+function saveCompEdit() {
+  const prodId = document.getElementById('compEditProdId').value;
+  const compId = document.getElementById('compEditCompId').value;
+  const name = document.getElementById('compEditName').value.trim();
+  const features = document.getElementById('compEditFeatures').value.trim().split('\n').filter(f=>f.trim());
+  const price = document.getElementById('compEditPrice').value.trim();
+  if(!name) { toast('请填写竞品名称'); return; }
+
   const prods = S.products();
   const p = prods.find(p=>p.id===prodId);
   if(!p) return;
   p.competitors = p.competitors||[];
-  p.competitors.push({id:Date.now().toString(36),name,features:[],price:'',category:''});
+
+  if(compId) {
+    const c = p.competitors.find(c=>c.id===compId);
+    if(c) Object.assign(c, {name, features, price});
+    toast('已更新竞品');
+  } else {
+    p.competitors.push({id:Date.now().toString(36), name, features, price});
+    toast('已添加竞品');
+  }
   S.save('products', prods);
+  closeModal('compModal');
   refreshProductList();
   renderProductChips();
 }
-function deleteComp(prodId,compId) {
+
+function deleteComp(prodId, compId) {
   if(!confirm('删除此竞品？')) return;
   const prods = S.products();
   const p = prods.find(p=>p.id===prodId);
@@ -707,11 +755,12 @@ function deleteComp(prodId,compId) {
   p.competitors = (p.competitors||[]).filter(c=>c.id!==compId);
   S.save('products', prods);
   if(selectedProductId===prodId+'__c__'+compId) selectedProductId = prodId;
+  toast('已删除');
   refreshProductList();
   renderProductChips();
 }
 
-// ---- 产品资料（PDF/文本） ----
+// ---- 资料上传 ----
 async function uploadMaterial(prodId, input) {
   const file = input.files[0]; if(!file) return;
   const text = await extractFileText(file);
@@ -719,30 +768,28 @@ async function uploadMaterial(prodId, input) {
   const p = prods.find(p=>p.id===prodId);
   if(!p) return;
   p.materials = p.materials||[];
-  p.materials.push({id:Date.now(),name:file.name,text:text.substring(0,8000),time:new Date().toISOString()});
+  p.materials.push({id:Date.now(), name:file.name, text:text.substring(0,8000), time:new Date().toISOString()});
   S.save('products', prods);
   toast('资料已添加');
   refreshProductList();
-  renderProductChips();
 }
 
 async function extractFileText(file) {
   if(file.name.endsWith('.pdf')) {
     try {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data:buf}).promise;
       let text = '';
       for(let i=1;i<=Math.min(pdf.numPages,20);i++){
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text += content.items.map(it=>it.str).join(' ')+'\n';
+        const pg = await pdf.getPage(i);
+        const ct = await pg.getTextContent();
+        text += ct.items.map(it=>it.str).join(' ')+'\n';
       }
       return text.trim()||'（PDF提取失败，请手动输入内容）';
-    } catch(e) { return '（PDF解析失败: '+e.message+'）'; }
-  } else {
-    return await file.text();
+    } catch(e){ return '（PDF解析失败: '+e.message+'）'; }
   }
+  return await file.text();
 }
 
 function delMaterial(prodId, matId) {
@@ -751,44 +798,36 @@ function delMaterial(prodId, matId) {
   if(!p) return;
   p.materials = (p.materials||[]).filter(m=>m.id!==matId);
   S.save('products', prods);
+  toast('已删除资料');
   refreshProductList();
 }
 
 function refreshProductList() {
   const prods = S.products();
-  const cats = S.categories();
-  const catMap = {}; cats.forEach(c=>catMap[c.name]=c.name);
-
   document.getElementById('productList').innerHTML = prods.length ? prods.map(p=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div class="data-item-info" style="flex:1">
+        <div style="flex:1">
           <div class="data-item-title">
             ${E(p.name)}
             <span class="sub">${E(p.category||'未分类')}</span>
             <span class="tag tag-a">我品</span>
-            ${p.materials?.length?`<span class="tag tag-p">📎${p.materials.length}份资料</span>`:''}
+            ${p.materials?.length?`<span class="tag tag-p">📎 ${p.materials.length} 份资料</span>`:''}
           </div>
-          <div class="data-item-desc">${E(p.features.join(' · ')||'无卖点')}${p.price?' · '+E(p.price):''}</div>
+          <div class="data-item-desc">${E((p.features||[]).join(' · ')||'暂无卖点')}${p.price?' · '+E(p.price):''}</div>
         </div>
-        <div class="data-item-actions" style="flex-shrink:0">
-          <button class="btn-sm" onclick="selProduct('${p.id}')">选择</button>
+        <div class="data-item-actions">
           <button class="btn-sm" onclick="editProduct('${p.id}')">编辑</button>
           <button class="btn-sm d" onclick="deleteProduct('${p.id}')">删除</button>
         </div>
       </div>
       ${p.desc?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px 10px;background:#f9f9f9;border-radius:6px">${E(p.desc)}</div>`:''}
-      ${p.url?`<div style="font-size:12px;margin-top:4px"><a href="${E(p.url)}" target="_blank" style="color:var(--info)">🔗 查看产品链接</a></div>`:''}
+      ${p.url?`<div style="font-size:12px;margin-top:4px"><a href="${E(p.url)}" target="_blank" style="color:var(--info)">🔗 产品链接</a></div>`:''}
       <div class="divider"></div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">📎 资料上传</div>
-      <div class="file-upload">
-        <input type="file" accept=".pdf,.txt,.md,.doc,.docx" onchange="uploadMaterial('${p.id}',this)">
-      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">📎 资料上传（PDF/TXT/MD）</div>
+      <input type="file" accept=".pdf,.txt,.md" onchange="uploadMaterial('${p.id}',this)">
       ${p.materials?.length?`<div class="mat-list">${p.materials.map(m=>`
-        <span class="mat-chip">
-          📄 ${E(m.name)}
-          <span class="del" onclick="delMaterial('${p.id}',${m.id})" title="删除">×</span>
-        </span>
+        <span class="mat-chip">📄 ${E(m.name)}<span class="del" onclick="delMaterial('${p.id}',${m.id})" title="删除">×</span></span>
       `).join('')}</div>`:''}
       <div class="divider"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -796,24 +835,27 @@ function refreshProductList() {
         <button class="btn-sm w" onclick="showAddComp('${p.id}')">＋ 添加竞品</button>
       </div>
       ${(p.competitors||[]).length ? p.competitors.map(c=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fffbeb;border-radius:6px;margin-bottom:4px;font-size:12px">
-          <span><span style="color:var(--warning)">⚔</span> ${E(c.name)} ${c.price?'· '+E(c.price):''}</span>
-          <button class="btn-sm d" style="font-size:11px;padding:2px 8px" onclick="deleteComp('${p.id}','${c.id}')">×</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fffbeb;border-radius:6px;margin-bottom:4px;font-size:12px">
+          <span><span style="color:var(--warning)">⚔</span> ${E(c.name)} ${c.price?'· '+E(c.price):''}${(c.features||[]).length?` · ${c.features.slice(0,2).join('、')}`+((c.features.length>2)?'…':''):''}</span>
+          <div style="display:flex;gap:4px">
+            <button class="btn-sm i" style="font-size:11px;padding:2px 8px" onclick="showEditComp('${p.id}','${c.id}')">编辑</button>
+            <button class="btn-sm d" style="font-size:11px;padding:2px 8px" onclick="deleteComp('${p.id}','${c.id}')">×</button>
+          </div>
         </div>
       `).join('') : '<div style="font-size:12px;color:#ccc;text-align:center;padding:6px">暂无竞品</div>'}
     </div>
-  `).join('') : '<div class="no-data">暂无产品，请在下方添加</div>';
+  `).join('') : '<div class="no-data">暂无产品，在上方表单添加</div>';
 }
 
 // ================================================================
-// 品类管理
+// 品类
 // ================================================================
 function saveCategory() {
   const name = document.getElementById('newCatName').value.trim();
-  if(!name) {toast('请输入品类名称');return;}
+  if(!name){ toast('请输入品类名称'); return; }
   const cats = S.categories();
-  if(cats.find(c=>c.name===name)) {toast('品类已存在');return;}
-  cats.push({id:Date.now(),name,time:new Date().toISOString()});
+  if(cats.find(c=>c.name===name)){ toast('品类已存在'); return; }
+  cats.push({id:Date.now(), name, time:new Date().toISOString()});
   S.save('categories', cats);
   document.getElementById('newCatName').value='';
   toast('已添加');
@@ -822,8 +864,7 @@ function saveCategory() {
 }
 function deleteCategory(id) {
   if(!confirm('删除此品类？')) return;
-  const cats = S.categories().filter(c=>c.id!==id);
-  localStorage.setItem('brg_categories',JSON.stringify(cats));
+  S.save('categories', S.categories().filter(c=>c.id!==id));
   toast('已删除');
   refreshCategoryList();
   refreshCatSelect();
@@ -833,14 +874,11 @@ function refreshCategoryList() {
   document.getElementById('categoryList').innerHTML = cats.length ? cats.map(c=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:15px;font-weight:600">${E(c.name)}</div>
-          <div style="font-size:11px;color:#bbb;margin-top:2px">${fmt(c.time)}</div>
-        </div>
+        <div><div style="font-size:15px;font-weight:600">${E(c.name)}</div>
+        <div style="font-size:11px;color:#bbb;margin-top:2px">${fmt(c.time)}</div></div>
         <button class="btn-sm d" onclick="deleteCategory(${c.id})">删除</button>
       </div>
-    </div>
-  `).join('') : '<div class="no-data">暂无品类</div>';
+    </div>`).join('') : '<div class="no-data">暂无品类</div>';
 }
 
 // ================================================================
@@ -848,21 +886,22 @@ function refreshCategoryList() {
 // ================================================================
 function clearMethodForm() {
   ['methodName','methodPlatform','methodContent'].forEach(id=>document.getElementById(id).value='');
+  window._editMethodId = null;
 }
 function saveMethod() {
   const name = document.getElementById('methodName').value.trim();
   const platform = document.getElementById('methodPlatform').value;
   const content = document.getElementById('methodContent').value.trim();
-  if(!name||!content) {toast('请填写名称和内容');return;}
+  if(!name||!content){ toast('请填写名称和内容'); return; }
   const methods = S.methods();
   const editId = window._editMethodId;
   if(editId) {
     const m = methods.find(m=>m.id===editId);
-    if(m) Object.assign(m,{name,platform,content});
+    if(m) Object.assign(m, {name, platform, content});
     window._editMethodId = null;
     toast('已更新');
   } else {
-    methods.push({id:Date.now(),name,platform,content,active:true,time:new Date().toISOString()});
+    methods.push({id:Date.now(), name, platform, content, active:true, time:new Date().toISOString()});
     toast('已添加');
   }
   S.save('methods', methods);
@@ -876,12 +915,11 @@ function editMethod(id) {
   document.getElementById('methodName').value = m.name;
   document.getElementById('methodPlatform').value = m.platform||'';
   document.getElementById('methodContent').value = m.content;
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 function deleteMethod(id) {
   if(!confirm('删除此方法论？')) return;
-  const methods = S.methods().filter(m=>m.id!==id);
-  localStorage.setItem('brg_methods',JSON.stringify(methods));
+  S.save('methods', S.methods().filter(m=>m.id!==id));
   toast('已删除');
   refreshMethodList();
 }
@@ -890,6 +928,7 @@ function toggleMethod(id) {
   const m = methods.find(m=>m.id===id);
   if(m) m.active = !m.active;
   S.save('methods', methods);
+  toast(m.active?'已启用':'已停用');
   refreshMethodList();
 }
 function refreshMethodList() {
@@ -898,37 +937,36 @@ function refreshMethodList() {
   document.getElementById('methodList').innerHTML = methods.length ? methods.map(m=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div class="data-item-info" style="flex:1">
-          <div class="data-item-title">
-            ${E(m.name)}
-            <span class="tag ${m.active?'tag-p':'tag-d'}">${m.active?'✅ 启用':'⛔ 停用'}</span>
-            <span class="tag tag-a">${platMap[m.platform]||'通用'}</span>
-          </div>
+        <div style="flex:1">
+          <div class="data-item-title">${E(m.name)}<span class="tag ${m.active?'tag-p':'tag-d'}">${m.active?'✅ 启用':'⛔ 停用'}</span><span class="tag tag-a">${platMap[m.platform||'']||'通用'}</span></div>
           <div class="method-detail">${E(m.content.substring(0,200))}${m.content.length>200?'…':''}</div>
         </div>
-        <div class="data-item-actions" style="flex-shrink:0">
+        <div class="data-item-actions">
           <button class="btn-sm ${m.active?'d':'s'}" onclick="toggleMethod(${m.id})">${m.active?'停用':'启用'}</button>
           <button class="btn-sm" onclick="editMethod(${m.id})">编辑</button>
           <button class="btn-sm d" onclick="deleteMethod(${m.id})">删除</button>
         </div>
       </div>
-    </div>
-  `).join('') : '<div class="no-data">暂无方法论，请在下方添加</div>';
+    </div>`).join('') : '<div class="no-data">暂无方法论</div>';
 }
 
 // ================================================================
 // 修改意见
 // ================================================================
 function saveFeedback() {
-  const prod = document.getElementById('fbProd').value.trim();
-  const platform = document.getElementById('fbPlatform').value;
-  const original = document.getElementById('fbOriginal').value.trim();
   const text = document.getElementById('fbText').value.trim();
-  if(!text) {toast('请填写修改意见');return;}
+  if(!text){ toast('请填写修改意见'); return; }
   const fbs = S.feedback();
-  fbs.push({id:Date.now(),prod,platform,original,text,processed:false,time:new Date().toISOString()});
-  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
-  ['fbProd','fbPlatform','fbOriginal','fbText'].forEach(id=>document.getElementById(id).value='');
+  fbs.push({
+    id:Date.now(),
+    prod:document.getElementById('fbProd').value.trim(),
+    platform:document.getElementById('fbPlatform').value,
+    original:document.getElementById('fbOriginal').value.trim(),
+    text, processed:false, time:new Date().toISOString()
+  });
+  S.save('feedback', fbs);
+  ['fbProd','fbOriginal','fbText'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fbPlatform').value='';
   toast('已提交');
   refreshFeedbackList();
 }
@@ -936,14 +974,13 @@ function processFeedback(id) {
   const fbs = S.feedback();
   const f = fbs.find(f=>f.id===id);
   if(f) f.processed = true;
-  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
+  S.save('feedback', fbs);
   toast('已标记处理');
   refreshFeedbackList();
 }
 function deleteFeedback(id) {
   if(!confirm('删除此意见？')) return;
-  const fbs = S.feedback().filter(f=>f.id!==id);
-  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
+  S.save('feedback', S.feedback().filter(f=>f.id!==id));
   toast('已删除');
   refreshFeedbackList();
 }
@@ -957,24 +994,99 @@ function refreshFeedbackList() {
   document.getElementById('feedbackList').innerHTML = fbs.length ? fbs.map(f=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div class="data-item-info" style="flex:1">
-          <div class="data-item-title">
-            ${E(f.prod||'通用')}
-            ${f.platform?`<span class="tag tag-a">${f.platform==='bili'?'📺B站':f.platform==='douyin'?'🎵抖音':'📕小红书'}</span>`:''}
-            <span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span>
-          </div>
+        <div style="flex:1">
+          <div class="data-item-title">${E(f.prod||'通用')}${f.platform?`<span class="tag tag-a">${f.platform==='bili'?'📺B站':f.platform==='douyin'?'🎵抖音':'📕小红书'}</span>`:''}<span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span></div>
           <div class="data-item-meta">${fmt(f.time)}</div>
           ${f.original?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px 10px;background:#f9f9f9;border-radius:6px"><strong>原文：</strong>${E(f.original.substring(0,100))}</div>`:''}
           <div style="font-size:13px;margin-top:6px;padding:8px 12px;background:#fff7e6;border-radius:6px;border-left:3px solid var(--warning)">💬 ${E(f.text)}</div>
         </div>
-        <div class="data-item-actions" style="flex-shrink:0">
+        <div class="data-item-actions">
           ${!f.processed?`<button class="btn-sm s" onclick="processFeedback(${f.id})">标为已处理</button>`:''}
           <button class="btn-sm d" onclick="deleteFeedback(${f.id})">删除</button>
         </div>
       </div>
-    </div>
-  `).join('') : '<div class="no-data">暂无修改意见</div>';
+    </div>`).join('') : '<div class="no-data">暂无修改意见</div>';
 }
+
+// ================================================================
+// 历史记录
+// ================================================================
+function saveToHistory() {
+  if(!curComments.length){ toast('当前没有生成结果'); return; }
+  const hist = S.history();
+  const limit = +(S.settings().histLimit||50);
+  const p = getSelectedProductInfo();
+  hist.unshift({
+    id: Date.now(),
+    platform: curPlatform,
+    productName: p?p.name:'未知产品',
+    tone: toneLevel,
+    isPurchased,
+    comments: curComments.map(c=>c.text),
+    time: new Date().toISOString()
+  });
+  if(hist.length > limit) hist.splice(limit);
+  S.save('history', hist);
+  toast('已保存到历史记录');
+}
+
+function clearHistory() {
+  if(!confirm('清空全部历史记录？')) return;
+  S.save('history', []);
+  toast('已清空');
+  refreshHistoryList();
+}
+
+function refreshHistoryList() {
+  const hist = S.history();
+  const platNames = {bili:'📺 B站',douyin:'🎵 抖音',xhs:'📕 小红书'};
+  document.getElementById('historyList').innerHTML = hist.length ? hist.map(h=>`
+    <div class="hist-item" onclick="showHistDetail(${h.id})">
+      <div class="hist-meta">
+        <span>${platNames[h.platform]||h.platform}</span>
+        <span>${E(h.productName)}</span>
+        <span>${h.isPurchased?'✅ 体验向':'🔍 决策向'}</span>
+        <span>${fmt(h.time)}</span>
+        <span class="cnt-badge">${h.comments.length}条</span>
+      </div>
+      <div class="hist-preview">${E(h.comments.slice(0,2).join(' / '))}</div>
+    </div>`).join('') : '<div class="no-data">暂无历史记录，生成后点击「保存到历史」</div>';
+}
+
+function showHistDetail(id) {
+  const h = S.history().find(h=>h.id===id);
+  if(!h) return;
+  const platNames = {bili:'📺 B站',douyin:'🎵 抖音',xhs:'📕 小红书'};
+  document.getElementById('histModalTitle').textContent = `${platNames[h.platform]} · ${h.productName} · ${fmt(h.time)}`;
+  document.getElementById('histModalBody').innerHTML = `
+    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="copyHistAll(${id})">📋 复制全部</button>
+      <button class="btn btn-d" onclick="deleteHist(${id})">🗑 删除</button>
+    </div>
+    ${h.comments.map((c,i)=>`
+      <div style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;position:relative">
+        <div style="font-size:13px;color:#333;line-height:1.7">${E(c)}</div>
+        <button style="position:absolute;top:8px;right:8px;padding:3px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:#fff;color:#999;cursor:pointer" onclick="copySingle('${escJ(c)}')">复制</button>
+      </div>`).join('')}`;
+  openModal('histModal');
+}
+
+function copyHistAll(id) {
+  const h = S.history().find(h=>h.id===id);
+  if(!h) return;
+  navigator.clipboard.writeText(h.comments.join('\n')).then(()=>toast('已复制全部'));
+}
+
+function deleteHist(id) {
+  if(!confirm('删除此历史记录？')) return;
+  S.save('history', S.history().filter(h=>h.id!==id));
+  toast('已删除');
+  closeModal('histModal');
+  refreshHistoryList();
+}
+
+function escJ(s){ return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n'); }
+function copySingle(s){ navigator.clipboard.writeText(s.replace(/\\n/g,'\n')).then(()=>toast('已复制')); }
 
 // ================================================================
 // 设置 & 统计
@@ -983,27 +1095,50 @@ function refreshStats() {
   const s = S.settings();
   document.getElementById('genCount').value = s.genCount||10;
   document.getElementById('defTone').value = s.defTone||50;
+  document.getElementById('histLimit').value = s.histLimit||50;
   document.getElementById('statProd').textContent = S.products().length;
   document.getElementById('statMethod').textContent = S.methods().length;
   document.getElementById('statFb').textContent = S.feedback().length;
   document.getElementById('statCat').textContent = S.categories().length;
-  genCount = +document.getElementById('genCount').value;
-  toneLevel = +document.getElementById('defTone').value;
+  document.getElementById('statHist').textContent = S.history().length;
+
+  genCount = +(s.genCount||10);
+  toneLevel = +(s.defTone||50);
   document.getElementById('toneSlider').value = toneLevel;
+
+  // AI key
+  const key = localStorage.getItem('brg_ai_key')||'';
+  document.getElementById('aiKey').value = key ? '••••••••'+key.slice(-4) : '';
+  document.getElementById('aiHint').style.display = key ? 'block' : 'none';
 }
+
+function saveAiKey() {
+  const raw = document.getElementById('aiKey').value.trim();
+  if(!raw||raw.startsWith('••••')) { toast('未修改'); return; }
+  localStorage.setItem('brg_ai_key', raw);
+  refreshStats();
+  toast('API Key 已保存');
+}
+
+function saveSettings() {
+  S.save('settings', {
+    genCount: +document.getElementById('genCount').value,
+    defTone: +document.getElementById('defTone').value,
+    histLimit: +document.getElementById('histLimit').value,
+  });
+  genCount = +document.getElementById('genCount').value;
+  toast('已保存');
+}
+
 function clearAllData() {
   if(!confirm('确定清空所有数据？此操作不可恢复！')) return;
-  ['brg_products','brg_categories','brg_methods','brg_feedback'].forEach(k=>localStorage.removeItem(k));
+  ['products','categories','methods','feedback','history','settings'].forEach(k=>localStorage.removeItem('brg_'+k));
+  localStorage.removeItem('brg_ai_key');
   selectedProductId = null;
   toast('已清空');
   refreshStats();
   renderProductChips();
   refreshManagement();
-}
-function saveSettings() {
-  saveSettingsLocal();
-  genCount = +document.getElementById('genCount').value;
-  toast('已保存');
 }
 
 // ================================================================
@@ -1017,330 +1152,548 @@ function exportAll() {
     feedback: S.feedback(),
     settings: S.settings(),
     exportedAt: new Date().toISOString(),
-    version: '1.0',
+    version: '2.0',
   };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
   a.download = `口碑评论生成器_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.json`;
   a.click(); URL.revokeObjectURL(a.href);
   toast('导出成功');
 }
+
 function importAll(event) {
   const file = event.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      if(data.products) localStorage.setItem('brg_products',JSON.stringify(data.products));
-      if(data.categories) localStorage.setItem('brg_categories',JSON.stringify(data.categories));
-      if(data.methods) localStorage.setItem('brg_methods',JSON.stringify(data.methods));
-      if(data.feedback) localStorage.setItem('brg_feedback',JSON.stringify(data.feedback));
-      if(data.settings) localStorage.setItem('brg_settings',JSON.stringify(data.settings));
+      if(data.products) S.save('products', data.products);
+      if(data.categories) S.save('categories', data.categories);
+      if(data.methods) S.save('methods', data.methods);
+      if(data.feedback) S.save('feedback', data.feedback);
+      if(data.settings) S.save('settings', data.settings);
       toast('导入成功！');
       refreshStats();
       renderProductChips();
       refreshManagement();
-    } catch(err) { toast('导入失败：'+err.message); }
+    } catch(err){ toast('导入失败：'+err.message); }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
 // ================================================================
-// 链接识别
-// ================================================================
-async function analyzeLink() {
-  const url = document.getElementById('linkInput').value.trim();
-  if(!url) return;
-  const status = document.getElementById('linkStatus');
-  status.className = 'link-status show loading';
-  status.textContent = '正在分析链接…';
-  try {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    const resp = await fetch(proxyUrl);
-    const html = await resp.text();
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : '';
-
-    // 识别产品
-    const prods = S.products();
-    let matched = null;
-    for(const p of prods) {
-      if(title.includes(p.name)||html.includes(p.name)) {matched=p;break;}
-    }
-
-    // 识别平台
-    let detected = '';
-    if(url.includes('xiaohongshu')||url.includes('xhs')) detected='xhs';
-    else if(url.includes('bilibili')||url.includes('b23.tv')) detected='bili';
-    else if(url.includes('douyin')) detected='douyin';
-
-    if(matched) {
-      selectedProductId = matched.id;
-      renderProductChips();
-      const platNames = {bili:'📺B站',douyin:'🎵抖音',xhs:'📕小红书'};
-      status.className = 'link-status show ok';
-      status.textContent = `✅ 已识别：${matched.name}${detected?' · '+platNames[detected]:''}`;
-      if(detected) curPlatform = detected;
-    } else {
-      status.className = 'link-status show';
-      status.textContent = title ? `📄 识别到：${title.substring(0,60)}（未匹配到产品，请先在管理后台添加）` : '⚠️ 未识别到内容，请在管理后台手动添加产品';
-    }
-  } catch(e) {
-    status.className = 'link-status show err';
-    status.textContent = '❌ 链接获取失败：'+e.message;
-  }
-}
-
-// ================================================================
-// 语调 & 用户状态
+// 语调 & 状态
 // ================================================================
 function updateTone() { toneLevel = +document.getElementById('toneSlider').value; }
 function setPurchased(val) {
   isPurchased = val;
-  document.getElementById('btn-no').classList.toggle('active',!val);
-  document.getElementById('btn-yes').classList.toggle('active',!!val);
+  document.getElementById('btn-no').classList.toggle('active', !val);
+  document.getElementById('btn-yes').classList.toggle('active', !!val);
 }
 
 // ================================================================
-// 评论生成引擎
+// 评论生成引擎（修复版 + 增强版）
 // ================================================================
+
+// ---- 通用分析 ----
 function analyzeProduct(info) {
-  const {name,category,features,price,competitor,compFeatures} = info;
+  const {name, category, features, price} = info;
+  const catStr = (category+name).toLowerCase();
   const featStr = (features||[]).map(f=>f.toLowerCase()).join(' ');
-  const p = parseInt(price)||0;
+  const p = parseInt((price||'').replace(/[^0-9]/g,''))||0;
+
   let priceSeg = '中端';
   if(p>0&&p<2000) priceSeg='入门';
   else if(p>=2000&&p<5000) priceSeg='中端性价比';
   else if(p>=5000&&p<10000) priceSeg='中高端';
   else if(p>=10000) priceSeg='旗舰';
 
-  const isProj=/投影/.test(category+name);
-  const isTV=/电视/.test(category+name);
-  const isAudio=/音响|音箱|耳机/.test(category+name);
-  const isAc=/空调|新风/.test(category+name);
-  const isWash=/洗衣机|烘干/.test(category+name);
-  const isFridge=/冰箱/.test(category+name);
+  const isProj   = /投影/.test(catStr);
+  const isTV     = /电视/.test(catStr);
+  const isAudio  = /音响|音箱|耳机/.test(catStr);
+  const isAc     = /空调|新风/.test(catStr);
+  const isWash   = /洗衣机|烘干/.test(catStr);
+  const isFridge = /冰箱/.test(catStr);
+  const isCamera = /相机|摄像|拍照/.test(catStr);
+  const isPhone  = /手机/.test(catStr);
+  const isPC     = /电脑|笔记本|台式/.test(catStr);
+  const isFloor  = /扫地|吸尘|洗地/.test(catStr);
 
-  const hotC=[];
-  const addH=(re,w)=>{const f=features.find(f=>re.test(f));if(f) hotC.push({f,w});};
+  // 权重选取最重要卖点
+  const hotC = [];
+  const addH = (re, w) => {
+    const f = features.find(f=>re.test(f));
+    if(f) hotC.push({f, w});
+  };
   if(isProj){
-    addH(/cvia|ansi|流明|亮度|nit/i,10);
-    addH(/激光|三色|光源|alpd/i,9);
-    addH(/4k|分辨率|1080/i,7);
-    addH(/云台|支架|便携|自动对焦|梯形|校正|无感/i,8);
-    addH(/音响|哈曼|jbl|杜比|dolby|音质/i,6);
-    addH(/护眼|低蓝光|莱茵|漫反射/i,7);
-    addH(/游戏|延迟|低延迟|hdmi|memc/i,5);
-  }
-  if(isTV){
-    addH(/4k|8k|oled|miniled|qled/i,10);
-    addH(/音响|哈曼|回音壁/i,7);
-    addH(/144hz|高刷|memc/i,6);
-  }
-  if(isAudio){
-    addH(/降噪|anc/i,10);
-    addH(/音质|解码|hi-res|金标/i,9);
-    addH(/续航|电池|充电/i,7);
-  }
-  if(isAc){
-    addH(/变频|省电|一级能效/i,9);
-    addH(/冷暖|制冷|制热/i,8);
-    addH(/新风|净化|除甲醛/i,8);
-    addH(/静音|低噪/i,7);
-  }
-  if(isWash){addH(/烘干|热泵|洗烘/i,10);addH(/容量|10kg/i,7);}
-  const covered=new Set(hotC.map(h=>h.f));
-  (features||[]).forEach(f=>{if(!covered.has(f)) hotC.push({f,w:4});});
-
-  let hp='',hp2='';
-  if(hotC.length){
-    let tw=hotC.reduce((s,c)=>s+c.w,0);
-    let rl=Math.random()*tw;
-    for(const c of hotC){rl-=c.w;if(rl<=0){hp=c.f;break;}}
-    if(!hp&&hotC.length) hp=hotC[0].f;
-    const p2=hotC.filter(c=>c.f!==hp);
-    if(p2.length){let r2=Math.random()*p2.reduce((s,c)=>s+c.w,0);for(const c of p2){r2-=c.w;if(r2<=0){hp2=c.f;break;}}if(!hp2) hp2=p2[0].f;}
-  }
-
-  const myUnique=(features||[]).filter(f=>!(compFeatures||[]).some(cf=>f.includes(cf)||cf.includes(f)));
-  const keyDiff=myUnique.length?R(myUnique):hp;
-  const wknesses=[];
-  if(isProj&&!/4k/i.test(featStr)&&p>3000) wknesses.push('纠结1080P还是4K要多考虑');
-  if(isProj&&!/cvia|ansi/i.test(featStr)) wknesses.push('亮度参数没标清，白天能不能用是问号');
-  if(isTV&&/广告/.test(featStr)) wknesses.push('开机有广告确实扣分');
-  const weakness=wknesses.length?R(wknesses):'';
-
-  return {hp,hp2,keyDiff,priceSeg,weakness,isProj,isTV,isAudio,isAc,isWash,isFridge};
-}
-
-function pickScene(info,a){
-  const {isProj,isTV,isAudio,isAc}=a;
-  const feats=(info.features||[]).map(f=>f.toLowerCase()).join(' ');
-  const scenes=[];
-  if(isProj){
-    scenes.push({s:'晚上关灯看',d:'投白墙效果出乎意料的好'},{s:'白天拉窗帘',d:'亮度够用不用全黑'},{s:'卧室躺着看天花板',d:'云台直接对着天花板投'},{s:'周末连看三部电影',d:'眼睛不累，比电视舒服'},{s:'朋友来家看球',d:'大屏就是爽'},{s:'露营带出去',d:'便携确实方便'});
+    addH(/cvia|ansi|流明|亮度|nit/i, 10);
+    addH(/激光|三色|光源|alpd/i, 9);
+    addH(/4k|分辨率|1080/i, 7);
+    addH(/云台|支架|便携|自动对焦|梯形|校正|无感/i, 8);
+    addH(/音响|哈曼|jbl|杜比|dolby|音质/i, 6);
+    addH(/护眼|低蓝光|莱茵|漫反射/i, 7);
+    addH(/游戏|延迟|低延迟|hdmi|memc/i, 5);
   } else if(isTV){
-    scenes.push({s:'接游戏机打游戏',d:'延迟基本感觉不到'},{s:'客厅当家庭影院',d:'配回音壁效果炸裂'},{s:'老人看新闻',d:'操作简单他们也能用'});
+    addH(/4k|8k|oled|miniled|qled/i, 10);
+    addH(/音响|哈曼|回音壁/i, 7);
+    addH(/144hz|高刷|memc/i, 6);
   } else if(isAudio){
-    scenes.push({s:'通勤路上',d:'降噪效果明显'},{s:'跑步健身戴着',d:'不容易掉，续航够用'},{s:'在家听歌',d:'音质比手机直推好太多'});
+    addH(/降噪|anc/i, 10);
+    addH(/音质|解码|hi-res|金标/i, 9);
+    addH(/续航|电池|充电/i, 7);
   } else if(isAc){
-    scenes.push({s:'夏天制冷',d:'降温挺快的'},{s:'冬天制热',d:'热得挺快的'},{s:'晚上睡觉开',d:'确实安静，基本听不到声音'});
+    addH(/变频|省电|一级能效/i, 9);
+    addH(/新风|净化|除甲醛/i, 8);
+    addH(/静音|低噪/i, 7);
+  } else if(isWash){
+    addH(/烘干|热泵|洗烘/i, 10);
+    addH(/容量|kg/i, 7);
+  } else if(isCamera){
+    addH(/像素|传感器|cmos/i, 10);
+    addH(/防抖|ois/i, 8);
+    addH(/续航|电池/i, 6);
+  } else if(isPhone){
+    addH(/芯片|处理器|骁龙|天玑/i, 10);
+    addH(/相机|拍照|像素/i, 9);
+    addH(/续航|电池|充电/i, 8);
+    addH(/屏幕|oled|刷新率/i, 7);
+  } else if(isPC){
+    addH(/处理器|cpu|i7|i9|r7|r9/i, 10);
+    addH(/显卡|gpu|rtx|rx/i, 9);
+    addH(/内存|ram/i, 7);
+    addH(/屏幕|分辨率/i, 6);
+  } else if(isFloor){
+    addH(/吸力|pa/i, 10);
+    addH(/自清洁|基站/i, 9);
+    addH(/电池|续航/i, 6);
   }
-  if(/护眼|小孩/i.test(feats)) scenes.push({s:'给娃用',d:'比看iPad强太多'});
-  return scenes.length?R(scenes):{s:'日常使用',d:'整体满意'};
+
+  // 剩余特征加权
+  const covered = new Set(hotC.map(h=>h.f));
+  (features||[]).forEach(f=>{ if(!covered.has(f)) hotC.push({f, w:4}); });
+
+  // 加权随机选取
+  function weightedPick(arr) {
+    if(!arr.length) return '';
+    const total = arr.reduce((s,c)=>s+c.w, 0);
+    let rl = Math.random()*total;
+    for(const c of arr){ rl-=c.w; if(rl<=0) return c.f; }
+    return arr[0].f;
+  }
+
+  const hp = weightedPick(hotC);
+  const hp2 = weightedPick(hotC.filter(c=>c.f!==hp));
+
+  // 差异化卖点（我品 vs 竞品）
+  const myUnique = (features||[]).filter(f=>!(info.compFeatures||[]).some(cf=>f.includes(cf)||cf.includes(f)));
+  const keyDiff = myUnique.length ? R(myUnique) : hp;
+
+  return {hp, hp2, keyDiff, priceSeg, isProj, isTV, isAudio, isAc, isWash, isFridge, isCamera, isPhone, isPC, isFloor};
 }
 
-// ---- B站 ----
-const PB=[{role:'参数小白',open:'有没有懂哥说下',ask:'不太懂参数 看着还行',s:'ask'},{role:'参数党',open:'说句实话',ask:'这个参数在这个价位',s:'evaluate'},{role:'对比狂人',open:'对比了五六款了',ask:'横向看了一圈',s:'compare'},{role:'学生党',open:'学生党预算有限',ask:'这个性价比怎么样',s:'ask'},{role:'老用户',open:'之前那台用了三年',ask:'换了新的说说感受',s:'share'},{role:'给家人买',open:'给爸妈买的',ask:'他们不太会调参数 这个好上手不',s:'ask'},{role:'客厅升级',open:'从电视转到投影',ask:'大屏体验确实不一样',s:'share'},{role:'踩过坑',open:'之前被坑过一次 这次做了功课',ask:'到手了测测再说',s:'evaluate'},{role:'纠结党',open:'纠结了好几天 最后还是下手了',ask:'希望别翻车',s:'share'},{role:'购物节蹲守',open:'等618/双11',ask:'看这波能不能降',s:'ask'},{role:'空间党',open:'我家客厅间距大概',ask:'这个距离投出来效果怎么样',s:'ask_dimension'},{role:'画质控',open:'对画质有点要求 之前那台偏色严重',ask:'这台的色准和亮度能打不',s:'ask'},{role:'设备党',open:'主要是接',ask:'和switch/PS5玩游戏',s:'ask_device'},{role:'预算党',open:'预算大概',ask:'这个价位有推荐不',s:'ask_budget'},{role:'入门真香党',open:'入手了',ask:'可以说目前入门最香的了',s:'declare'}];
+function pickScene(info, a) {
+  const {isProj, isTV, isAudio, isAc, isPhone, isPC, isFloor} = a;
+  const scenes = [];
+  if(isProj){
+    scenes.push(
+      {s:'晚上关灯看', d:'投白墙效果出乎意料的好'},
+      {s:'白天拉窗帘', d:'亮度够用不用全黑'},
+      {s:'卧室躺着看天花板', d:'云台直接对天花板投，太舒服了'},
+      {s:'周末连看三部电影', d:'眼睛不累，比电视舒服'},
+      {s:'朋友来家看球', d:'大屏就是爽'},
+      {s:'露营带出去', d:'便携确实方便'},
+    );
+  } else if(isTV){
+    scenes.push(
+      {s:'接游戏机打游戏', d:'延迟基本感觉不到'},
+      {s:'客厅当家庭影院', d:'配回音壁效果炸裂'},
+      {s:'老人看新闻', d:'操作简单他们也能用'},
+    );
+  } else if(isAudio){
+    scenes.push(
+      {s:'通勤路上戴', d:'降噪效果明显，地铁噪音隔绝了大半'},
+      {s:'跑步健身戴着', d:'不容易掉，续航够用'},
+      {s:'在家听歌', d:'音质比手机直推好太多'},
+    );
+  } else if(isAc){
+    scenes.push(
+      {s:'夏天制冷', d:'降温挺快的'},
+      {s:'冬天制热', d:'热得挺快的'},
+      {s:'晚上睡觉开', d:'确实安静，基本听不到声音'},
+    );
+  } else if(isPhone){
+    scenes.push(
+      {s:'日常拍照', d:'出片效果比上一款好很多'},
+      {s:'打游戏', d:'帧率稳，不发烫'},
+      {s:'续航', d:'一天半都没问题'},
+    );
+  } else if(isPC){
+    scenes.push(
+      {s:'剪视频', d:'渲染速度明显比以前快'},
+      {s:'同时跑多个程序', d:'基本不卡'},
+      {s:'带出去用', d:'重量可以接受'},
+    );
+  } else if(isFloor){
+    scenes.push(
+      {s:'每天定时清扫', d:'地板干净多了'},
+      {s:'有宠物毛', d:'吸毛效果不错'},
+    );
+  }
+  return scenes.length ? R(scenes) : {s:'日常使用', d:'整体满意'};
+}
 
-function genBili(info,idx){
-  const a=analyzeProduct(info);
-  const per=PB[idx%PB.length];
-  const casual=toneLevel<35, pro=toneLevel>65;
-  const w = isPurchased?{declare:.25,share:.25,evaluate:.30,compare:.15,ask:.05}:{ask:.20,ask_budget:.20,ask_dimension:.18,ask_device:.12,compare:.18,evaluate:.12};
-  const st=Object.entries(w);
-  let ttl=w=>Object.values(w).reduce((s,[,v])=>s+v,0);
-  let rl=Math.random()*ttl(w);
-  let style='evaluate';
-  for(const[s,v]of st){rl-=v;if(rl<=0){style=s;break;}}
+// ---- 获取方法论提示词 ----
+function getMethodHints(platform) {
+  return S.methods()
+    .filter(m=>m.active&&(!m.platform||m.platform===platform))
+    .map(m=>m.content.substring(0,200))
+    .join('\n---\n');
+}
 
-  let text='';
-  const priceHint=info.price?`${info.price}这个价`:'这价位';
-  const featLine=a.hp+(a.hp2?`和${a.hp2}`:'');
-  const compRef=info.competitor?`比${info.competitor}${R(['强不少','实在多了','香多了'])}`:'';
-  const scene=pickScene(info,a);
+// ---- 获取修改意见提示 ----
+function getFeedbackHints(prodName, platform) {
+  return S.feedback()
+    .filter(f=>!f.processed&&(f.prod===prodName||!f.prod)&&(!f.platform||f.platform===platform))
+    .map(f=>f.text)
+    .join('\n');
+}
 
-  if(style==='declare'){
-    const node=R(['618','双11','首发','现在']);
-    text=R([
-      `${node}${priceHint} ${featLine} ${a.priceSeg}可以说是真香机了 ${compRef}`,
-      `${priceHint}有${featLine} ${R(['基本家用够了','这个配置真不赖','还要什么自行车'])} ${R(['目前入门最香的了','横向比了一圈没对手','冲就完事了'])}`,
-      `${featLine} ${node}这价 ${R(['别家同价位基本没有','性价比拉满了','闭眼入'])} ${compRef}`,
+// ================================================================
+// B站
+// ================================================================
+const PB_PROFILES = [
+  {role:'参数小白', style:'ask', open:'这个参数看着行吗'},
+  {role:'参数党', style:'evaluate', open:'说句实话这个参数'},
+  {role:'对比狂人', style:'compare', open:'横向对比了几款'},
+  {role:'学生党', style:'ask_budget', open:'学生党预算有限'},
+  {role:'老用户', style:'share', open:'之前那台用了三年'},
+  {role:'给家人买', style:'ask', open:'给爸妈买的'},
+  {role:'踩过坑', style:'evaluate', open:'之前踩过一次坑 这次做了功课'},
+  {role:'纠结党', style:'share', open:'纠结了好几天还是下手了'},
+  {role:'购物节蹲守', style:'ask', open:'等618/双11'},
+  {role:'空间党', style:'ask_dimension', open:'我家客厅间距大概'},
+  {role:'画质控', style:'evaluate', open:'对画质有要求'},
+  {role:'入门真香', style:'declare', open:'入手了'},
+  {role:'设备党', style:'ask_device', open:'主要接'},
+];
+
+function genBili(info, idx) {
+  const a = analyzeProduct(info);
+  const per = PB_PROFILES[idx % PB_PROFILES.length];
+  const casual = toneLevel < 35, pro = toneLevel > 65;
+  const featLine = a.hp + (a.hp2 ? `和${a.hp2}` : '');
+  const compRef = info.competitor ? `比${info.competitor}${R(['强不少','实在多了','香多了','好上不少'])}` : '';
+  const scene = pickScene(info, a);
+  const priceHint = info.price ? `${info.price}这价` : '这价位';
+  const methodHint = getMethodHints('bili');
+  const fbHint = getFeedbackHints(info.name, 'bili');
+
+  // 权重选风格
+  const weights = isPurchased
+    ? {declare:.22,share:.28,evaluate:.30,compare:.15,ask:.05}
+    : {ask:.20,ask_budget:.18,ask_dimension:.15,ask_device:.12,compare:.18,evaluate:.17};
+
+  let style = per.style;
+  // 随机覆盖（30%概率使用权重随机）
+  if(Math.random() < 0.3) {
+    const entries = Object.entries(weights);
+    const total = entries.reduce((s,[,v])=>s+v, 0);
+    let rl = Math.random()*total;
+    for(const [s,v] of entries){ rl-=v; if(rl<=0){style=s;break;} }
+  }
+
+  let text = '';
+
+  if(style==='declare') {
+    text = R([
+      `${priceHint} ${featLine} ${a.priceSeg}可以说是真香机 ${compRef}`,
+      `冲了！${priceHint}有${featLine} ${R(['基本家用完全够了','这个配置真不赖','还要什么自行车'])} ${R(['目前入门最香的了','横向比了一圈没对手','冲就完事了'])}`,
+      `${featLine} ${priceHint} ${R(['别家同价位基本没有','性价比拉满了','闭眼入'])} ${compRef}`,
     ]);
-  } else if(style==='ask_budget'){
-    const p=parseInt(info.price)||3000;
-    const k=Math.round(p/1000);
-    const r=Math.random();
-    let bs;
-    if(r<.3){const a2=Math.round(p*(.4+Math.random()*.4)/100)*100,b=Math.round(p*(.8+Math.random()*.7)/100)*100;bs=`${a2}左右和${b}左右`;}
-    else if(r<.5){const lo=Math.round(p*(.3+Math.random()*.4)/100)*100,hi=Math.round(p*(.9+Math.random()*.7)/100)*100;bs=`预算${lo}-${hi}`;}
-    else if(r<.7){bs=R([`${k-1}千多的`,`${k}千左右`,`${k}千价位`]);}
-    else if(r<.85){const m=Math.round(p*(.7+Math.random()*.6)/100)*100;bs=`${m}以内`;}
-    else{bs=`${k}千预算`;}
-    const usage=R([`主要是${R(['卧室','客厅','小房间'])}${R(['接switch','接PS5','接电脑'])}玩游戏 加上${R(['看看综艺','刷刷B站'])}`,`就是想${R(['下班躺床上看','周末窝沙发看','睡前看一会儿'])}${R(['接switch','接电脑'])}方便一点`]);
-    text=R([
-      `${bs} 有推荐不？${usage}`,
-      `${bs} ${usage} ${info.competitor?`看了${info.competitor}觉得怎么样`:'求真实推荐'}`,
-      `${bs} ${usage} 要求不高 ${R(['能看就行','比电视强就可'])} ${info.name}这个行吗`,
+  } else if(style==='ask_budget') {
+    const p = parseInt((info.price||'').replace(/[^0-9]/g,''))||3000;
+    const k = Math.round(p/1000);
+    const bs = R([`${k-1}千多`,`${k}千左右`,`${k}千价位`,`预算${Math.round(p*0.8/100)*100}-${Math.round(p*1.2/100)*100}`]);
+    const usage = R([`主要卧室接${R(['switch','PS5','电脑'])}玩游戏加看综艺`, `就想下班躺着看`, `家用一般的使用`]);
+    text = R([
+      `${bs}有推荐不？${usage}`,
+      `${bs} ${usage} 到手的兄弟说下真实感受`,
+      `${bs} ${info.name}这个价位合适不 ${R(['求真实评价','有没有更好的选择'])}`,
     ]);
-  } else if(style==='ask_dimension'){
-    const room=R(['客厅','卧室','小房间']),dist=(2.5+Math.random()*3).toFixed(1);
-    const cond=R(['想实现白天观影','晚上看就行 白天拉窗帘也能看','光线一般 不是全黑']);
-    const screen=R(['软幕布可以考虑加装','白墙直接投','准备搞个幕布','幕布还没选好']);
-    text=R([
+  } else if(style==='ask_dimension') {
+    const room = R(['客厅','卧室','小房间']);
+    const dist = (2.5+Math.random()*3).toFixed(1);
+    const cond = R(['想实现白天观影','晚上看就行','光线一般不是全黑']);
+    const screen = R(['软幕布可以加装','白墙直接投','准备搞个幕布']);
+    text = R([
       `${room}${dist}米间隔 ${cond} ${info.name}投${dist}米效果咋样 ${screen}`,
-      `up大哥 ${room}${dist}米 ${cond} ${info.name}和${info.competitor||'同价位别家'}哪个更合适 ${screen}`,
+      `up主 ${room}${dist}米 ${cond} ${info.name}合适吗 ${screen}`,
     ]);
-  } else if(style==='ask_device'){
-    const dev=R(['电脑','switch','PS5','笔记本','机顶盒']),dev2=R(['switch','PS5','电脑','iPad']);
-    const concern=R([`${info.competitor?`${info.competitor}和${info.name}哪款`:'哪款'}延迟低一点`,`HDMI接${dev}会不会有延迟`]);
-    text=R([`${concern} ${R(['有实测过的兄弟吗','求真实反馈','在线等'])}`,`主要是${R(['卧室','客厅'])}接${dev}和${dev2} ${R(['玩游戏','看剧'])} ${info.name}行不行`]);
-  } else if(style==='compare'){
-    const them=info.competitor||R(['极米','坚果','当贝','小明','海信']);
-    text=R([`${info.name} ${them} ${R(['价格差不太多','预算都能接受'])} up最推荐哪一款 ${R(['我就下班在客厅看看电影','主要给爸妈用'])}`,`在${info.name}和${them}之间纠结 ${a.hp}这个我比较看重 ${R(['求真实建议','再看看 不过倾向这个'])}`]);
-  } else if(style==='share'){
-    const days=R(['两周','一个月','半个多月','一周多','三天']);
-    const detail=R([`${scene.s} ${scene.d}`,`到手就试了${R(['投白墙','接switch'])} ${R(['效果比想象中好','没翻车','确实不错'])}`,`之前那台${R(['亮度完全不够','晚上都糊'])} 换了${info.name} ${R(['这才叫投影','差距太明显'])}`]);
-    text=R([`用了${days} 说说感受 ${a.hp}确实不错 ${detail} ${info.competitor?`对比${info.competitor}选对了`:'没选错'}`,`${info.price?info.price+'入的':'之前买的'} 用了${days} ${detail} ${R(['可以放心冲','没什么槽点'])}`]);
-  } else if(style==='evaluate'){
-    const dur=isPurchased?`用了${R(['两周','一个月','半个多月','一周'])} `:'';
-    const conc=isPurchased?R(['整体满意','没选错','可以入','不后悔']):R(['看着挺香','准备冲','大概率选这个了','再看看 不过倾向这个']);
-    text=R([`${dur}${featLine} ${a.priceSeg} ${R(['横向看了下确实能打','参数没虚标'])} ${scene.s} ${scene.d} ${compRef} ${conc}`,`${dur}说下${featLine}的真实感受 ${R(['不像有些牌子参数看着高实际拉胯','不是参数党 但用起来确实不一样'])} ${scene.d} ${compRef} ${conc}`]);
-    if(!isPurchased&&!text.includes('？')&&Math.random()>.3) text+=' '+R(['有没有到手的兄弟说下','到手的兄弟实测一下','在线等一个真实评价']);
+  } else if(style==='ask_device') {
+    const dev = R(['switch','PS5','笔记本','机顶盒']);
+    const concern = R([`接${dev}延迟低不低`, `HDMI接${dev}会不会有延迟`]);
+    text = R([
+      `${concern} ${R(['有实测过的吗','求真实反馈','在线等'])}`,
+      `主要卧室接${dev}玩游戏 ${info.name}行不行`,
+    ]);
+  } else if(style==='compare') {
+    const them = info.competitor || R(['极米','坚果','当贝','小明','海信']);
+    text = R([
+      `${info.name} vs ${them} ${R(['价格差不太多','预算都能接受'])} 哪款更推荐`,
+      `在${info.name}和${them}之间纠结 ${a.hp}我比较看重 ${R(['求真实建议','再看看 但倾向这个'])}`,
+    ]);
+  } else if(style==='share') {
+    const days = R(['两周','一个月','半个多月','一周多']);
+    const detail = R([
+      `${scene.s} ${scene.d}`,
+      `到手就试了${R(['投白墙','接设备'])} ${R(['效果比想象中好','没翻车','确实不错'])}`,
+      `之前那台${R(['亮度完全不够','效果糊'])} 换了${info.name} ${R(['差距太明显了','提升明显'])}`,
+    ]);
+    text = R([
+      `用了${days}说说感受 ${a.hp}确实不错 ${detail} ${compRef?compRef+' ':''} 没选错`,
+      `${info.price?info.price+'入的':'花了点钱买的'} 用了${days} ${detail} ${R(['可以放心冲','基本没槽点'])}`,
+    ]);
+  } else if(style==='evaluate') {
+    const dur = isPurchased ? `用了${R(['两周','一个月','半个多月','一周'])} ` : '';
+    const conc = isPurchased ? R(['整体满意','没选错','可以入','不后悔']) : R(['看着挺香','准备冲','大概率选这个了','再看看 但倾向这个']);
+    text = R([
+      `${dur}${featLine} ${a.priceSeg} ${R(['横向看了一圈确实能打','参数没虚标'])} ${scene.s}时${scene.d} ${compRef} ${conc}`,
+      `${dur}说下${featLine}真实感受 ${R(['用起来和参数符合','不是参数党但感受明显'])} ${scene.d} ${compRef} ${conc}`,
+    ]);
+    if(!isPurchased && Math.random()>.3) text += ' '+R(['有到手的兄弟说下','在线等一个真实评价']);
   } else {
-    text=R([`${info.name} ${a.hp}怎么样 ${R(['有没有用过的兄弟','到手的说说','求真实评价'])}`,`有没有懂哥 ${info.name}的${a.hp}什么水平 ${info.competitor?`和${info.competitor}比呢`:''}`]);
+    text = R([
+      `${info.name}的${a.hp}怎么样 ${R(['有没有用过的','到手的说说','求真实评价'])}`,
+      `有没有懂哥 ${info.name}${a.hp}什么水平 ${info.competitor?`和${info.competitor}比呢`:''}`,
+    ]);
   }
 
-  if(casual){text=text.replace(/确实/g,'真的');if(Math.random()>.5&&!text.includes('doge')&&!text.includes('？')&&!text.includes('兄弟')) text+=' [doge]';text=text.replace(/性价比/g,'值不值');}
-  if(pro){text=text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数到位');text=text.replace(/闭眼入/g,'推荐入手');}
+  // 语调微调
+  if(casual) {
+    text = text.replace(/确实/g,'真的');
+    if(Math.random()>.5 && !text.includes('[doge]')) text += ' [doge]';
+  }
+  if(pro) {
+    text = text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数到位');
+    text = text.replace(/闭眼入/g,'推荐入手');
+  }
 
-  return{text:text.trim(),name:R(NAMES_B),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(50,3200),hours:RI(1,12),platform:'bili'};
+  // 方法论微调
+  if(methodHint && Math.random() > 0.6) {
+    // 简单注入：如果方法论提到某些词汇，适当引用风格
+    if(/深度测评|全方位/.test(methodHint)) text += R([' 全方位测了一遍', ' 深度测评下来']);
+    if(/实测|开箱/.test(methodHint)) text += R([' 实测感受', '']);
+  }
+
+  return {text:text.trim(), name:R(NAMES_B), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(50,3200), hours:RI(1,12), platform:'bili'};
 }
 
-// ---- 抖音 ----
-const PD=[{o:'直接冲了',a:'不纠结'},{o:'刷到就下单了',a:'希望别翻车'},{o:'用了告诉你',a:'真香/真坑'},{o:'不整那些虚的',a:'说大白话'},{o:'晚上窝沙发看',a:'沉浸感拉满'},{o:'打工人犒劳自己',a:'下班回家就想躺平看'},{o:'买了给娃看动画',a:'护眼很重要'},{o:'打游戏延迟重要',a:'实测延迟能接受'}];
+// ================================================================
+// 抖音
+// ================================================================
+const PD_PROFILES = [
+  {o:'直接冲了', style:'buy'},
+  {o:'刷到就下单', style:'impulsive'},
+  {o:'不整虚的 说大白话', style:'honest'},
+  {o:'打工人犒劳自己', style:'reward'},
+  {o:'买了给娃用', style:'kid'},
+  {o:'搞活动蹲到了', style:'deal'},
+  {o:'对比了好几家', style:'research'},
+  {o:'朋友推荐的', style:'referral'},
+];
 
-function genDouyin(info,idx){
-  const a=analyzeProduct(info);
-  const per=PD[idx%PD.length];
-  const casual=toneLevel<35,pro=toneLevel>65;
-  const scene=pickScene(info,a);
-  const featLine=a.hp+(a.hp2?`+${a.hp2}`:'');
-  const compRef=info.competitor?R([`比${info.competitor}${R(['强多了','实在多了'])}`,`${info.competitor}看完直接放弃了`]):'';
+function genDouyin(info, idx) {
+  const a = analyzeProduct(info);
+  const per = PD_PROFILES[idx % PD_PROFILES.length];
+  const casual = toneLevel < 35, pro = toneLevel > 65;
+  const scene = pickScene(info, a);
+  const featLine = a.hp + (a.hp2 ? `+${a.hp2}` : '');
+  const compRef = info.competitor ? R([`比${info.competitor}强多了`, `${info.competitor}看完直接放弃`]) : '';
 
-  const openPool=isPurchased?[
-    ()=>`${per.o} ${featLine} ${R(['真没翻车','没让人失望','值了'])}`,
-    ()=>`用了${R(['两周','一个月','半个月'])} ${featLine} ${R(['确实能打','没有虚标','比想象的好'])}`,
-  ]:[
-    ()=>`刷到了 ${per.a}`,
-    ()=>`${per.o} 这个看着行不行`,
-    ()=>'这个到底行不行 有没有踩坑的',
+  const opens = isPurchased ? [
+    `${per.o}。`,
+    `用了${R(['两周','一个月','半个月'])}，来说说真实感受。`,
+    `真实评测，不是广。`,
+  ] : [
+    `刷到了，${per.o}吗？`,
+    `${per.o}，这个到底行不行。`,
+    `有没有踩坑的，评论区聊聊。`,
   ];
 
-  let text=pick(openPool)()+'。'+R([
-    `${a.hp}在这个价位 ${R(['香麻了','太能打了','真的顶'])} ${scene.s}`,
-    `${a.hp} ${R(['闭眼入','看参数就知道','实测没翻车'])}`,
-    `就冲${a.hp}这一点 ${R(['值了','够了','比我想的好'])}`,
-    `${featLine} 这个配置 ${R(['真卷','杀疯了'])}`,
-  ])+'。'+R(isPurchased?['早买早享受','这波不亏','放心入 没什么坑','基本满意']:['冲不冲兄弟们','已经下了 到货拍视频','评论区蹲一个真实用户']);
+  const insights = [
+    `${a.hp}在这价位${R(['香麻了','太能打了','真的顶'])}，${scene.s}时${scene.d}。`,
+    `就冲${a.hp}这一点，${R(['值了','够了','比想的好'])}。${compRef}`,
+    `${featLine}，这配置${R(['真卷','杀疯了'])}。${R(['冲不冲？','闭眼入了'])}`,
+    `${a.hp}实测没虚标，${scene.d}。${compRef}`,
+  ];
 
-  if(casual){text=text.replace(/确实/g,'真的');if(!text.endsWith('！')&&Math.random()>.6) text+='！';}
-  if(pro){text=text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数能打');text=text.replace(/闭眼入/g,'可入');}
+  const closes = isPurchased
+    ? ['早买早享受。', '放心入，没什么坑。', '这波不亏。', '整体满意，推荐。']
+    : ['评论区告诉我值不值冲。', '已经下单了，到货拍视频。', '纠结中，有用过的说下。'];
 
-  return{text:text.trim(),name:R(NAMES_D),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(20,5000),hours:RI(1,8),platform:'douyin'};
+  let text = R(opens) + R(insights) + R(closes);
+
+  if(!casual && !pro) {
+    // 适中语气不变
+  } else if(casual) {
+    text = text.replace(/确实/g,'真的');
+    if(!text.endsWith('！') && Math.random()>.5) text += '！';
+  } else if(pro) {
+    text = text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数能打');
+    text = text.replace(/闭眼入/g,'可入');
+  }
+
+  return {text:text.trim(), name:R(NAMES_D), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(20,5000), hours:RI(1,8), platform:'douyin'};
 }
 
-// ---- 小红书 ----
-const PX=[{o:'被种草很久终于下手了',a:'来说说真实感受'},{o:'做了一周功课才选的',a:'选品思路分享'},{o:'小白第一次买',a:'需要姐妹们给建议'},{o:'第N台了',a:'这次确实不一样'},{o:'新家装修选了它',a:'和整体风格很搭'},{o:'一个人住',a:'提升幸福感的好物'},{o:'送给朋友/爸妈的',a:'他们反馈说'},{o:'看到好多人推荐就买了',a:'没让人失望'}];
+// ================================================================
+// 小红书
+// ================================================================
+const PX_PROFILES = [
+  {o:'被种草很久终于下手了', a:'真实体验分享'},
+  {o:'做了一周功课才选', a:'选品思路'},
+  {o:'小白第一次入手', a:'需要姐妹建议'},
+  {o:'新家装修配的', a:'和风格很搭'},
+  {o:'一个人住的提升好物', a:'幸福感up'},
+  {o:'看到好多人推荐就买了', a:'没让人失望'},
+  {o:'回购第N次了', a:'真的很好用'},
+  {o:'送给家人的', a:'反馈很好'},
+];
 
-function genXhs(info,idx){
-  const a=analyzeProduct(info);
-  const per=PX[idx%PX.length];
-  const casual=toneLevel<35,pro=toneLevel>65;
-  const featLine=a.hp+(a.hp2?`配合${a.hp2}`:'');
+function genXhs(info, idx) {
+  const a = analyzeProduct(info);
+  const per = PX_PROFILES[idx % PX_PROFILES.length];
+  const casual = toneLevel < 35, pro = toneLevel > 65;
+  const featLine = a.hp + (a.hp2 ? `配合${a.hp2}` : '');
+  const compRef = info.competitor ? `对比${info.competitor}，${R(['${info.name}更值得入','还是选了这个'])}` : '';
+  const scene = pickScene(info, a);
 
-  const openPool=isPurchased?[
-    ()=>`用了${R(['两周','一个月'])} 来repo ${per.a}`,
-    ()=>`${per.o} 来分享下真实感受 ✨`,
-    ()=>R(['真实用户反馈 不是广','自己买的 真诚分享']),
-  ]:[
-    ()=>`${per.o} 姐妹们帮我看看 ✨`,
-    ()=>`🔥种草好久了 ${per.a}`,
-    ()=>`👀做了功课 ${per.a}这个可以入吗`,
+  const opens = isPurchased ? [
+    `用了${R(['两周','一个月'])}，来repo一下真实感受 ✨`,
+    `${per.o}，${per.a} ～`,
+    `真实用户分享，不是广告 🙅`,
+  ] : [
+    `${per.o}，姐妹们帮我看看 ✨`,
+    `🔍 做了功课，${per.a}，这个可以入吗`,
+    `种草好久了，${per.a} ✨`,
   ];
 
-  const insightPool=[
-    ()=>`${a.hp}这个体验 ${R(['太加分了','提升幸福感','每天都在用'])} ${featLine} ${R(['绝绝子','太舒服了','爱了爱了'])}`,
-    ()=>`对比了${info.competitor||'别家'} ${a.hp}确实是${info.name}的亮点 ${info.competitor?`${info.competitor}没有这个`:'其他家目前给不到'}`,
-    ()=>`${a.hp} ${R(['真不是参数党','用起来才知道多香','解决了我最大的痛点'])} ${a.priceSeg}能有这个 真的可以`,
+  const insights = [
+    `${a.hp}这个体验${R(['太加分了','提升幸福感','每天都用'])}，${featLine}${R(['绝绝子','太舒服了','爱了爱了'])} ✨`,
+    `对比了${info.competitor||'别家'}，${a.hp}确实是${info.name}的亮点。${compRef}`,
+    `${a.hp}${R(['真不是参数党','用起来才知道多香','解决了最大痛点'])}，${a.priceSeg}能有这个真的可以 🌟`,
+    `${scene.s}时${scene.d}，${featLine}效果很惊喜 💕`,
   ];
 
-  let text=pick(openPool)()+'。'+pick(insightPool)()+'。'+R(isPurchased?['闭眼入没毛病 ✨','提升生活幸福感的好物 推荐！','之后继续分享使用感受~','真的不后悔 ✨']:[info.price?`${info.price}值得冲吗姐妹们 🥺`:`家人们觉得值吗`,'有没有买过的姐妹给个建议 🥺','周末去线下看看再决定']);
+  const closes = isPurchased
+    ? ['闭眼入没毛病 ✨', '提升生活幸福感的好物，推荐！', '之后继续分享使用感受～', '真的不后悔 ✨']
+    : [
+        info.price?`${info.price}值得冲吗姐妹们 🥺`:`家人们觉得值吗 🥺`,
+        '有没有买过的姐妹给个建议 🥺',
+        '周末去线下看看再决定',
+      ];
 
-  if(casual){text=text.replace(/绝绝子/g,'真的太棒了').replace(/幸福感/g,'太幸福了');}
-  if(pro){text=text.replace(/绝绝子|爱了|种草|太舒服了/g,'参数到位');if(Math.random()>.5) text+=' 做了详细功课才选的';}
+  let text = R(opens) + R(insights) + R(closes);
 
-  return{text:text.trim(),name:R(NAMES_X),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(10,800),hours:RI(1,24),platform:'xhs'};
+  if(casual) {
+    text = text.replace(/绝绝子/g,'真的太棒了').replace(/幸福感/g,'太幸福了');
+  }
+  if(pro) {
+    text = text.replace(/绝绝子|爱了|种草|太舒服了/g,'参数到位');
+    if(Math.random()>.5) text += ' 做了详细功课才选的。';
+  }
+
+  return {text:text.trim(), name:R(NAMES_X), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(10,800), hours:RI(1,24), platform:'xhs'};
+}
+
+// ================================================================
+// AI 生成（DeepSeek，可选）
+// ================================================================
+async function generateWithAI(platform, info, count) {
+  const key = localStorage.getItem('brg_ai_key');
+  if(!key) return null;
+
+  const platNames = {bili:'B站', douyin:'抖音', xhs:'小红书'};
+  const platGuide = {
+    bili: '风格：B站评论区风格，真实用户口吻，可有弹幕/表情，有具体场景，偶尔发问，字数60-120字',
+    douyin: '风格：抖音短视频评论风格，简短有力，口语化，偶有感叹号，字数40-80字',
+    xhs: '风格：小红书种草风格，可加emoji，亲切自然，有真实体验感，字数60-100字',
+  };
+
+  const methodHints = getMethodHints(platform);
+  const fbHints = getFeedbackHints(info.name, platform);
+  const userState = isPurchased ? '已购买用户（侧重使用体验分享）' : '潜在购买用户（侧重购买决策、对比、发问）';
+  const toneDesc = toneLevel < 35 ? '偏口语（真实感强，接地气）' : toneLevel > 65 ? '偏专业（硬核评测风格）' : '适中（平衡口语和专业性）';
+
+  const systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。每条评论都要有独特的用户角色和视角，避免雷同。`;
+
+  const userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
+
+产品信息：
+- 名称：${info.name}
+- 品类：${info.category||'未分类'}
+- 核心卖点：${(info.features||[]).join('、')}
+- 价格区间：${info.price||'未知'}
+- 产品描述：${info.desc||'无'}
+${info.competitor ? `- 竞品：${info.competitor}（${(info.compFeatures||[]).join('、')||'无卖点'}）` : ''}
+${info.materials?.length ? `- 产品资料摘要：${info.materials.map(m=>m.text.substring(0,200)).join(' | ')}` : ''}
+
+生成要求：
+- ${platGuide[platform]}
+- 用户状态：${userState}
+- 语调：${toneDesc}
+${methodHints ? `- 风格指导：${methodHints}` : ''}
+${fbHints ? `- 避免以下问题（用户反馈）：${fbHints}` : ''}
+
+请严格按照以下JSON格式返回（不要有其他文字）：
+{"comments": ["评论1", "评论2", ...]}`;
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {role:'system', content:systemPrompt},
+          {role:'user', content:userPrompt},
+        ],
+        temperature: 0.9,
+        max_tokens: 2000,
+      }),
+    });
+
+    if(!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const content = data.choices[0].message.content.trim();
+
+    // 提取JSON
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('AI返回格式异常');
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed.comments || [];
+  } catch(e) {
+    console.error('AI生成失败:', e);
+    return null;
+  }
 }
 
 // ================================================================
 // 生成入口
 // ================================================================
-function generateFor(platform) {
+async function generateFor(platform) {
   curPlatform = platform;
   const pair = getProductPair();
-  if(!pair) {toast('请先选择一个产品');return;}
+  if(!pair) { toast('请先选择一个产品'); return; }
 
   const info = {
     name: pair.myProduct.name,
@@ -1350,75 +1703,133 @@ function generateFor(platform) {
     url: pair.myProduct.url||'',
     desc: pair.myProduct.desc||'',
     materials: pair.myProduct.materials||[],
-    competitor: pair.comp?pair.comp.name:'',
-    compFeatures: pair.comp?(pair.comp.features||[]):[],
-    compPrice: pair.comp?(pair.comp.price||''):'',
+    competitor: pair.comp ? pair.comp.name : '',
+    compFeatures: pair.comp ? (pair.comp.features||[]) : [],
+    compPrice: pair.comp ? (pair.comp.price||'') : '',
   };
 
-  // 如果有资料，注入前500字作为上下文
-  if(info.materials?.length) {
-    const matText = info.materials.map(m=>`【${m.name}】${m.text.substring(0,300)}`).join('\n');
-    // 在卖点中混入资料内容（真实感增强）
+  // 从资料中提取卖点
+  if(info.materials.length) {
+    const matText = info.materials.map(m=>m.text.substring(0,300)).join('\n');
     const matFeatures = matText.split(/[，。\n]/).filter(s=>s.length>5&&s.length<30).slice(0,5);
-    info.features = [...new Set([...info.features,...matFeatures])];
+    info.features = [...new Set([...info.features, ...matFeatures])];
   }
 
-  // 注入方法论提示
-  const activeMethods = S.methods().filter(m=>m.active&&(!m.platform||m.platform===platform));
-  const methodHint = activeMethods.length ? '\n方法论参考：'+activeMethods.map(m=>m.content).join('；') : '';
-
-  // 注入修改意见
-  const pendingFbs = S.feedback().filter(f=>!f.processed&&f.prod===info.name);
-  const fbHint = pendingFbs.length ? '\n用户反馈：'+pendingFbs.map(f=>f.text).join('；') : '';
-
-  // 生成
-  const generators = {bili:genBili,douyin:genDouyin,xhs:genXhs};
-  curComments = [];
   const cnt = Math.min(genCount, 15);
-  for(let i=0;i<cnt;i++) curComments.push(generators[platform](info,i));
+
+  // 显示加载状态
+  document.getElementById('resultArea').innerHTML = `<div class="generating"><div class="spin"></div><div>正在生成中…</div></div>`;
+  document.getElementById('resultActions').style.display = 'none';
+
+  // 尝试 AI 生成
+  const aiKey = localStorage.getItem('brg_ai_key');
+  if(aiKey) {
+    const aiComments = await generateWithAI(platform, info, cnt);
+    if(aiComments && aiComments.length > 0) {
+      // AI 生成成功
+      curComments = aiComments.map((text, i) => ({
+        text,
+        name: platform==='bili' ? R(NAMES_B) : platform==='douyin' ? R(NAMES_D) : R(NAMES_X),
+        color: AVATAR_COLORS[i%AVATAR_COLORS.length],
+        likes: RI(platform==='douyin'?20:10, platform==='douyin'?5000:platform==='bili'?3200:800),
+        hours: RI(1, platform==='xhs'?24:12),
+        platform,
+        aiGenerated: true,
+      }));
+      renderComments();
+      document.getElementById('resultActions').style.display = 'flex';
+      return;
+    }
+    // AI 失败，降级到模板引擎
+    toast('AI生成失败，使用模板引擎生成');
+  }
+
+  // 模板引擎生成
+  const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
+  curComments = [];
+  for(let i=0;i<cnt;i++) curComments.push(generators[platform](info, i));
   renderComments();
   document.getElementById('resultActions').style.display = 'flex';
 }
 
+// ----------------------------------------------------------------
+// 重新生成单条
+// ----------------------------------------------------------------
+function regenOne(idx) {
+  const pair = getProductPair();
+  if(!pair) return;
+  const info = {
+    name: pair.myProduct.name,
+    category: pair.myProduct.category||'',
+    features: pair.myProduct.features||[],
+    price: pair.myProduct.price||'',
+    desc: pair.myProduct.desc||'',
+    materials: pair.myProduct.materials||[],
+    competitor: pair.comp ? pair.comp.name : '',
+    compFeatures: pair.comp ? (pair.comp.features||[]) : [],
+    compPrice: pair.comp ? (pair.comp.price||'') : '',
+  };
+  const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
+  curComments[idx] = generators[curPlatform](info, idx+Math.floor(Math.random()*100));
+  renderComments();
+  toast('已重新生成此条');
+}
+
 // ================================================================
-// 渲染评论
+// 渲染
 // ================================================================
 function renderComments() {
   const area = document.getElementById('resultArea');
-  const badges = {bili:'<span class="badge b-bili">📺 B站评论</span>',douyin:'<span class="badge b-douyin">🎵 抖音评论</span>',xhs:'<span class="badge b-xhs">📕 小红书评论</span>'};
-  const stat = isPurchased?'<span style="font-size:11px;color:#10b981;margin-left:8px">✅ 已购 · 体验向</span>':'<span style="font-size:11px;color:#f59e0b;margin-left:8px">🔍 未购 · 决策向</span>';
+  const badges = {
+    bili: '<span class="badge b-bili">📺 B站评论</span>',
+    douyin: '<span class="badge b-douyin">🎵 抖音评论</span>',
+    xhs: '<span class="badge b-xhs">📕 小红书评论</span>',
+  };
+  const stat = isPurchased
+    ? '<span style="font-size:11px;color:#10b981;margin-left:8px">✅ 已购 · 体验向</span>'
+    : '<span style="font-size:11px;color:#f59e0b;margin-left:8px">🔍 未购 · 决策向</span>';
   const tone = `<span style="font-size:11px;color:#888;margin-left:4px">语调${toneLevel<35?'偏口语':toneLevel>65?'偏专业':'适中'}</span>`;
+  const aiTag = curComments[0]?.aiGenerated ? '<span class="badge b-green" style="margin-left:6px">✨ AI生成</span>' : '';
 
-  area.innerHTML = `<div style="margin-bottom:12px">${badges[curPlatform]}${stat}${tone}</div>`+renderers[curPlatform](curComments);
+  area.innerHTML = `<div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${badges[curPlatform]}${stat}${tone}${aiTag}</div>`
+    + renderers[curPlatform](curComments);
 }
 
 const renderers = {
-  bili: c => c.map(x=>{
-    const t=E(x.text).replace(/'/g,"&#39;");
+  bili: cs => cs.map((x, idx) => {
+    const t = x.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
     return `<div class="cc-wrap bc">
       <div class="bc-avatar" style="background:${x.color}">${x.name[0]}</div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:0">
         <div class="bc-name">${E(x.name)}</div>
         <div class="bc-text">${E(x.text)}</div>
         <div class="bc-meta"><span>👍 ${x.likes>=1000?(x.likes/1000).toFixed(1)+'k':x.likes}</span><span>${x.hours}小时前</span></div>
       </div>
-      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+      <div class="cc-actions">
+        <button class="cc-act-btn" onclick="regenOne(${idx})">🔄</button>
+        <button class="cc-act-btn" onclick="copySingle('${t}')">复制</button>
+      </div>
     </div>`;
   }).join(''),
-  douyin: c => c.map(x=>{
-    const t=E(x.text).replace(/'/g,"&#39;");
+
+  douyin: cs => cs.map((x, idx) => {
+    const t = x.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
     return `<div class="cc-wrap dc">
       <div class="dc-avatar" style="background:${x.color}">${x.name[0]}</div>
-      <div style="flex:1">
+      <div style="flex:1;min-width:0">
         <div class="dc-name">${E(x.name)}</div>
         <div class="dc-text">${E(x.text)}</div>
-        <div class="dc-meta"><span>${x.hours}小时前</span><span class="dc-heart ${Math.random()>.5?'liked':''}">♡ ${x.likes>=1000?(x.likes/1000).toFixed(1)+'k':x.likes}</span></div>
+        <div class="dc-meta"><span>${x.hours}小时前</span><span>♡ ${x.likes>=1000?(x.likes/1000).toFixed(1)+'k':x.likes}</span></div>
       </div>
-      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+      <div class="cc-actions">
+        <button class="cc-act-btn" onclick="regenOne(${idx})">🔄</button>
+        <button class="cc-act-btn" onclick="copySingle('${t}')">复制</button>
+      </div>
     </div>`;
   }).join(''),
-  xhs: c => c.map(x=>{
-    const t=E(x.text).replace(/'/g,"&#39;");
+
+  xhs: cs => cs.map((x, idx) => {
+    const t = x.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
     return `<div class="cc-wrap xc">
       <div class="xc-header">
         <div class="xc-avatar" style="background:${x.color}">${x.name[0]}</div>
@@ -1426,34 +1837,36 @@ const renderers = {
       </div>
       <div class="xc-text">${E(x.text)}</div>
       <div class="xc-meta"><span>${x.hours}小时前</span><span>♡ ${x.likes}</span></div>
-      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+      <div class="cc-actions" style="top:0">
+        <button class="cc-act-btn" onclick="regenOne(${idx})">🔄</button>
+        <button class="cc-act-btn" onclick="copySingle('${t}')">复制</button>
+      </div>
     </div>`;
   }).join(''),
 };
 
-function copyOne(btn,text){
-  navigator.clipboard.writeText(text.replace(/&#39;/g,"'")).then(()=>toast('已复制'));
-}
-function copyAll(){
+function copyAll() {
   navigator.clipboard.writeText(curComments.map(c=>c.text).join('\n')).then(()=>toast('已复制全部'));
 }
 
 // ================================================================
 // 弹窗
 // ================================================================
-function openModal(id){
+function openModal(id) {
   document.getElementById(id).classList.add('show');
   if(id==='methodModal') renderMethodModal();
   if(id==='feedbackModal') renderFeedbackModal();
 }
-function closeModal(id){
+function closeModal(id) {
   document.getElementById(id).classList.remove('show');
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'))}});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+});
 
-function renderMethodModal(){
-  const methods=S.methods();
-  const platMap={bili:'📺B站',douyin:'🎵抖音',xhs:'📕小红书','':'🌐通用'};
+function renderMethodModal() {
+  const methods = S.methods();
+  const platMap = {bili:'📺B站', douyin:'🎵抖音', xhs:'📕小红书', '':'🌐通用'};
   document.getElementById('methodModalBody').innerHTML = methods.length ? methods.map(m=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
@@ -1461,7 +1874,7 @@ function renderMethodModal(){
           <div style="font-size:15px;font-weight:600;margin-bottom:4px">${E(m.name)}</div>
           <div style="margin-bottom:6px">
             <span class="tag ${m.active?'tag-p':'tag-d'}">${m.active?'✅ 启用':'⛔ 停用'}</span>
-            <span class="tag tag-a">${platMap[m.platform]||'通用'}</span>
+            <span class="tag tag-a">${platMap[m.platform||'']||'通用'}</span>
           </div>
           <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${E(m.content)}</div>
         </div>
@@ -1470,31 +1883,27 @@ function renderMethodModal(){
           <button class="btn-sm d" onclick="deleteMethod(${m.id});renderMethodModal()">删除</button>
         </div>
       </div>
-    </div>
-  `).join('') : '<div class="no-data">暂无方法论</div>';
+    </div>`).join('') : '<div class="no-data">暂无方法论</div>';
 }
 
-function renderFeedbackModal(){
-  const fbs=S.feedback();
+function renderFeedbackModal() {
+  const fbs = S.feedback();
   document.getElementById('feedbackModalBody').innerHTML = fbs.length ? fbs.map(f=>`
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1">
           <div style="font-size:14px;font-weight:600;margin-bottom:3px">${E(f.prod||'通用产品')}</div>
-          <div style="margin-bottom:6px">
-            <span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span>
-          </div>
+          <div style="margin-bottom:6px"><span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span></div>
           ${f.original?`<div style="font-size:12px;color:#555;padding:6px 10px;background:#f9f9f9;border-radius:6px;margin-bottom:6px"><strong>原文：</strong>${E(f.original.substring(0,100))}</div>`:''}
           <div style="font-size:13px;padding:8px 12px;background:#fff7e6;border-radius:6px;border-left:3px solid #f59e0b">💬 ${E(f.text)}</div>
           <div style="font-size:11px;color:#bbb;margin-top:4px">${fmt(f.time)}</div>
         </div>
-        <div style="display:flex;gap:5px;flex-shrink:0;flex-direction:column">
+        <div style="display:flex;gap:5px;flex-direction:column">
           ${!f.processed?`<button class="btn-sm s" onclick="processFeedback(${f.id});renderFeedbackModal()">标为已处理</button>`:''}
           <button class="btn-sm d" onclick="deleteFeedback(${f.id});renderFeedbackModal()">删除</button>
         </div>
       </div>
-    </div>
-  `).join('') : '<div class="no-data">暂无修改意见</div>';
+    </div>`).join('') : '<div class="no-data">暂无修改意见</div>';
 }
 
 // ================================================================
