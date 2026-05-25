@@ -1,988 +1,1507 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>口碑评论生成器</title>
-    <style>
-/* ============ CSS ============ */
-:root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --text: #1e293b;
-    --text-secondary: #64748b;
-    --border: #e2e8f0;
-    --shadow: 0 1px 3px rgba(0,0,0,0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-    --radius: 12px;
-    --success: #22c55e;
-    --danger: #ef4444;
-    --warning: #f59e0b;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>口碑评论生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#4f46e5;--primary-h:#4338ca;--bg:#f5f5f5;
+  --card:#fff;--text:#333;--text2:#666;--text3:#999;
+  --border:#e0e0e0;--success:#10b981;--danger:#e53e3e;
+  --warning:#f59e0b;--info:#3b82f6;
 }
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.6;
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:960px;margin:0 auto;padding:20px 16px}
+/* header */
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#4f46e5,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;gap:8px;flex-wrap:wrap}
+/* nav tabs */
+.nav-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:24px;gap:0}
+.nav-tab{padding:12px 20px;border:none;background:transparent;cursor:pointer;font-size:14px;color:var(--text2);border-bottom:3px solid transparent;margin-bottom:-2px;font-weight:500;transition:all .2s}
+.nav-tab:hover{color:var(--primary)}
+.nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+/* section */
+.section{display:none}
+.section.active{display:block}
+/* buttons */
+.btn{padding:8px 16px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+.btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+.btn-o{border:1px solid var(--border);background:var(--card);color:#555}.btn-o:hover{background:#fafafa}
+.btn-s{background:var(--success);color:#fff}.btn-s:hover{opacity:.9}
+.btn-d{background:var(--card);color:var(--danger);border:1px solid #fecaca}.btn-d:hover{background:#fef2f2}
+.btn-ghost{background:transparent;color:var(--text2);padding:6px 10px;font-size:12px}.btn-ghost:hover{background:#f0f0f0}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:#fff;color:#555;transition:all .2s}
+.btn-sm:hover{background:#f5f5f5}
+.btn-sm.d{color:var(--danger);border-color:#fecaca}.btn-sm.d:hover{background:#fef2f2}
+.btn-sm.s{color:var(--success);border-color:#bbf7d0}.btn-sm.s:hover{background:#f0fdf4}
+.btn-sm.i{color:var(--info);border-color:#bfdbfe}.btn-sm.i:hover{background:#eff6ff}
+.btn-sm.w{color:var(--warning);border-color:#fde68a}.btn-sm.w:hover{background:#fffbeb}
+.btn-pdf{background:#dc2626;color:#fff;padding:5px 10px;font-size:11px;border-radius:4px;border:none;cursor:pointer}
+/* cards */
+.card{background:var(--card);border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+/* select bar */
+.select-bar{background:var(--card);border-radius:12px;padding:14px 18px;margin-bottom:14px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.select-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.select-label{font-size:13px;color:var(--text2);white-space:nowrap;font-weight:500}
+.product-chips{display:flex;gap:7px;flex-wrap:wrap}
+.product-chip{padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:#555;transition:all .2s;font-weight:500;position:relative}
+.product-chip:hover{border-color:#bbb}
+.product-chip.mine.selected{border-color:var(--primary);background:#f0efff;color:var(--primary)}
+.product-chip.comp.selected{border-color:var(--warning);background:#fffbeb;color:#b45309}
+.product-chip .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.product-chip.mine .dot{background:var(--primary)}
+.product-chip.comp .dot{background:var(--warning)}
+.product-chip .tag{font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px}
+.product-chip.mine .tag{background:#f0efff;color:var(--primary)}
+.product-chip.comp .tag{background:#fffbeb;color:#b45309}
+.no-product{font-size:13px;color:#bbb}
+.info-row{font-size:12px;color:var(--text2);margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+.info-row span{display:flex;align-items:center;gap:3px}
+/* controls */
+.controls-row{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.tone-group{display:flex;align-items:center;gap:8px;flex:1;min-width:180px}
+.tone-slider{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,#ff6b6b,#ffa502,#7c5ce7,#2c3e50);cursor:pointer}
+.tone-slider::-webkit-slider-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--primary);cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.15)}
+.tone-ends{display:flex;justify-content:space-between;font-size:10px;color:#ccc;margin-top:2px}
+.purchase-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.toggle-btn{padding:6px 14px;font-size:13px;cursor:pointer;border:none;background:#fff;color:#999;transition:all .2s}
+.toggle-btn:first-child{border-right:1px solid var(--border)}
+.toggle-btn.active{background:var(--primary);color:#fff}
+/* platforms */
+.platform-btns{display:flex;gap:10px;margin-bottom:16px}
+.platform-btn{flex:1;padding:14px 0;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff}
+.platform-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.bili-btn{background:linear-gradient(135deg,#fb7299,#e84c7a)}
+.douyin-btn{background:linear-gradient(135deg,#1a1a2e,#000);border:2px solid #fe2c55}
+.douyin-btn:hover{border-color:#ff5c85;box-shadow:0 6px 20px rgba(254,44,85,.3)}
+.xhs-btn{background:linear-gradient(135deg,#ff2442,#e0203a)}
+/* link input */
+.link-row{display:flex;gap:8px;margin-bottom:10px}
+.link-row input{flex:1}
+.link-status{font-size:12px;color:var(--text2);margin-bottom:10px;padding:6px 10px;background:#f9f9f9;border-radius:6px;display:none}
+.link-status.show{display:block}
+.link-status.ok{color:var(--success);background:#f0fdf4}
+.link-status.err{color:var(--danger);background:#fef2f2}
+.link-status.loading{color:var(--text2);background:#f9f9f9}
+/* result */
+.result-area{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border);min-height:200px;margin-bottom:14px}
+.result-header{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;color:#fff}
+.b-bili{background:#fb7299}.b-douyin{background:#1a1a2e;border:1px solid #fe2c55;color:#fe2c55}.b-xhs{background:#ff2442}
+.b-green{background:var(--success)}.b-yellow{background:var(--warning)}.b-blue{background:var(--info)}
+.empty{text-align:center;padding:50px 20px;color:#ccc;font-size:14px}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.result-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* comment styles */
+.bc{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;position:relative}
+.bc:last-child{border-bottom:none}
+.bc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;color:#fff}
+.bc-name{font-size:13px;color:#61666d;margin-bottom:2px}
+.bc-text{font-size:13px;color:#18191c;line-height:1.65}
+.bc-meta{font-size:11px;color:#9499a0;margin-top:4px;display:flex;gap:14px}
+.dc{display:flex;gap:10px;padding:14px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start}
+.dc:last-child{border-bottom:none}
+.dc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;color:#fff}
+.dc-name{font-size:12px;color:#999;margin-bottom:2px}
+.dc-text{font-size:14px;color:#333;line-height:1.5}
+.dc-meta{font-size:11px;color:#bbb;margin-top:5px;display:flex;justify-content:space-between}
+.dc-heart{color:#ccc;cursor:pointer}
+.xc{padding:12px 0;border-bottom:1px solid #f5f5f5}
+.xc:last-child{border-bottom:none}
+.xc-header{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.xc-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;color:#fff}
+.xc-name{font-size:12px;color:#999}
+.xc-text{font-size:14px;color:#333;line-height:1.7;padding-left:36px}
+.xc-meta{font-size:11px;color:#bbb;margin-top:4px;padding-left:36px;display:flex;gap:10px}
+.cc-wrap{position:relative}
+.copy-btn{position:absolute;top:8px;right:8px;padding:3px 10px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:#fff;color:#999;cursor:pointer;opacity:0;transition:opacity .2s}
+.cc-wrap:hover .copy-btn{opacity:1}
+.copy-btn:hover{color:var(--primary);border-color:var(--primary)}
+/* management */
+.mgr-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.mgr-tab{padding:8px 16px;border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.mgr-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+/* forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-full{width:100%;margin-bottom:10px}
+.form-g{margin-bottom:10px}
+.form-g label{display:block;font-size:12px;font-weight:500;color:#777;margin-bottom:4px}
+.form-g input,.form-g textarea,.form-g select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;font-family:inherit}
+.form-g input:focus,.form-g textarea:focus,.form-g select:focus{border-color:var(--primary)}
+.form-g textarea{resize:vertical;min-height:60px}
+.form-g select{background:#fff}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+textarea{min-height:50px;resize:vertical}
+/* data list */
+.data-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:#fff;transition:all .2s}
+.data-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.data-item.mine{border-left:3px solid var(--primary)}
+.data-item.comp{border-left:3px solid var(--warning)}
+.data-item.info{flex:1}
+.data-item-title{font-size:14px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.data-item-title .sub{font-size:12px;font-weight:400;color:var(--text2)}
+.data-item-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-top:4px;max-width:500px}
+.data-item-meta{font-size:11px;color:#bbb;margin-top:3px}
+.data-item-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
+.data-item-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500}
+.tag-a{background:#f0efff;color:var(--primary)}.tag-i{background:#fff7e6;color:#b45309}.tag-p{background:#f0fdf4;color:#166534}.tag-d{background:#fef2f2;color:#991b1b}
+/* file upload */
+.file-upload{display:flex;align-items:center;gap:8px;margin-top:6px}
+.file-upload input[type=file]{font-size:12px;border:none;background:transparent}
+.mat-list{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+.mat-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#555}
+.mat-chip .del{color:#ccc;cursor:pointer;font-size:13px}.mat-chip .del:hover{color:var(--danger)}
+/* feedback */
+.fb-stat{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.fb-stat-item{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#f9f9f9;border-radius:8px;font-size:13px}
+.fb-stat-item .num{font-size:18px;font-weight:700;color:var(--primary)}
+/* settings */
+.settings-box{background:#fffbeb;border:2px solid var(--warning);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+.settings-box h4{color:var(--warning);font-size:14px;margin-bottom:6px}
+.settings-box p{font-size:12px;color:#666;margin-bottom:12px}
+/* toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:#333;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;z-index:9999;transition:transform .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:760px;max-height:88vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.2)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1}
+.modal-hdr-title{font-size:16px;font-weight:600}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:#f5f5f5;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#999;transition:all .2s}
+.modal-close:hover{background:#eee;color:#333}
+.modal-body{padding:24px}
+/* pdf viewer */
+.pdf-section{margin-top:14px;border-top:1px solid var(--border);padding-top:14px}
+.pdf-section-title{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.pdf-preview{background:#f9f9f9;border-radius:8px;padding:12px;font-size:12px;color:#555;line-height:1.7;max-height:150px;overflow-y:auto;white-space:pre-wrap;border:1px solid var(--border)}
+/* divider */
+.divider{border-top:1px dashed var(--border);margin:16px 0}
+/* method detail */
+.method-detail{font-size:12px;color:var(--text2);line-height:1.6;padding:8px 12px;background:#f9f9f9;border-radius:6px;margin-top:6px;max-height:80px;overflow:hidden;position:relative}
+.method-detail::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,#f9f9f9)}
+/* no data */
+.no-data{text-align:center;padding:30px;color:#ccc;font-size:13px}
+/* responsive */
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .controls-row{flex-direction:column;gap:10px}
+  .platform-btns{flex-direction:column}
+  .nav-tabs{flex-wrap:wrap}
+  .header{flex-direction:column;align-items:flex-start}
 }
-
-.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
-header { text-align: center; margin-bottom: 32px; }
-header h1 { font-size: 2rem; margin-bottom: 8px; }
-.subtitle { color: var(--text-secondary); font-size: 0.95rem; }
-
-/* Nav Tabs */
-.nav-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 24px;
-    border-bottom: 2px solid var(--border);
-}
-.nav-tab {
-    padding: 12px 24px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-size: 1rem;
-    color: var(--text-secondary);
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-}
-.nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-/* Sections */
-.section { display: none; }
-.section.active { display: block; }
-
-/* Steps */
-.step { margin-bottom: 24px; }
-.step h3 { font-size: 1.1rem; margin-bottom: 12px; }
-
-/* Grids */
-.grid { display: flex; flex-wrap: wrap; gap: 10px; }
-.grid-btn {
-    padding: 10px 20px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card);
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-}
-.grid-btn:hover { border-color: var(--primary); color: var(--primary); }
-.grid-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-/* Platform */
-.platform-row { display: flex; gap: 12px; }
-.platform-btn {
-    flex: 1;
-    padding: 16px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card);
-    cursor: pointer;
-    text-align: center;
-    font-size: 1rem;
-}
-.platform-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-/* Inputs */
-.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-input, textarea, select {
-    padding: 12px;
-    border: 2px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 0.95rem;
-    outline: none;
-    font-family: inherit;
-    width: 100%;
-}
-input:focus, textarea:focus { border-color: var(--primary); }
-textarea { resize: vertical; min-height: 60px; }
-
-/* Buttons */
-.btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: var(--radius);
-    cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-}
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-hover); }
-.btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
-.btn-danger { background: white; color: var(--danger); border: 1px solid var(--danger); }
-.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-
-.btn-generate {
-    width: 100%;
-    padding: 18px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    box-shadow: var(--shadow-lg);
-}
-.btn-generate:hover { transform: translateY(-1px); }
-.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-/* Results */
-.results { margin-top: 24px; }
-.result-meta { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px; }
-.comment-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: var(--shadow);
-}
-.comment-text { line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
-.comment-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-/* Admin Forms */
-.admin-form {
-    background: var(--card);
-    padding: 20px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin-bottom: 20px;
-}
-.admin-form h4 { margin-bottom: 12px; }
-.form-row { margin-bottom: 10px; }
-.form-actions { display: flex; gap: 8px; margin-top: 12px; }
-
-/* Data List */
-.data-item {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-}
-.data-item-info { flex: 1; }
-.data-item-title { font-weight: 600; margin-bottom: 4px; }
-.data-item-desc { color: var(--text-secondary); font-size: 0.85rem; }
-.data-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
-/* Status Badge */
-.badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-}
-.badge-active { background: #dcfce7; color: #166534; }
-.badge-pending { background: #fef3c7; color: #92400e; }
-
-/* Toast */
-.toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #1e293b;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    transition: transform 0.3s;
-    z-index: 1000;
-}
-.toast.show { transform: translateX(-50%) translateY(0); }
-
-/* Settings */
-.settings-box {
-    background: #fff7ed;
-    border: 2px solid var(--warning);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 20px;
-}
-.settings-box h4 { color: var(--warning); margin-bottom: 8px; }
-
-/* Material */
-.material-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.85rem;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-    .platform-row { flex-direction: column; }
-    .input-row { flex-direction: column; }
-}
-    </style>
+</style>
 </head>
 <body>
 <div class="container">
-    <header>
-        <h1>🔥 口碑评论生成器</h1>
-        <p class="subtitle">一键生成小红书 / B站 / 抖音真实口碑文案</p>
-    </header>
 
-    <!-- Nav Tabs -->
-    <nav class="nav-tabs">
-        <button class="nav-tab active" onclick="showSection('main')">生成文案</button>
-        <button class="nav-tab" onclick="showSection('admin')">后台管理</button>
-        <button class="nav-tab" onclick="showSection('settings')">设置</button>
-    </nav>
+  <!-- Header -->
+  <div class="header">
+    <h1>🔥 口碑评论生成器</h1>
+    <div class="header-right">
+      <button class="btn btn-o" onclick="openModal('methodModal')">📖 方法论库</button>
+      <button class="btn btn-o" onclick="openModal('feedbackModal')">💬 修改意见</button>
+      <button class="btn btn-o" onclick="exportAll()">📤 导出全部</button>
+      <button class="btn btn-o" onclick="document.getElementById('importAllInput').click()">📥 导入</button>
+      <input type="file" id="importAllInput" accept=".json" style="display:none" onchange="importAll(event)">
+    </div>
+  </div>
 
-    <!-- ========== Main Section ========== -->
-    <section class="section active" id="section-main">
-        <!-- Step 1: Category -->
-        <div class="step">
-            <h3>① 选择品类</h3>
-            <div class="grid" id="catGrid"></div>
-        </div>
+  <!-- Nav -->
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('generator',this)">✨ 生成文案</button>
+    <button class="nav-tab" onclick="switchTab('management',this)">⚙ 管理后台</button>
+    <button class="nav-tab" onclick="switchTab('settings',this)">🔑 设置</button>
+  </nav>
 
-        <!-- Step 2: Product -->
-        <div class="step" id="prodStep" style="display:none">
-            <h3>② 选择产品</h3>
-            <div class="grid" id="prodGrid"></div>
-        </div>
+  <!-- ===== 生成区 ===== -->
+  <section class="section active" id="tab-generator">
 
-        <!-- Step 3: Platform -->
-        <div class="step" id="platStep" style="display:none">
-            <h3>③ 选择平台</h3>
-            <div class="platform-row">
-                <button class="platform-btn" data-p="xiaohongshu" onclick="selectPlatform('xiaohongshu')">📕 小红书</button>
-                <button class="platform-btn" data-p="bilibili" onclick="selectPlatform('bilibili')">📺 B站</button>
-                <button class="platform-btn" data-p="douyin" onclick="selectPlatform('douyin')">🎵 抖音</button>
-            </div>
+    <!-- 产品选择条 -->
+    <div class="select-bar">
+      <div class="select-row">
+        <span class="select-label">当前产品：</span>
+        <div class="product-chips" id="productChips">
+          <span class="no-product">还没有产品，点右上角「管理后台」添加</span>
         </div>
+      </div>
+      <div class="info-row" id="infoRow" style="display:none"></div>
+    </div>
 
-        <!-- Step 4: Link (optional) -->
-        <div class="step" id="linkStep" style="display:none">
-            <h3>④ 粘贴链接（可选）</h3>
-            <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:8px">粘贴小红书/B站文章链接，AI将自动识别内容</p>
-            <div class="input-row">
-                <input type="url" id="linkInput" placeholder="https://www.xiaohongshu.com/...">
-                <button class="btn btn-secondary" onclick="analyzeLink()">识别</button>
-            </div>
-            <div id="linkStatus" style="font-size:0.85rem;color:var(--text-secondary)"></div>
-        </div>
+    <!-- 链接识别 -->
+    <div class="card" id="linkCard" style="display:none">
+      <div class="card-title">🔗 链接识别</div>
+      <div class="link-row">
+        <input type="url" id="linkInput" placeholder="粘贴小红书/B站/抖音链接，AI自动识别产品和平台">
+        <button class="btn btn-p" onclick="analyzeLink()">识别</button>
+      </div>
+      <div class="link-status" id="linkStatus"></div>
+    </div>
 
-        <!-- Generate -->
-        <div class="step" id="genStep" style="display:none">
-            <button class="btn btn-generate" onclick="generate()">✨ 生成口碑文案</button>
+    <!-- 控制区 -->
+    <div class="card">
+      <div class="controls-row">
+        <div class="tone-group">
+          <span class="select-label" style="font-size:12px">🗣 白话</span>
+          <input type="range" class="tone-slider" id="toneSlider" min="0" max="100" value="50" oninput="updateTone()">
+          <span class="select-label" style="font-size:12px">专业 📊</span>
         </div>
+        <div class="purchase-toggle">
+          <button class="toggle-btn active" id="btn-no" onclick="setPurchased(false)">🔍 未购（决策向）</button>
+          <button class="toggle-btn" id="btn-yes" onclick="setPurchased(true)">✅ 已购（体验向）</button>
+        </div>
+      </div>
 
-        <!-- Results -->
-        <div class="results" id="resultsBox" style="display:none">
-            <h3>📝 生成结果</h3>
-            <div class="result-meta" id="resultMeta"></div>
-            <div id="resultsList"></div>
-            <button class="btn btn-secondary" style="width:100%;margin-top:16px" onclick="generate()">🔄 重新生成</button>
-        </div>
-    </section>
+      <div class="platform-btns">
+        <button class="platform-btn bili-btn" onclick="generateFor('bili')">📺 生成B站评论</button>
+        <button class="platform-btn douyin-btn" onclick="generateFor('douyin')">🎵 生成抖音评论</button>
+        <button class="platform-btn xhs-btn" onclick="generateFor('xhs')">📕 生成小红书评论</button>
+      </div>
+    </div>
 
-    <!-- ========== Admin Section ========== -->
-    <section class="section" id="section-admin">
-        <!-- Categories -->
-        <div class="admin-form">
-            <h4>品类管理</h4>
-            <div class="form-row">
-                <input type="text" id="newCatName" placeholder="新品类名称">
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary btn-sm" onclick="addCategory()">添加</button>
-            </div>
-        </div>
-        <div id="catList"></div>
+    <!-- 结果 -->
+    <div class="result-area" id="resultArea">
+      <div class="empty">
+        <div class="empty-icon">📝</div>
+        添加产品 → 选择产品 → 调好参数 → 点击平台按钮生成
+      </div>
+    </div>
+    <div class="result-actions" id="resultActions" style="display:none">
+      <button class="btn btn-p" onclick="copyAll()">📋 复制全部</button>
+      <button class="btn btn-o" onclick="generateFor(curPlatform)">🔄 换一批</button>
+    </div>
+  </section>
 
-        <!-- Products -->
-        <div class="admin-form">
-            <h4>产品管理</h4>
-            <div class="form-row">
-                <select id="prodCatSelect"><option value="">选择品类</option></select>
-            </div>
-            <div class="form-row">
-                <input type="text" id="newProdName" placeholder="产品名称">
-            </div>
-            <div class="form-row">
-                <textarea id="newProdDesc" placeholder="产品描述"></textarea>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary btn-sm" onclick="addProduct()">添加</button>
-            </div>
-        </div>
-        <div id="prodList"></div>
+  <!-- ===== 管理后台 ===== -->
+  <section class="section" id="tab-management">
 
-        <!-- Methodology -->
-        <div class="admin-form">
-            <h4>口碑方法论</h4>
-            <div class="form-row">
-                <input type="text" id="newMethodTitle" placeholder="方法论标题">
-            </div>
-            <div class="form-row">
-                <textarea id="newMethodContent" placeholder="方法论内容：指导口碑文案生成的策略、风格、注意事项" style="min-height:100px"></textarea>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary btn-sm" onclick="addMethodology()">添加</button>
-            </div>
-        </div>
-        <div id="methodList"></div>
+    <div class="mgr-tabs">
+      <button class="mgr-tab active" onclick="switchMgrTab('products',this)">📦 产品管理</button>
+      <button class="mgr-tab" onclick="switchMgrTab('methods',this)">📖 方法论</button>
+      <button class="mgr-tab" onclick="switchMgrTab('feedbacks',this)">💬 修改意见</button>
+      <button class="mgr-tab" onclick="switchMgrTab('categories',this)">🏷 品类管理</button>
+    </div>
 
-        <!-- Feedback -->
-        <div class="admin-form">
-            <h4>修改意见收集</h4>
-            <div class="form-row">
-                <input type="text" id="fbProd" placeholder="产品名称">
-                <input type="text" id="fbPlat" placeholder="平台">
-            </div>
-            <div class="form-row">
-                <textarea id="fbOriginal" placeholder="原始评论"></textarea>
-            </div>
-            <div class="form-row">
-                <textarea id="fbText" placeholder="修改意见"></textarea>
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary btn-sm" onclick="addFeedback()">提交</button>
-            </div>
+    <!-- 产品管理 -->
+    <div id="mgr-products">
+      <div class="card">
+        <div class="card-title">➕ 添加产品</div>
+        <div class="form-grid">
+          <div class="form-g">
+            <label>产品名称 *</label>
+            <input type="text" id="prodName" placeholder="产品名称">
+          </div>
+          <div class="form-g">
+            <label>品类</label>
+            <select id="prodCat"></select>
+          </div>
         </div>
-        <div id="fbList"></div>
-    </section>
+        <div class="form-g">
+          <label>核心卖点（每行一个）</label>
+          <textarea id="prodFeatures" placeholder="三色激光&#10;2000CVIA亮度&#10;云台一体化设计&#10;杜比音响"></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-g">
+            <label>价格区间</label>
+            <input type="text" id="prodPrice" placeholder="如：4000-5000">
+          </div>
+          <div class="form-g">
+            <label>参考链接</label>
+            <input type="text" id="prodUrl" placeholder="产品页面链接">
+          </div>
+        </div>
+        <div class="form-g">
+          <label>产品描述（AI生成参考）</label>
+          <textarea id="prodDesc" placeholder="描述产品的使用场景、目标用户等"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-o" onclick="clearProdForm()">清空</button>
+          <button class="btn btn-p" onclick="saveProduct()">💾 保存产品</button>
+        </div>
+      </div>
 
-    <!-- ========== Settings Section ========== -->
-    <section class="section" id="section-settings">
-        <div class="settings-box">
-            <h4>⚠️ API 配置（必须）</h4>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px">
-                本工具需要 OpenAI 兼容 API，请填写你的 API Key。
-            </p>
-            <div class="form-row">
-                <input type="text" id="apiKey" placeholder="API Key (如: sk-xxx)">
-            </div>
-            <div class="form-row">
-                <input type="text" id="apiBase" placeholder="API Base URL (默认: https://api.openai.com/v1)">
-            </div>
-            <div class="form-row">
-                <input type="text" id="apiModel" placeholder="模型名称 (默认: gpt-4o-mini)">
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
-            </div>
+      <div id="productList"></div>
+    </div>
+
+    <!-- 方法论 -->
+    <div id="mgr-methods" style="display:none">
+      <div class="card">
+        <div class="card-title">➕ 添加方法论</div>
+        <div class="form-g">
+          <label>方法论名称 *</label>
+          <input type="text" id="methodName" placeholder="如：B站测评风格、抖音带货风">
         </div>
-        <div style="color:var(--text-secondary);font-size:0.85rem">
-            <p>💡 提示：设置保存在浏览器本地存储，不会上传到服务器。</p>
+        <div class="form-g">
+          <label>适用平台</label>
+          <select id="methodPlatform">
+            <option value="">通用</option>
+            <option value="bili">B站</option>
+            <option value="douyin">抖音</option>
+            <option value="xhs">小红书</option>
+          </select>
         </div>
-    </section>
+        <div class="form-g">
+          <label>方法论内容（指导AI如何生成文案）</label>
+          <textarea id="methodContent" style="min-height:120px" placeholder="描述这个方法论的核心策略：
+1. 语气风格：...
+2. 内容结构：...
+3. 常用词汇：...
+4. 注意事项：..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-o" onclick="clearMethodForm()">清空</button>
+          <button class="btn btn-p" onclick="saveMethod()">💾 保存方法论</button>
+        </div>
+      </div>
+      <div id="methodList"></div>
+    </div>
+
+    <!-- 修改意见 -->
+    <div id="mgr-feedbacks" style="display:none">
+      <div class="fb-stat">
+        <div class="fb-stat-item"><span class="num" id="fbTotal">0</span> 全部意见</div>
+        <div class="fb-stat-item" style="color:var(--warning)"><span class="num" id="fbPending">0</span> 待处理</div>
+        <div class="fb-stat-item" style="color:var(--success)"><span class="num" id="fbDone">0</span> 已处理</div>
+      </div>
+      <div class="card">
+        <div class="card-title">➕ 提交修改意见</div>
+        <div class="form-grid">
+          <div class="form-g">
+            <label>产品名称</label>
+            <input type="text" id="fbProd" placeholder="产品名称">
+          </div>
+          <div class="form-g">
+            <label>平台</label>
+            <select id="fbPlatform">
+              <option value="">通用</option>
+              <option value="bili">B站</option>
+              <option value="douyin">抖音</option>
+              <option value="xhs">小红书</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-g">
+          <label>原始评论</label>
+          <textarea id="fbOriginal" placeholder="复制的原始评论内容"></textarea>
+        </div>
+        <div class="form-g">
+          <label>修改意见 *</label>
+          <textarea id="fbText" placeholder="哪里需要改？希望怎么调整？"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-p" onclick="saveFeedback()">💾 提交意见</button>
+        </div>
+      </div>
+      <div id="feedbackList"></div>
+    </div>
+
+    <!-- 品类管理 -->
+    <div id="mgr-categories" style="display:none">
+      <div class="card">
+        <div class="card-title">➕ 添加品类</div>
+        <div class="form-g" style="max-width:400px">
+          <label>品类名称</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="newCatName" placeholder="如：投影仪">
+            <button class="btn btn-p" onclick="saveCategory()">添加</button>
+          </div>
+        </div>
+      </div>
+      <div id="categoryList"></div>
+    </div>
+  </section>
+
+  <!-- ===== 设置 ===== -->
+  <section class="section" id="tab-settings">
+    <div class="settings-box">
+      <h4>⚡ 模板引擎说明</h4>
+      <p>本工具采用纯前端模板引擎生成评论，无需任何 API Key。所有数据保存在浏览器本地存储中。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🔧 高级设置</div>
+      <div class="form-g">
+        <label>生成条数</label>
+        <select id="genCount" onchange="saveSettings()">
+          <option value="5">5 条</option>
+          <option value="10" selected>10 条</option>
+          <option value="15">15 条</option>
+        </select>
+      </div>
+      <div class="form-g">
+        <label>默认语调</label>
+        <select id="defTone" onchange="saveSettings()">
+          <option value="20">偏口语（真实感强）</option>
+          <option value="50" selected>适中</option>
+          <option value="80">偏专业（硬核评测）</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-d" onclick="clearAllData()">🗑 清空所有数据</button>
+        <button class="btn btn-o" onclick="exportAll()">📤 导出备份</button>
+      </div>
+    </div>
+    <div class="card" style="background:#f9f9f9;border-color:#ddd">
+      <div class="card-title">📊 数据统计</div>
+      <div class="fb-stat">
+        <div class="fb-stat-item">产品 <span class="num" id="statProd">0</span></div>
+        <div class="fb-stat-item">方法论 <span class="num" id="statMethod">0</span></div>
+        <div class="fb-stat-item">修改意见 <span class="num" id="statFb">0</span></div>
+        <div class="fb-stat-item">品类 <span class="num" id="statCat">0</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== 方法论弹窗 ===== -->
+<div class="modal-overlay" id="methodModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">📖 口碑方法论库</span>
+      <button class="modal-close" onclick="closeModal('methodModal')">✕</button>
+    </div>
+    <div class="modal-body" id="methodModalBody"></div>
+  </div>
+</div>
+
+<!-- ===== 修改意见弹窗 ===== -->
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <span class="modal-hdr-title">💬 修改意见收集</span>
+      <button class="modal-close" onclick="closeModal('feedbackModal')">✕</button>
+    </div>
+    <div class="modal-body" id="feedbackModalBody"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-// ============ Data Storage (localStorage) ============
-const STORAGE = {
-    categories: 'review_cats',
-    products: 'review_prods',
-    methodologies: 'review_methods',
-    feedbacks: 'review_fbs',
-    settings: 'review_settings',
+// ================================================================
+// 全局状态
+// ================================================================
+const AVATAR_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6','#f97316','#64748b'];
+const NAMES_B = ['柚子酱','野生摄影师','打工仔小王','硬核测评','追剧狂魔','露营爱好者','数码迷','影迷老张','游戏宅','吃瓜群众','云玩家','技术流','电影收割机','宅家小能手','数码圈老司机'];
+const NAMES_D = ['用户8372','小甜甜','快乐星球','大橙子','阿木','喵喵','老李说数码','追光者','周末露营','小鱼干','阿花','小李飞刀','看世界的眼','家电测评','光影猎人'];
+const NAMES_X = ['是橙子呀','小鹿爱家居','生活家Miya','宅家日记','露营少女','追剧的猫','设计师小Q','居家好物君','光影收藏家','周末玩家','好物种草','小确幸','理想家','森系生活','慢生活'];
+const R = arr => arr[Math.floor(Math.random()*arr.length)];
+const RI = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const E = s => (!s?'':(''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
+
+let curPlatform = 'bili';
+let curComments = [];
+let selectedProductId = null;
+let toneLevel = 50;
+let isPurchased = false;
+let genCount = 10;
+
+// ================================================================
+// 存储
+// ================================================================
+const S = {
+  products:   () => JSON.parse(localStorage.getItem('brg_products')   || '[]'),
+  categories:() => JSON.parse(localStorage.getItem('brg_categories') || '[]'),
+  methods:   () => JSON.parse(localStorage.getItem('brg_methods')    || '[]'),
+  feedback:  () => JSON.parse(localStorage.getItem('brg_feedback')  || '[]'),
+  settings:  () => JSON.parse(localStorage.getItem('brg_settings')   || '{}'),
+  save(key,val){localStorage.setItem('brg_'+key,JSON.stringify(val))},
+  loadObj(key){return JSON.parse(localStorage.getItem('brg_'+key)||'{}')},
+};
+const saveSettingsLocal = () => {
+  localStorage.setItem('brg_settings',JSON.stringify({
+    genCount: +document.getElementById('genCount').value,
+    defTone: +document.getElementById('defTone').value,
+  }));
 };
 
-function loadData(key) {
-    try { return JSON.parse(localStorage.getItem(STORAGE[key]) || '[]'); } catch { return []; }
+// ================================================================
+// 工具
+// ================================================================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
 }
-function saveData(key, data) {
-    localStorage.setItem(STORAGE[key], JSON.stringify(data));
+function fmt(d) {
+  if(!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('zh-CN',{month:'short',day:'numeric'})+' '+dt.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
 }
 
-// ============ Settings ============
-function loadSettings() {
+// ================================================================
+// Tab 切换
+// ================================================================
+function switchTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='management') refreshManagement();
+  if(name==='generator') renderProductChips();
+  if(name==='settings') refreshStats();
+}
+function switchMgrTab(name, btn) {
+  ['products','methods','feedbacks','categories'].forEach(n=>{
+    document.getElementById('mgr-'+n).style.display = 'none';
+  });
+  document.querySelectorAll('.mgr-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('mgr-'+name).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// ================================================================
+// 产品 Chips (生成区)
+// ================================================================
+function renderProductChips() {
+  const prods = S.products();
+  const chips = document.getElementById('productChips');
+  if(!prods.length) {
+    chips.innerHTML = '<span class="no-product">还没有产品，点右上角「管理后台」添加</span>';
+    document.getElementById('infoRow').style.display = 'none';
+    selectedProductId = null;
+    return;
+  }
+  let html = '';
+  prods.forEach(p => {
+    const sel = p.id===selectedProductId ? ' selected' : '';
+    html += `<span class="product-chip mine${sel}" onclick="selProduct('${p.id}')"><span class="dot"></span>${E(p.name)}<span class="tag">我品</span></span>`;
+    (p.competitors||[]).forEach(c=>{
+      const cid = p.id+'__c__'+c.id;
+      const s2 = cid===selectedProductId ? ' selected' : '';
+      html += `<span class="product-chip comp${s2}" onclick="selProduct('${cid}')"><span class="dot"></span>${E(c.name)}<span class="tag">竞品</span></span>`;
+    });
+  });
+  chips.innerHTML = html;
+  updateInfoRow();
+  document.getElementById('linkCard').style.display = prods.length ? 'block' : 'none';
+}
+function selProduct(id) { selectedProductId = id; renderProductChips(); }
+
+function getSelectedProductInfo() {
+  if(!selectedProductId) return null;
+  const prods = S.products();
+  if(selectedProductId.includes('__c__')) {
+    const [pid,cid] = selectedProductId.split('__c__');
+    const parent = prods.find(p=>p.id===pid);
+    if(!parent) return null;
+    const comp = (parent.competitors||[]).find(c=>c.id===cid);
+    return comp ? {...comp,isCompetitor:true,parentProduct:parent} : null;
+  }
+  return prods.find(p=>p.id===selectedProductId)||null;
+}
+function getProductPair() {
+  const info = getSelectedProductInfo();
+  if(!info) return null;
+  if(info.isCompetitor) return {myProduct:info.parentProduct,comp:info};
+  const comp = (info.competitors||[]).length ? R(info.competitors) : null;
+  return {myProduct:info,comp};
+}
+function updateInfoRow() {
+  const row = document.getElementById('infoRow');
+  const p = getSelectedProductInfo();
+  if(!p) {row.style.display='none';return;}
+  const feats = (p.features||[]).slice(0,3).join(' · ')+((p.features||[]).length>3?' …':'');
+  row.style.display = 'flex';
+  row.innerHTML = `<span>📦 ${E(p.name)}（${E(p.category||'未分类')}）</span>${p.price?`<span>💰 ${E(p.price)}</span>`:''}${feats?`<span>🎯 ${E(feats)}</span>`:''}`;
+}
+
+// ================================================================
+// 产品管理
+// ================================================================
+function refreshCatSelect() {
+  const cats = S.categories();
+  const sel = document.getElementById('prodCat');
+  sel.innerHTML = '<option value="">选择品类（可选）</option>'+cats.map(c=>`<option value="${E(c.name)}">${E(c.name)}</option>`).join('');
+}
+
+function refreshManagement() {
+  refreshProductList();
+  refreshMethodList();
+  refreshFeedbackList();
+  refreshCategoryList();
+  refreshCatSelect();
+}
+
+function clearProdForm() {
+  ['prodName','prodCat','prodFeatures','prodPrice','prodUrl','prodDesc'].forEach(id=>document.getElementById(id).value='');
+}
+
+function saveProduct() {
+  const name = document.getElementById('prodName').value.trim();
+  const category = document.getElementById('prodCat').value.trim();
+  const features = document.getElementById('prodFeatures').value.trim().split('\n').filter(f=>f.trim());
+  const price = document.getElementById('prodPrice').value.trim();
+  const url = document.getElementById('prodUrl').value.trim();
+  const desc = document.getElementById('prodDesc').value.trim();
+  if(!name) {toast('请填写产品名称');return;}
+
+  let prods = S.products();
+  const editId = window._editProdId;
+  if(editId) {
+    const p = prods.find(p=>p.id===editId);
+    if(p) {Object.assign(p,{name,category,features,price,url,desc});}
+    window._editProdId = null;
+    toast('已更新');
+  } else {
+    prods.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),name,category,features,price,url,desc,competitors:[],materials:[],time:new Date().toISOString()});
+    toast('已添加');
+  }
+  // 直接写入当前修改后的数组，不依赖getter重新读取
+  localStorage.setItem('brg_products', JSON.stringify(prods));
+  clearProdForm();
+  refreshProductList();
+  renderProductChips();
+
+  // 如果还没选产品，自动选这个
+  if(!selectedProductId && prods.length) selectedProductId = prods[prods.length-1].id;
+  renderProductChips();
+}
+
+function editProduct(id) {
+  const p = S.products().find(p=>p.id===id);
+  if(!p) return;
+  window._editProdId = id;
+  document.getElementById('prodName').value = p.name;
+  document.getElementById('prodCat').value = p.category||'';
+  document.getElementById('prodFeatures').value = (p.features||[]).join('\n');
+  document.getElementById('prodPrice').value = p.price||'';
+  document.getElementById('prodUrl').value = p.url||'';
+  document.getElementById('prodDesc').value = p.desc||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteProduct(id) {
+  if(!confirm('删除产品及其所有竞品？')) return;
+  const prods = S.products().filter(p=>p.id!==id);
+  localStorage.setItem('brg_products',JSON.stringify(prods));
+  if(selectedProductId===id||(selectedProductId||'').startsWith(id+'__c__')) selectedProductId=null;
+  toast('已删除');
+  refreshProductList();
+  renderProductChips();
+}
+
+// ---- 竞品 CRUD ----
+function showAddComp(prodId) {
+  const name = prompt('竞品名称：');
+  if(!name) return;
+  const prods = S.products();
+  const p = prods.find(p=>p.id===prodId);
+  if(!p) return;
+  p.competitors = p.competitors||[];
+  p.competitors.push({id:Date.now().toString(36),name,features:[],price:'',category:''});
+  S.save('products', prods);
+  refreshProductList();
+  renderProductChips();
+}
+function deleteComp(prodId,compId) {
+  if(!confirm('删除此竞品？')) return;
+  const prods = S.products();
+  const p = prods.find(p=>p.id===prodId);
+  if(!p) return;
+  p.competitors = (p.competitors||[]).filter(c=>c.id!==compId);
+  S.save('products', prods);
+  if(selectedProductId===prodId+'__c__'+compId) selectedProductId = prodId;
+  refreshProductList();
+  renderProductChips();
+}
+
+// ---- 产品资料（PDF/文本） ----
+async function uploadMaterial(prodId, input) {
+  const file = input.files[0]; if(!file) return;
+  const text = await extractFileText(file);
+  const prods = S.products();
+  const p = prods.find(p=>p.id===prodId);
+  if(!p) return;
+  p.materials = p.materials||[];
+  p.materials.push({id:Date.now(),name:file.name,text:text.substring(0,8000),time:new Date().toISOString()});
+  S.save('products', prods);
+  toast('资料已添加');
+  refreshProductList();
+  renderProductChips();
+}
+
+async function extractFileText(file) {
+  if(file.name.endsWith('.pdf')) {
     try {
-        const s = JSON.parse(localStorage.getItem(STORAGE.settings) || '{}');
-        document.getElementById('apiKey').value = s.key || '';
-        document.getElementById('apiBase').value = s.base || '';
-        document.getElementById('apiModel').value = s.model || '';
-        return s;
-    } catch { return {}; }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+      let text = '';
+      for(let i=1;i<=Math.min(pdf.numPages,20);i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(it=>it.str).join(' ')+'\n';
+      }
+      return text.trim()||'（PDF提取失败，请手动输入内容）';
+    } catch(e) { return '（PDF解析失败: '+e.message+'）'; }
+  } else {
+    return await file.text();
+  }
+}
+
+function delMaterial(prodId, matId) {
+  const prods = S.products();
+  const p = prods.find(p=>p.id===prodId);
+  if(!p) return;
+  p.materials = (p.materials||[]).filter(m=>m.id!==matId);
+  S.save('products', prods);
+  refreshProductList();
+}
+
+function refreshProductList() {
+  const prods = S.products();
+  const cats = S.categories();
+  const catMap = {}; cats.forEach(c=>catMap[c.name]=c.name);
+
+  document.getElementById('productList').innerHTML = prods.length ? prods.map(p=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div class="data-item-info" style="flex:1">
+          <div class="data-item-title">
+            ${E(p.name)}
+            <span class="sub">${E(p.category||'未分类')}</span>
+            <span class="tag tag-a">我品</span>
+            ${p.materials?.length?`<span class="tag tag-p">📎${p.materials.length}份资料</span>`:''}
+          </div>
+          <div class="data-item-desc">${E(p.features.join(' · ')||'无卖点')}${p.price?' · '+E(p.price):''}</div>
+        </div>
+        <div class="data-item-actions" style="flex-shrink:0">
+          <button class="btn-sm" onclick="selProduct('${p.id}')">选择</button>
+          <button class="btn-sm" onclick="editProduct('${p.id}')">编辑</button>
+          <button class="btn-sm d" onclick="deleteProduct('${p.id}')">删除</button>
+        </div>
+      </div>
+      ${p.desc?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px 10px;background:#f9f9f9;border-radius:6px">${E(p.desc)}</div>`:''}
+      ${p.url?`<div style="font-size:12px;margin-top:4px"><a href="${E(p.url)}" target="_blank" style="color:var(--info)">🔗 查看产品链接</a></div>`:''}
+      <div class="divider"></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">📎 资料上传</div>
+      <div class="file-upload">
+        <input type="file" accept=".pdf,.txt,.md,.doc,.docx" onchange="uploadMaterial('${p.id}',this)">
+      </div>
+      ${p.materials?.length?`<div class="mat-list">${p.materials.map(m=>`
+        <span class="mat-chip">
+          📄 ${E(m.name)}
+          <span class="del" onclick="delMaterial('${p.id}',${m.id})" title="删除">×</span>
+        </span>
+      `).join('')}</div>`:''}
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2)">⚔ 竞品（${(p.competitors||[]).length}）</span>
+        <button class="btn-sm w" onclick="showAddComp('${p.id}')">＋ 添加竞品</button>
+      </div>
+      ${(p.competitors||[]).length ? p.competitors.map(c=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fffbeb;border-radius:6px;margin-bottom:4px;font-size:12px">
+          <span><span style="color:var(--warning)">⚔</span> ${E(c.name)} ${c.price?'· '+E(c.price):''}</span>
+          <button class="btn-sm d" style="font-size:11px;padding:2px 8px" onclick="deleteComp('${p.id}','${c.id}')">×</button>
+        </div>
+      `).join('') : '<div style="font-size:12px;color:#ccc;text-align:center;padding:6px">暂无竞品</div>'}
+    </div>
+  `).join('') : '<div class="no-data">暂无产品，请在下方添加</div>';
+}
+
+// ================================================================
+// 品类管理
+// ================================================================
+function saveCategory() {
+  const name = document.getElementById('newCatName').value.trim();
+  if(!name) {toast('请输入品类名称');return;}
+  const cats = S.categories();
+  if(cats.find(c=>c.name===name)) {toast('品类已存在');return;}
+  cats.push({id:Date.now(),name,time:new Date().toISOString()});
+  S.save('categories', cats);
+  document.getElementById('newCatName').value='';
+  toast('已添加');
+  refreshCategoryList();
+  refreshCatSelect();
+}
+function deleteCategory(id) {
+  if(!confirm('删除此品类？')) return;
+  const cats = S.categories().filter(c=>c.id!==id);
+  localStorage.setItem('brg_categories',JSON.stringify(cats));
+  toast('已删除');
+  refreshCategoryList();
+  refreshCatSelect();
+}
+function refreshCategoryList() {
+  const cats = S.categories();
+  document.getElementById('categoryList').innerHTML = cats.length ? cats.map(c=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:15px;font-weight:600">${E(c.name)}</div>
+          <div style="font-size:11px;color:#bbb;margin-top:2px">${fmt(c.time)}</div>
+        </div>
+        <button class="btn-sm d" onclick="deleteCategory(${c.id})">删除</button>
+      </div>
+    </div>
+  `).join('') : '<div class="no-data">暂无品类</div>';
+}
+
+// ================================================================
+// 方法论
+// ================================================================
+function clearMethodForm() {
+  ['methodName','methodPlatform','methodContent'].forEach(id=>document.getElementById(id).value='');
+}
+function saveMethod() {
+  const name = document.getElementById('methodName').value.trim();
+  const platform = document.getElementById('methodPlatform').value;
+  const content = document.getElementById('methodContent').value.trim();
+  if(!name||!content) {toast('请填写名称和内容');return;}
+  const methods = S.methods();
+  const editId = window._editMethodId;
+  if(editId) {
+    const m = methods.find(m=>m.id===editId);
+    if(m) Object.assign(m,{name,platform,content});
+    window._editMethodId = null;
+    toast('已更新');
+  } else {
+    methods.push({id:Date.now(),name,platform,content,active:true,time:new Date().toISOString()});
+    toast('已添加');
+  }
+  S.save('methods', methods);
+  clearMethodForm();
+  refreshMethodList();
+}
+function editMethod(id) {
+  const m = S.methods().find(m=>m.id===id);
+  if(!m) return;
+  window._editMethodId = id;
+  document.getElementById('methodName').value = m.name;
+  document.getElementById('methodPlatform').value = m.platform||'';
+  document.getElementById('methodContent').value = m.content;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function deleteMethod(id) {
+  if(!confirm('删除此方法论？')) return;
+  const methods = S.methods().filter(m=>m.id!==id);
+  localStorage.setItem('brg_methods',JSON.stringify(methods));
+  toast('已删除');
+  refreshMethodList();
+}
+function toggleMethod(id) {
+  const methods = S.methods();
+  const m = methods.find(m=>m.id===id);
+  if(m) m.active = !m.active;
+  S.save('methods', methods);
+  refreshMethodList();
+}
+function refreshMethodList() {
+  const methods = S.methods();
+  const platMap = {bili:'📺B站',douyin:'🎵抖音',xhs:'📕小红书','':'🌐通用'};
+  document.getElementById('methodList').innerHTML = methods.length ? methods.map(m=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div class="data-item-info" style="flex:1">
+          <div class="data-item-title">
+            ${E(m.name)}
+            <span class="tag ${m.active?'tag-p':'tag-d'}">${m.active?'✅ 启用':'⛔ 停用'}</span>
+            <span class="tag tag-a">${platMap[m.platform]||'通用'}</span>
+          </div>
+          <div class="method-detail">${E(m.content.substring(0,200))}${m.content.length>200?'…':''}</div>
+        </div>
+        <div class="data-item-actions" style="flex-shrink:0">
+          <button class="btn-sm ${m.active?'d':'s'}" onclick="toggleMethod(${m.id})">${m.active?'停用':'启用'}</button>
+          <button class="btn-sm" onclick="editMethod(${m.id})">编辑</button>
+          <button class="btn-sm d" onclick="deleteMethod(${m.id})">删除</button>
+        </div>
+      </div>
+    </div>
+  `).join('') : '<div class="no-data">暂无方法论，请在下方添加</div>';
+}
+
+// ================================================================
+// 修改意见
+// ================================================================
+function saveFeedback() {
+  const prod = document.getElementById('fbProd').value.trim();
+  const platform = document.getElementById('fbPlatform').value;
+  const original = document.getElementById('fbOriginal').value.trim();
+  const text = document.getElementById('fbText').value.trim();
+  if(!text) {toast('请填写修改意见');return;}
+  const fbs = S.feedback();
+  fbs.push({id:Date.now(),prod,platform,original,text,processed:false,time:new Date().toISOString()});
+  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
+  ['fbProd','fbPlatform','fbOriginal','fbText'].forEach(id=>document.getElementById(id).value='');
+  toast('已提交');
+  refreshFeedbackList();
+}
+function processFeedback(id) {
+  const fbs = S.feedback();
+  const f = fbs.find(f=>f.id===id);
+  if(f) f.processed = true;
+  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
+  toast('已标记处理');
+  refreshFeedbackList();
+}
+function deleteFeedback(id) {
+  if(!confirm('删除此意见？')) return;
+  const fbs = S.feedback().filter(f=>f.id!==id);
+  localStorage.setItem('brg_feedback',JSON.stringify(fbs));
+  toast('已删除');
+  refreshFeedbackList();
+}
+function refreshFeedbackList() {
+  const fbs = S.feedback();
+  const pending = fbs.filter(f=>!f.processed);
+  const done = fbs.filter(f=>f.processed);
+  document.getElementById('fbTotal').textContent = fbs.length;
+  document.getElementById('fbPending').textContent = pending.length;
+  document.getElementById('fbDone').textContent = done.length;
+  document.getElementById('feedbackList').innerHTML = fbs.length ? fbs.map(f=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div class="data-item-info" style="flex:1">
+          <div class="data-item-title">
+            ${E(f.prod||'通用')}
+            ${f.platform?`<span class="tag tag-a">${f.platform==='bili'?'📺B站':f.platform==='douyin'?'🎵抖音':'📕小红书'}</span>`:''}
+            <span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span>
+          </div>
+          <div class="data-item-meta">${fmt(f.time)}</div>
+          ${f.original?`<div style="font-size:12px;color:var(--text2);margin-top:6px;padding:6px 10px;background:#f9f9f9;border-radius:6px"><strong>原文：</strong>${E(f.original.substring(0,100))}</div>`:''}
+          <div style="font-size:13px;margin-top:6px;padding:8px 12px;background:#fff7e6;border-radius:6px;border-left:3px solid var(--warning)">💬 ${E(f.text)}</div>
+        </div>
+        <div class="data-item-actions" style="flex-shrink:0">
+          ${!f.processed?`<button class="btn-sm s" onclick="processFeedback(${f.id})">标为已处理</button>`:''}
+          <button class="btn-sm d" onclick="deleteFeedback(${f.id})">删除</button>
+        </div>
+      </div>
+    </div>
+  `).join('') : '<div class="no-data">暂无修改意见</div>';
+}
+
+// ================================================================
+// 设置 & 统计
+// ================================================================
+function refreshStats() {
+  const s = S.settings();
+  document.getElementById('genCount').value = s.genCount||10;
+  document.getElementById('defTone').value = s.defTone||50;
+  document.getElementById('statProd').textContent = S.products().length;
+  document.getElementById('statMethod').textContent = S.methods().length;
+  document.getElementById('statFb').textContent = S.feedback().length;
+  document.getElementById('statCat').textContent = S.categories().length;
+  genCount = +document.getElementById('genCount').value;
+  toneLevel = +document.getElementById('defTone').value;
+  document.getElementById('toneSlider').value = toneLevel;
+}
+function clearAllData() {
+  if(!confirm('确定清空所有数据？此操作不可恢复！')) return;
+  ['brg_products','brg_categories','brg_methods','brg_feedback'].forEach(k=>localStorage.removeItem(k));
+  selectedProductId = null;
+  toast('已清空');
+  refreshStats();
+  renderProductChips();
+  refreshManagement();
 }
 function saveSettings() {
-    const s = {
-        key: document.getElementById('apiKey').value.trim(),
-        base: document.getElementById('apiBase').value.trim() || 'https://api.openai.com/v1',
-        model: document.getElementById('apiModel').value.trim() || 'gpt-4o-mini',
-    };
-    saveData('settings', s);
-    showToast('设置已保存');
+  saveSettingsLocal();
+  genCount = +document.getElementById('genCount').value;
+  toast('已保存');
 }
 
-// ============ Section Navigation ============
-function showSection(name) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('section-' + name).classList.add('active');
-    event.target.classList.add('active');
-    
-    if (name === 'main') refreshCategories();
-    if (name === 'admin') refreshAdmin();
+// ================================================================
+// 导出 / 导入
+// ================================================================
+function exportAll() {
+  const data = {
+    products: S.products(),
+    categories: S.categories(),
+    methods: S.methods(),
+    feedback: S.feedback(),
+    settings: S.settings(),
+    exportedAt: new Date().toISOString(),
+    version: '1.0',
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `口碑评论生成器_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('导出成功');
+}
+function importAll(event) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(data.products) localStorage.setItem('brg_products',JSON.stringify(data.products));
+      if(data.categories) localStorage.setItem('brg_categories',JSON.stringify(data.categories));
+      if(data.methods) localStorage.setItem('brg_methods',JSON.stringify(data.methods));
+      if(data.feedback) localStorage.setItem('brg_feedback',JSON.stringify(data.feedback));
+      if(data.settings) localStorage.setItem('brg_settings',JSON.stringify(data.settings));
+      toast('导入成功！');
+      refreshStats();
+      renderProductChips();
+      refreshManagement();
+    } catch(err) { toast('导入失败：'+err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
-// ============ State ============
-let selectedCat = null;
-let selectedProd = null;
-let selectedPlat = null;
-
-// ============ Categories ============
-function refreshCategories() {
-    const cats = loadData('categories');
-    const grid = document.getElementById('catGrid');
-    if (!cats.length) {
-        grid.innerHTML = '<div style="color:var(--text-secondary)">暂无品类，请先在后台添加</div>';
-        return;
-    }
-    grid.innerHTML = cats.map(c => 
-        `<button class="grid-btn" onclick="selectCat(${c.id})">${c.name}</button>`
-    ).join('');
-    
-    // Reset selections
-    selectedCat = null;
-    selectedProd = null;
-    selectedPlat = null;
-    document.getElementById('prodStep').style.display = 'none';
-    document.getElementById('platStep').style.display = 'none';
-    document.getElementById('linkStep').style.display = 'none';
-    document.getElementById('genStep').style.display = 'none';
-    document.getElementById('resultsBox').style.display = 'none';
-}
-
-function selectCat(id) {
-    const cats = loadData('categories');
-    selectedCat = cats.find(c => c.id === id);
-    selectedProd = null;
-    
-    document.querySelectorAll('#catGrid .grid-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // Show products
-    refreshProducts();
-    document.getElementById('prodStep').style.display = 'block';
-    document.getElementById('platStep').style.display = 'none';
-    document.getElementById('linkStep').style.display = 'none';
-    document.getElementById('genStep').style.display = 'none';
-    document.getElementById('resultsBox').style.display = 'none';
-}
-
-function refreshProducts() {
-    const prods = loadData('products').filter(p => p.catId === selectedCat.id);
-    const grid = document.getElementById('prodGrid');
-    if (!prods.length) {
-        grid.innerHTML = '<div style="color:var(--text-secondary)">该品类暂无产品</div>';
-        return;
-    }
-    grid.innerHTML = prods.map(p => 
-        `<button class="grid-btn" onclick="selectProd(${p.id})">${p.name}</button>`
-    ).join('');
-}
-
-function selectProd(id) {
-    const prods = loadData('products');
-    selectedProd = prods.find(p => p.id === id);
-    
-    document.querySelectorAll('#prodGrid .grid-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    document.getElementById('platStep').style.display = 'block';
-    document.getElementById('linkStep').style.display = 'block';
-    selectedPlat = null;
-    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('genStep').style.display = 'none';
-}
-
-function selectPlatform(p) {
-    selectedPlat = p;
-    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('genStep').style.display = 'block';
-}
-
-// ============ Link Analysis ============
+// ================================================================
+// 链接识别
+// ================================================================
 async function analyzeLink() {
-    const url = document.getElementById('linkInput').value.trim();
-    if (!url) return;
-    
-    document.getElementById('linkStatus').textContent = '正在分析链接...';
-    
-    try {
-        // Fetch link content (via CORS proxy if needed)
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-        const resp = await fetch(proxyUrl);
-        const html = await resp.text();
-        
-        // Simple extraction
-        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const title = titleMatch ? titleMatch[1].trim() : '';
-        
-        // Try to detect product from content
-        const prods = loadData('products');
-        let matchedProd = null;
-        
-        for (const p of prods) {
-            if (html.includes(p.name) || title.includes(p.name)) {
-                matchedProd = p;
-                break;
-            }
-        }
-        
-        if (matchedProd) {
-            document.getElementById('linkStatus').textContent = `✅ 已识别：${matchedProd.name}`;
-            
-            // Auto select
-            const cats = loadData('categories');
-            const cat = cats.find(c => c.id === matchedProd.catId);
-            if (cat) {
-                selectedCat = cat;
-                refreshProducts();
-                document.getElementById('prodStep').style.display = 'block';
-                setTimeout(() => {
-                    selectProd(matchedProd.id);
-                    document.querySelectorAll('#prodGrid .grid-btn').forEach(b => {
-                        if (b.textContent === matchedProd.name) b.classList.add('active');
-                    });
-                }, 100);
-            }
-            
-            // Auto platform
-            if (url.includes('xiaohongshu')) selectPlatform('xiaohongshu');
-            else if (url.includes('bilibili')) selectPlatform('bilibili');
-            else if (url.includes('douyin')) selectPlatform('douyin');
-        } else {
-            document.getElementById('linkStatus').textContent = '⚠️ 未自动识别，请手动选择';
-        }
-    } catch (e) {
-        document.getElementById('linkStatus').textContent = '❌ 链接分析失败';
+  const url = document.getElementById('linkInput').value.trim();
+  if(!url) return;
+  const status = document.getElementById('linkStatus');
+  status.className = 'link-status show loading';
+  status.textContent = '正在分析链接…';
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(proxyUrl);
+    const html = await resp.text();
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : '';
+
+    // 识别产品
+    const prods = S.products();
+    let matched = null;
+    for(const p of prods) {
+      if(title.includes(p.name)||html.includes(p.name)) {matched=p;break;}
     }
-}
 
-// ============ Generate ============
-async function generate() {
-    if (!selectedProd || !selectedPlat) {
-        showToast('请选择产品和平台');
-        return;
+    // 识别平台
+    let detected = '';
+    if(url.includes('xiaohongshu')||url.includes('xhs')) detected='xhs';
+    else if(url.includes('bilibili')||url.includes('b23.tv')) detected='bili';
+    else if(url.includes('douyin')) detected='douyin';
+
+    if(matched) {
+      selectedProductId = matched.id;
+      renderProductChips();
+      const platNames = {bili:'📺B站',douyin:'🎵抖音',xhs:'📕小红书'};
+      status.className = 'link-status show ok';
+      status.textContent = `✅ 已识别：${matched.name}${detected?' · '+platNames[detected]:''}`;
+      if(detected) curPlatform = detected;
+    } else {
+      status.className = 'link-status show';
+      status.textContent = title ? `📄 识别到：${title.substring(0,60)}（未匹配到产品，请先在管理后台添加）` : '⚠️ 未识别到内容，请在管理后台手动添加产品';
     }
-    
-    const settings = loadSettings();
-    if (!settings.key) {
-        showToast('请先在设置中配置 API Key');
-        showSection('settings');
-        return;
-    }
-    
-    const btn = document.querySelector('.btn-generate');
-    btn.disabled = true;
-    btn.textContent = '⏳ 生成中...';
-    
-    // Build prompt
-    const methods = loadData('methodologies');
-    const activeMethod = methods.find(m => m.active) || methods[0];
-    const methodContent = activeMethod ? activeMethod.content : '';
-    
-    const fbs = loadData('feedbacks');
-    const pendingFbs = fbs.filter(f => !f.processed && f.prod === selectedProd.name);
-    const fbHints = pendingFbs.map(f => f.text).join('\n');
-    
-    const platStyles = {
-        xiaohongshu: '小红书风格：使用emoji，语气活泼可爱，善用"绝绝子""yyds"等流行语，段落简短，感叹号多，像闺蜜推荐',
-        bilibili: 'B站风格：幽默中带点犀利或真诚，善用B站梗，偶尔冒出"前方高能""泪目"等用语，真实不做作',
-        douyin: '抖音风格：简短有力，接地气，善用"冲了""闭眼入""真香"等短视频平台用语',
-    };
-    
-    const prompt = `你是一个真实互联网用户，为产品"${selectedProd.name}"写口碑评论文案。
-
-产品描述：${selectedProd.desc || '暂无'}
-
-方法论指导：${methodContent || '用真实用户视角，避免广告感'}
-
-平台风格：${platStyles[selectedPlat]}
-
-历史修改意见：${fbHints || '无'}
-
-要求：
-1. 生成5条不同风格角度的评论
-2. 像真人写的，有个人使用场景和感受
-3. 可使用emoji但不过度
-4. 长度适中：小红书80-200字，B站50-150字，抖音30-100字
-5. 偶尔加入中性评价更真实
-
-严格输出JSON数组格式：
-["评论1", "评论2", "评论3", "评论4", "评论5"]`;
-
-    try {
-        const resp = await fetch(`${settings.base}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${settings.key}`,
-            },
-            body: JSON.stringify({
-                model: settings.model,
-                messages: [
-                    { role: 'system', content: '你是专业的口碑评论文案创作助手。' },
-                    { role: 'user', content: prompt },
-                ],
-                temperature: 0.9,
-                max_tokens: 2000,
-            }),
-        });
-        
-        if (!resp.ok) {
-            const err = await resp.json();
-            throw new Error(err.error?.message || 'API调用失败');
-        }
-        
-        const data = await resp.json();
-        const raw = data.choices[0].message.content;
-        
-        // Parse JSON
-        let comments;
-        try {
-            comments = JSON.parse(raw.match(/\[.*\]/s)?.[0] || raw);
-        } catch {
-            comments = raw.split('\n').filter(l => l.trim()).slice(0, 5);
-        }
-        
-        showResults(comments);
-    } catch (e) {
-        showToast('生成失败：' + e.message);
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '✨ 生成口碑文案';
-    }
+  } catch(e) {
+    status.className = 'link-status show err';
+    status.textContent = '❌ 链接获取失败：'+e.message;
+  }
 }
 
-function showResults(comments) {
-    const platNames = { xiaohongshu: '小红书', bilibili: 'B站', douyin: '抖音' };
-    document.getElementById('resultMeta').textContent = 
-        `产品：${selectedProd.name} | 平台：${platNames[selectedPlat]}`;
-    
-    document.getElementById('resultsList').innerHTML = comments.map((c, i) => `
-        <div class="comment-card">
-            <div class="comment-text">${escapeHtml(c)}</div>
-            <div class="comment-actions">
-                <button class="btn btn-sm btn-secondary" onclick="submitFb(${i})">📝 提意见</button>
-                <button class="btn btn-sm btn-primary" onclick="copyText(${i})">📋 复制</button>
-            </div>
-            <textarea style="display:none" id="c${i}">${escapeHtml(c)}</textarea>
+// ================================================================
+// 语调 & 用户状态
+// ================================================================
+function updateTone() { toneLevel = +document.getElementById('toneSlider').value; }
+function setPurchased(val) {
+  isPurchased = val;
+  document.getElementById('btn-no').classList.toggle('active',!val);
+  document.getElementById('btn-yes').classList.toggle('active',!!val);
+}
+
+// ================================================================
+// 评论生成引擎
+// ================================================================
+function analyzeProduct(info) {
+  const {name,category,features,price,competitor,compFeatures} = info;
+  const featStr = (features||[]).map(f=>f.toLowerCase()).join(' ');
+  const p = parseInt(price)||0;
+  let priceSeg = '中端';
+  if(p>0&&p<2000) priceSeg='入门';
+  else if(p>=2000&&p<5000) priceSeg='中端性价比';
+  else if(p>=5000&&p<10000) priceSeg='中高端';
+  else if(p>=10000) priceSeg='旗舰';
+
+  const isProj=/投影/.test(category+name);
+  const isTV=/电视/.test(category+name);
+  const isAudio=/音响|音箱|耳机/.test(category+name);
+  const isAc=/空调|新风/.test(category+name);
+  const isWash=/洗衣机|烘干/.test(category+name);
+  const isFridge=/冰箱/.test(category+name);
+
+  const hotC=[];
+  const addH=(re,w)=>{const f=features.find(f=>re.test(f));if(f) hotC.push({f,w});};
+  if(isProj){
+    addH(/cvia|ansi|流明|亮度|nit/i,10);
+    addH(/激光|三色|光源|alpd/i,9);
+    addH(/4k|分辨率|1080/i,7);
+    addH(/云台|支架|便携|自动对焦|梯形|校正|无感/i,8);
+    addH(/音响|哈曼|jbl|杜比|dolby|音质/i,6);
+    addH(/护眼|低蓝光|莱茵|漫反射/i,7);
+    addH(/游戏|延迟|低延迟|hdmi|memc/i,5);
+  }
+  if(isTV){
+    addH(/4k|8k|oled|miniled|qled/i,10);
+    addH(/音响|哈曼|回音壁/i,7);
+    addH(/144hz|高刷|memc/i,6);
+  }
+  if(isAudio){
+    addH(/降噪|anc/i,10);
+    addH(/音质|解码|hi-res|金标/i,9);
+    addH(/续航|电池|充电/i,7);
+  }
+  if(isAc){
+    addH(/变频|省电|一级能效/i,9);
+    addH(/冷暖|制冷|制热/i,8);
+    addH(/新风|净化|除甲醛/i,8);
+    addH(/静音|低噪/i,7);
+  }
+  if(isWash){addH(/烘干|热泵|洗烘/i,10);addH(/容量|10kg/i,7);}
+  const covered=new Set(hotC.map(h=>h.f));
+  (features||[]).forEach(f=>{if(!covered.has(f)) hotC.push({f,w:4});});
+
+  let hp='',hp2='';
+  if(hotC.length){
+    let tw=hotC.reduce((s,c)=>s+c.w,0);
+    let rl=Math.random()*tw;
+    for(const c of hotC){rl-=c.w;if(rl<=0){hp=c.f;break;}}
+    if(!hp&&hotC.length) hp=hotC[0].f;
+    const p2=hotC.filter(c=>c.f!==hp);
+    if(p2.length){let r2=Math.random()*p2.reduce((s,c)=>s+c.w,0);for(const c of p2){r2-=c.w;if(r2<=0){hp2=c.f;break;}}if(!hp2) hp2=p2[0].f;}
+  }
+
+  const myUnique=(features||[]).filter(f=>!(compFeatures||[]).some(cf=>f.includes(cf)||cf.includes(f)));
+  const keyDiff=myUnique.length?R(myUnique):hp;
+  const wknesses=[];
+  if(isProj&&!/4k/i.test(featStr)&&p>3000) wknesses.push('纠结1080P还是4K要多考虑');
+  if(isProj&&!/cvia|ansi/i.test(featStr)) wknesses.push('亮度参数没标清，白天能不能用是问号');
+  if(isTV&&/广告/.test(featStr)) wknesses.push('开机有广告确实扣分');
+  const weakness=wknesses.length?R(wknesses):'';
+
+  return {hp,hp2,keyDiff,priceSeg,weakness,isProj,isTV,isAudio,isAc,isWash,isFridge};
+}
+
+function pickScene(info,a){
+  const {isProj,isTV,isAudio,isAc}=a;
+  const feats=(info.features||[]).map(f=>f.toLowerCase()).join(' ');
+  const scenes=[];
+  if(isProj){
+    scenes.push({s:'晚上关灯看',d:'投白墙效果出乎意料的好'},{s:'白天拉窗帘',d:'亮度够用不用全黑'},{s:'卧室躺着看天花板',d:'云台直接对着天花板投'},{s:'周末连看三部电影',d:'眼睛不累，比电视舒服'},{s:'朋友来家看球',d:'大屏就是爽'},{s:'露营带出去',d:'便携确实方便'});
+  } else if(isTV){
+    scenes.push({s:'接游戏机打游戏',d:'延迟基本感觉不到'},{s:'客厅当家庭影院',d:'配回音壁效果炸裂'},{s:'老人看新闻',d:'操作简单他们也能用'});
+  } else if(isAudio){
+    scenes.push({s:'通勤路上',d:'降噪效果明显'},{s:'跑步健身戴着',d:'不容易掉，续航够用'},{s:'在家听歌',d:'音质比手机直推好太多'});
+  } else if(isAc){
+    scenes.push({s:'夏天制冷',d:'降温挺快的'},{s:'冬天制热',d:'热得挺快的'},{s:'晚上睡觉开',d:'确实安静，基本听不到声音'});
+  }
+  if(/护眼|小孩/i.test(feats)) scenes.push({s:'给娃用',d:'比看iPad强太多'});
+  return scenes.length?R(scenes):{s:'日常使用',d:'整体满意'};
+}
+
+// ---- B站 ----
+const PB=[{role:'参数小白',open:'有没有懂哥说下',ask:'不太懂参数 看着还行',s:'ask'},{role:'参数党',open:'说句实话',ask:'这个参数在这个价位',s:'evaluate'},{role:'对比狂人',open:'对比了五六款了',ask:'横向看了一圈',s:'compare'},{role:'学生党',open:'学生党预算有限',ask:'这个性价比怎么样',s:'ask'},{role:'老用户',open:'之前那台用了三年',ask:'换了新的说说感受',s:'share'},{role:'给家人买',open:'给爸妈买的',ask:'他们不太会调参数 这个好上手不',s:'ask'},{role:'客厅升级',open:'从电视转到投影',ask:'大屏体验确实不一样',s:'share'},{role:'踩过坑',open:'之前被坑过一次 这次做了功课',ask:'到手了测测再说',s:'evaluate'},{role:'纠结党',open:'纠结了好几天 最后还是下手了',ask:'希望别翻车',s:'share'},{role:'购物节蹲守',open:'等618/双11',ask:'看这波能不能降',s:'ask'},{role:'空间党',open:'我家客厅间距大概',ask:'这个距离投出来效果怎么样',s:'ask_dimension'},{role:'画质控',open:'对画质有点要求 之前那台偏色严重',ask:'这台的色准和亮度能打不',s:'ask'},{role:'设备党',open:'主要是接',ask:'和switch/PS5玩游戏',s:'ask_device'},{role:'预算党',open:'预算大概',ask:'这个价位有推荐不',s:'ask_budget'},{role:'入门真香党',open:'入手了',ask:'可以说目前入门最香的了',s:'declare'}];
+
+function genBili(info,idx){
+  const a=analyzeProduct(info);
+  const per=PB[idx%PB.length];
+  const casual=toneLevel<35, pro=toneLevel>65;
+  const w = isPurchased?{declare:.25,share:.25,evaluate:.30,compare:.15,ask:.05}:{ask:.20,ask_budget:.20,ask_dimension:.18,ask_device:.12,compare:.18,evaluate:.12};
+  const st=Object.entries(w);
+  let ttl=w=>Object.values(w).reduce((s,[,v])=>s+v,0);
+  let rl=Math.random()*ttl(w);
+  let style='evaluate';
+  for(const[s,v]of st){rl-=v;if(rl<=0){style=s;break;}}
+
+  let text='';
+  const priceHint=info.price?`${info.price}这个价`:'这价位';
+  const featLine=a.hp+(a.hp2?`和${a.hp2}`:'');
+  const compRef=info.competitor?`比${info.competitor}${R(['强不少','实在多了','香多了'])}`:'';
+  const scene=pickScene(info,a);
+
+  if(style==='declare'){
+    const node=R(['618','双11','首发','现在']);
+    text=R([
+      `${node}${priceHint} ${featLine} ${a.priceSeg}可以说是真香机了 ${compRef}`,
+      `${priceHint}有${featLine} ${R(['基本家用够了','这个配置真不赖','还要什么自行车'])} ${R(['目前入门最香的了','横向比了一圈没对手','冲就完事了'])}`,
+      `${featLine} ${node}这价 ${R(['别家同价位基本没有','性价比拉满了','闭眼入'])} ${compRef}`,
+    ]);
+  } else if(style==='ask_budget'){
+    const p=parseInt(info.price)||3000;
+    const k=Math.round(p/1000);
+    const r=Math.random();
+    let bs;
+    if(r<.3){const a2=Math.round(p*(.4+Math.random()*.4)/100)*100,b=Math.round(p*(.8+Math.random()*.7)/100)*100;bs=`${a2}左右和${b}左右`;}
+    else if(r<.5){const lo=Math.round(p*(.3+Math.random()*.4)/100)*100,hi=Math.round(p*(.9+Math.random()*.7)/100)*100;bs=`预算${lo}-${hi}`;}
+    else if(r<.7){bs=R([`${k-1}千多的`,`${k}千左右`,`${k}千价位`]);}
+    else if(r<.85){const m=Math.round(p*(.7+Math.random()*.6)/100)*100;bs=`${m}以内`;}
+    else{bs=`${k}千预算`;}
+    const usage=R([`主要是${R(['卧室','客厅','小房间'])}${R(['接switch','接PS5','接电脑'])}玩游戏 加上${R(['看看综艺','刷刷B站'])}`,`就是想${R(['下班躺床上看','周末窝沙发看','睡前看一会儿'])}${R(['接switch','接电脑'])}方便一点`]);
+    text=R([
+      `${bs} 有推荐不？${usage}`,
+      `${bs} ${usage} ${info.competitor?`看了${info.competitor}觉得怎么样`:'求真实推荐'}`,
+      `${bs} ${usage} 要求不高 ${R(['能看就行','比电视强就可'])} ${info.name}这个行吗`,
+    ]);
+  } else if(style==='ask_dimension'){
+    const room=R(['客厅','卧室','小房间']),dist=(2.5+Math.random()*3).toFixed(1);
+    const cond=R(['想实现白天观影','晚上看就行 白天拉窗帘也能看','光线一般 不是全黑']);
+    const screen=R(['软幕布可以考虑加装','白墙直接投','准备搞个幕布','幕布还没选好']);
+    text=R([
+      `${room}${dist}米间隔 ${cond} ${info.name}投${dist}米效果咋样 ${screen}`,
+      `up大哥 ${room}${dist}米 ${cond} ${info.name}和${info.competitor||'同价位别家'}哪个更合适 ${screen}`,
+    ]);
+  } else if(style==='ask_device'){
+    const dev=R(['电脑','switch','PS5','笔记本','机顶盒']),dev2=R(['switch','PS5','电脑','iPad']);
+    const concern=R([`${info.competitor?`${info.competitor}和${info.name}哪款`:'哪款'}延迟低一点`,`HDMI接${dev}会不会有延迟`]);
+    text=R([`${concern} ${R(['有实测过的兄弟吗','求真实反馈','在线等'])}`,`主要是${R(['卧室','客厅'])}接${dev}和${dev2} ${R(['玩游戏','看剧'])} ${info.name}行不行`]);
+  } else if(style==='compare'){
+    const them=info.competitor||R(['极米','坚果','当贝','小明','海信']);
+    text=R([`${info.name} ${them} ${R(['价格差不太多','预算都能接受'])} up最推荐哪一款 ${R(['我就下班在客厅看看电影','主要给爸妈用'])}`,`在${info.name}和${them}之间纠结 ${a.hp}这个我比较看重 ${R(['求真实建议','再看看 不过倾向这个'])}`]);
+  } else if(style==='share'){
+    const days=R(['两周','一个月','半个多月','一周多','三天']);
+    const detail=R([`${scene.s} ${scene.d}`,`到手就试了${R(['投白墙','接switch'])} ${R(['效果比想象中好','没翻车','确实不错'])}`,`之前那台${R(['亮度完全不够','晚上都糊'])} 换了${info.name} ${R(['这才叫投影','差距太明显'])}`]);
+    text=R([`用了${days} 说说感受 ${a.hp}确实不错 ${detail} ${info.competitor?`对比${info.competitor}选对了`:'没选错'}`,`${info.price?info.price+'入的':'之前买的'} 用了${days} ${detail} ${R(['可以放心冲','没什么槽点'])}`]);
+  } else if(style==='evaluate'){
+    const dur=isPurchased?`用了${R(['两周','一个月','半个多月','一周'])} `:'';
+    const conc=isPurchased?R(['整体满意','没选错','可以入','不后悔']):R(['看着挺香','准备冲','大概率选这个了','再看看 不过倾向这个']);
+    text=R([`${dur}${featLine} ${a.priceSeg} ${R(['横向看了下确实能打','参数没虚标'])} ${scene.s} ${scene.d} ${compRef} ${conc}`,`${dur}说下${featLine}的真实感受 ${R(['不像有些牌子参数看着高实际拉胯','不是参数党 但用起来确实不一样'])} ${scene.d} ${compRef} ${conc}`]);
+    if(!isPurchased&&!text.includes('？')&&Math.random()>.3) text+=' '+R(['有没有到手的兄弟说下','到手的兄弟实测一下','在线等一个真实评价']);
+  } else {
+    text=R([`${info.name} ${a.hp}怎么样 ${R(['有没有用过的兄弟','到手的说说','求真实评价'])}`,`有没有懂哥 ${info.name}的${a.hp}什么水平 ${info.competitor?`和${info.competitor}比呢`:''}`]);
+  }
+
+  if(casual){text=text.replace(/确实/g,'真的');if(Math.random()>.5&&!text.includes('doge')&&!text.includes('？')&&!text.includes('兄弟')) text+=' [doge]';text=text.replace(/性价比/g,'值不值');}
+  if(pro){text=text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数到位');text=text.replace(/闭眼入/g,'推荐入手');}
+
+  return{text:text.trim(),name:R(NAMES_B),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(50,3200),hours:RI(1,12),platform:'bili'};
+}
+
+// ---- 抖音 ----
+const PD=[{o:'直接冲了',a:'不纠结'},{o:'刷到就下单了',a:'希望别翻车'},{o:'用了告诉你',a:'真香/真坑'},{o:'不整那些虚的',a:'说大白话'},{o:'晚上窝沙发看',a:'沉浸感拉满'},{o:'打工人犒劳自己',a:'下班回家就想躺平看'},{o:'买了给娃看动画',a:'护眼很重要'},{o:'打游戏延迟重要',a:'实测延迟能接受'}];
+
+function genDouyin(info,idx){
+  const a=analyzeProduct(info);
+  const per=PD[idx%PD.length];
+  const casual=toneLevel<35,pro=toneLevel>65;
+  const scene=pickScene(info,a);
+  const featLine=a.hp+(a.hp2?`+${a.hp2}`:'');
+  const compRef=info.competitor?R([`比${info.competitor}${R(['强多了','实在多了'])}`,`${info.competitor}看完直接放弃了`]):'';
+
+  const openPool=isPurchased?[
+    ()=>`${per.o} ${featLine} ${R(['真没翻车','没让人失望','值了'])}`,
+    ()=>`用了${R(['两周','一个月','半个月'])} ${featLine} ${R(['确实能打','没有虚标','比想象的好'])}`,
+  ]:[
+    ()=>`刷到了 ${per.a}`,
+    ()=>`${per.o} 这个看着行不行`,
+    ()=>'这个到底行不行 有没有踩坑的',
+  ];
+
+  let text=pick(openPool)()+'。'+R([
+    `${a.hp}在这个价位 ${R(['香麻了','太能打了','真的顶'])} ${scene.s}`,
+    `${a.hp} ${R(['闭眼入','看参数就知道','实测没翻车'])}`,
+    `就冲${a.hp}这一点 ${R(['值了','够了','比我想的好'])}`,
+    `${featLine} 这个配置 ${R(['真卷','杀疯了'])}`,
+  ])+'。'+R(isPurchased?['早买早享受','这波不亏','放心入 没什么坑','基本满意']:['冲不冲兄弟们','已经下了 到货拍视频','评论区蹲一个真实用户']);
+
+  if(casual){text=text.replace(/确实/g,'真的');if(!text.endsWith('！')&&Math.random()>.6) text+='！';}
+  if(pro){text=text.replace(/香麻了|太能打了|真的顶|绝了|真香/g,'参数能打');text=text.replace(/闭眼入/g,'可入');}
+
+  return{text:text.trim(),name:R(NAMES_D),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(20,5000),hours:RI(1,8),platform:'douyin'};
+}
+
+// ---- 小红书 ----
+const PX=[{o:'被种草很久终于下手了',a:'来说说真实感受'},{o:'做了一周功课才选的',a:'选品思路分享'},{o:'小白第一次买',a:'需要姐妹们给建议'},{o:'第N台了',a:'这次确实不一样'},{o:'新家装修选了它',a:'和整体风格很搭'},{o:'一个人住',a:'提升幸福感的好物'},{o:'送给朋友/爸妈的',a:'他们反馈说'},{o:'看到好多人推荐就买了',a:'没让人失望'}];
+
+function genXhs(info,idx){
+  const a=analyzeProduct(info);
+  const per=PX[idx%PX.length];
+  const casual=toneLevel<35,pro=toneLevel>65;
+  const featLine=a.hp+(a.hp2?`配合${a.hp2}`:'');
+
+  const openPool=isPurchased?[
+    ()=>`用了${R(['两周','一个月'])} 来repo ${per.a}`,
+    ()=>`${per.o} 来分享下真实感受 ✨`,
+    ()=>R(['真实用户反馈 不是广','自己买的 真诚分享']),
+  ]:[
+    ()=>`${per.o} 姐妹们帮我看看 ✨`,
+    ()=>`🔥种草好久了 ${per.a}`,
+    ()=>`👀做了功课 ${per.a}这个可以入吗`,
+  ];
+
+  const insightPool=[
+    ()=>`${a.hp}这个体验 ${R(['太加分了','提升幸福感','每天都在用'])} ${featLine} ${R(['绝绝子','太舒服了','爱了爱了'])}`,
+    ()=>`对比了${info.competitor||'别家'} ${a.hp}确实是${info.name}的亮点 ${info.competitor?`${info.competitor}没有这个`:'其他家目前给不到'}`,
+    ()=>`${a.hp} ${R(['真不是参数党','用起来才知道多香','解决了我最大的痛点'])} ${a.priceSeg}能有这个 真的可以`,
+  ];
+
+  let text=pick(openPool)()+'。'+pick(insightPool)()+'。'+R(isPurchased?['闭眼入没毛病 ✨','提升生活幸福感的好物 推荐！','之后继续分享使用感受~','真的不后悔 ✨']:[info.price?`${info.price}值得冲吗姐妹们 🥺`:`家人们觉得值吗`,'有没有买过的姐妹给个建议 🥺','周末去线下看看再决定']);
+
+  if(casual){text=text.replace(/绝绝子/g,'真的太棒了').replace(/幸福感/g,'太幸福了');}
+  if(pro){text=text.replace(/绝绝子|爱了|种草|太舒服了/g,'参数到位');if(Math.random()>.5) text+=' 做了详细功课才选的';}
+
+  return{text:text.trim(),name:R(NAMES_X),color:AVATAR_COLORS[idx%AVATAR_COLORS.length],likes:RI(10,800),hours:RI(1,24),platform:'xhs'};
+}
+
+// ================================================================
+// 生成入口
+// ================================================================
+function generateFor(platform) {
+  curPlatform = platform;
+  const pair = getProductPair();
+  if(!pair) {toast('请先选择一个产品');return;}
+
+  const info = {
+    name: pair.myProduct.name,
+    category: pair.myProduct.category||'',
+    features: pair.myProduct.features||[],
+    price: pair.myProduct.price||'',
+    url: pair.myProduct.url||'',
+    desc: pair.myProduct.desc||'',
+    materials: pair.myProduct.materials||[],
+    competitor: pair.comp?pair.comp.name:'',
+    compFeatures: pair.comp?(pair.comp.features||[]):[],
+    compPrice: pair.comp?(pair.comp.price||''):'',
+  };
+
+  // 如果有资料，注入前500字作为上下文
+  if(info.materials?.length) {
+    const matText = info.materials.map(m=>`【${m.name}】${m.text.substring(0,300)}`).join('\n');
+    // 在卖点中混入资料内容（真实感增强）
+    const matFeatures = matText.split(/[，。\n]/).filter(s=>s.length>5&&s.length<30).slice(0,5);
+    info.features = [...new Set([...info.features,...matFeatures])];
+  }
+
+  // 注入方法论提示
+  const activeMethods = S.methods().filter(m=>m.active&&(!m.platform||m.platform===platform));
+  const methodHint = activeMethods.length ? '\n方法论参考：'+activeMethods.map(m=>m.content).join('；') : '';
+
+  // 注入修改意见
+  const pendingFbs = S.feedback().filter(f=>!f.processed&&f.prod===info.name);
+  const fbHint = pendingFbs.length ? '\n用户反馈：'+pendingFbs.map(f=>f.text).join('；') : '';
+
+  // 生成
+  const generators = {bili:genBili,douyin:genDouyin,xhs:genXhs};
+  curComments = [];
+  const cnt = Math.min(genCount, 15);
+  for(let i=0;i<cnt;i++) curComments.push(generators[platform](info,i));
+  renderComments();
+  document.getElementById('resultActions').style.display = 'flex';
+}
+
+// ================================================================
+// 渲染评论
+// ================================================================
+function renderComments() {
+  const area = document.getElementById('resultArea');
+  const badges = {bili:'<span class="badge b-bili">📺 B站评论</span>',douyin:'<span class="badge b-douyin">🎵 抖音评论</span>',xhs:'<span class="badge b-xhs">📕 小红书评论</span>'};
+  const stat = isPurchased?'<span style="font-size:11px;color:#10b981;margin-left:8px">✅ 已购 · 体验向</span>':'<span style="font-size:11px;color:#f59e0b;margin-left:8px">🔍 未购 · 决策向</span>';
+  const tone = `<span style="font-size:11px;color:#888;margin-left:4px">语调${toneLevel<35?'偏口语':toneLevel>65?'偏专业':'适中'}</span>`;
+
+  area.innerHTML = `<div style="margin-bottom:12px">${badges[curPlatform]}${stat}${tone}</div>`+renderers[curPlatform](curComments);
+}
+
+const renderers = {
+  bili: c => c.map(x=>{
+    const t=E(x.text).replace(/'/g,"&#39;");
+    return `<div class="cc-wrap bc">
+      <div class="bc-avatar" style="background:${x.color}">${x.name[0]}</div>
+      <div style="flex:1">
+        <div class="bc-name">${E(x.name)}</div>
+        <div class="bc-text">${E(x.text)}</div>
+        <div class="bc-meta"><span>👍 ${x.likes>=1000?(x.likes/1000).toFixed(1)+'k':x.likes}</span><span>${x.hours}小时前</span></div>
+      </div>
+      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+    </div>`;
+  }).join(''),
+  douyin: c => c.map(x=>{
+    const t=E(x.text).replace(/'/g,"&#39;");
+    return `<div class="cc-wrap dc">
+      <div class="dc-avatar" style="background:${x.color}">${x.name[0]}</div>
+      <div style="flex:1">
+        <div class="dc-name">${E(x.name)}</div>
+        <div class="dc-text">${E(x.text)}</div>
+        <div class="dc-meta"><span>${x.hours}小时前</span><span class="dc-heart ${Math.random()>.5?'liked':''}">♡ ${x.likes>=1000?(x.likes/1000).toFixed(1)+'k':x.likes}</span></div>
+      </div>
+      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+    </div>`;
+  }).join(''),
+  xhs: c => c.map(x=>{
+    const t=E(x.text).replace(/'/g,"&#39;");
+    return `<div class="cc-wrap xc">
+      <div class="xc-header">
+        <div class="xc-avatar" style="background:${x.color}">${x.name[0]}</div>
+        <div class="xc-name">${E(x.name)}</div>
+      </div>
+      <div class="xc-text">${E(x.text)}</div>
+      <div class="xc-meta"><span>${x.hours}小时前</span><span>♡ ${x.likes}</span></div>
+      <button class="copy-btn" onclick="copyOne(this,'${t}')">复制</button>
+    </div>`;
+  }).join(''),
+};
+
+function copyOne(btn,text){
+  navigator.clipboard.writeText(text.replace(/&#39;/g,"'")).then(()=>toast('已复制'));
+}
+function copyAll(){
+  navigator.clipboard.writeText(curComments.map(c=>c.text).join('\n')).then(()=>toast('已复制全部'));
+}
+
+// ================================================================
+// 弹窗
+// ================================================================
+function openModal(id){
+  document.getElementById(id).classList.add('show');
+  if(id==='methodModal') renderMethodModal();
+  if(id==='feedbackModal') renderFeedbackModal();
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'))}});
+
+function renderMethodModal(){
+  const methods=S.methods();
+  const platMap={bili:'📺B站',douyin:'🎵抖音',xhs:'📕小红书','':'🌐通用'};
+  document.getElementById('methodModalBody').innerHTML = methods.length ? methods.map(m=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px">${E(m.name)}</div>
+          <div style="margin-bottom:6px">
+            <span class="tag ${m.active?'tag-p':'tag-d'}">${m.active?'✅ 启用':'⛔ 停用'}</span>
+            <span class="tag tag-a">${platMap[m.platform]||'通用'}</span>
+          </div>
+          <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${E(m.content)}</div>
         </div>
-    `).join('');
-    
-    document.getElementById('resultsBox').style.display = 'block';
-    document.getElementById('resultsBox').scrollIntoView({ behavior: 'smooth' });
-}
-
-function copyText(i) {
-    const text = document.getElementById('c' + i).value;
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('已复制');
-    }).catch(() => {
-        // Fallback
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast('已复制');
-    });
-}
-
-function submitFb(i) {
-    const text = document.getElementById('c' + i).value;
-    const fb = prompt('请输入修改意见：');
-    if (!fb) return;
-    
-    const fbs = loadData('feedbacks');
-    fbs.push({
-        id: Date.now(),
-        prod: selectedProd.name,
-        plat: selectedPlat,
-        original: text,
-        text: fb,
-        processed: false,
-        time: new Date().toISOString(),
-    });
-    saveData('feedbacks', fbs);
-    showToast('感谢反馈');
-}
-
-// ============ Admin Functions ============
-function refreshAdmin() {
-    refreshCatList();
-    refreshProdList();
-    refreshMethodList();
-    refreshFbList();
-}
-
-function addCategory() {
-    const name = document.getElementById('newCatName').value.trim();
-    if (!name) return showToast('请输入名称');
-    
-    const cats = loadData('categories');
-    if (cats.find(c => c.name === name)) return showToast('品类已存在');
-    
-    cats.push({ id: Date.now(), name, time: new Date().toISOString() });
-    saveData('categories', cats);
-    document.getElementById('newCatName').value = '';
-    showToast('已添加');
-    refreshCatList();
-    refreshProdCatSelect();
-}
-
-function refreshCatList() {
-    const cats = loadData('categories');
-    document.getElementById('catList').innerHTML = cats.map(c => `
-        <div class="data-item">
-            <div class="data-item-info">
-                <div class="data-item-title">${c.name}</div>
-                <div class="data-item-desc">${new Date(c.time).toLocaleDateString()}</div>
-            </div>
-            <div class="data-item-actions">
-                <button class="btn btn-sm btn-danger" onclick="delCat(${c.id})">删除</button>
-            </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn-sm ${m.active?'d':'s'}" onclick="toggleMethod(${m.id});renderMethodModal()">${m.active?'停用':'启用'}</button>
+          <button class="btn-sm d" onclick="deleteMethod(${m.id});renderMethodModal()">删除</button>
         </div>
-    `).join('') || '<div style="color:var(--text-secondary)">暂无品类</div>';
-    refreshProdCatSelect();
+      </div>
+    </div>
+  `).join('') : '<div class="no-data">暂无方法论</div>';
 }
 
-function delCat(id) {
-    if (!confirm('删除品类会同时删除其下所有产品')) return;
-    const cats = loadData('categories').filter(c => c.id !== id);
-    saveData('categories', cats);
-    const prods = loadData('products').filter(p => p.catId !== id);
-    saveData('products', prods);
-    showToast('已删除');
-    refreshCatList();
-}
-
-function refreshProdCatSelect() {
-    const cats = loadData('categories');
-    document.getElementById('prodCatSelect').innerHTML = 
-        '<option value="">选择品类</option>' + 
-        cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-}
-
-function addProduct() {
-    const catId = parseInt(document.getElementById('prodCatSelect').value);
-    const name = document.getElementById('newProdName').value.trim();
-    const desc = document.getElementById('newProdDesc').value.trim();
-    
-    if (!catId || !name) return showToast('请选择品类并输入产品名');
-    
-    const prods = loadData('products');
-    prods.push({ id: Date.now(), catId, name, desc, materials: [], time: new Date().toISOString() });
-    saveData('products', prods);
-    
-    document.getElementById('newProdName').value = '';
-    document.getElementById('newProdDesc').value = '';
-    showToast('已添加');
-    refreshProdList();
-}
-
-function refreshProdList() {
-    const prods = loadData('products');
-    const cats = loadData('categories');
-    const catMap = {}; cats.forEach(c => catMap[c.id] = c.name);
-    
-    document.getElementById('prodList').innerHTML = prods.map(p => `
-        <div class="data-item">
-            <div class="data-item-info">
-                <div class="data-item-title">${p.name} <span class="badge badge-active">${catMap[p.catId] || '未知'}</span></div>
-                <div class="data-item-desc">${p.desc || '暂无描述'}</div>
-                <div class="material-item" style="margin-top:8px">
-                    <input type="file" accept=".pdf,.txt" onchange="uploadMat(${p.id}, this)" style="font-size:0.8rem">
-                </div>
-                ${p.materials?.length ? `
-                    <div style="margin-top:6px;font-size:0.8rem;color:var(--text-secondary)">
-                        资料：${p.materials.map(m => m.name).join(', ')}
-                    </div>
-                ` : ''}
-            </div>
-            <div class="data-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editProd(${p.id})">编辑</button>
-                <button class="btn btn-sm btn-danger" onclick="delProd(${p.id})">删除</button>
-            </div>
+function renderFeedbackModal(){
+  const fbs=S.feedback();
+  document.getElementById('feedbackModalBody').innerHTML = fbs.length ? fbs.map(f=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:3px">${E(f.prod||'通用产品')}</div>
+          <div style="margin-bottom:6px">
+            <span class="tag ${f.processed?'tag-p':'tag-d'}">${f.processed?'✅ 已处理':'⏳ 待处理'}</span>
+          </div>
+          ${f.original?`<div style="font-size:12px;color:#555;padding:6px 10px;background:#f9f9f9;border-radius:6px;margin-bottom:6px"><strong>原文：</strong>${E(f.original.substring(0,100))}</div>`:''}
+          <div style="font-size:13px;padding:8px 12px;background:#fff7e6;border-radius:6px;border-left:3px solid #f59e0b">💬 ${E(f.text)}</div>
+          <div style="font-size:11px;color:#bbb;margin-top:4px">${fmt(f.time)}</div>
         </div>
-    `).join('') || '<div style="color:var(--text-secondary)">暂无产品</div>';
-}
-
-function uploadMat(prodId, input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-        const text = reader.result;
-        const prods = loadData('products');
-        const prod = prods.find(p => p.id === prodId);
-        if (!prod) return;
-        
-        prod.materials = prod.materials || [];
-        prod.materials.push({ name: file.name, text: text.substring(0, 5000) });
-        saveData('products', prods);
-        showToast('资料已添加');
-        refreshProdList();
-    };
-    reader.readAsText(file);
-}
-
-function editProd(id) {
-    const prods = loadData('products');
-    const p = prods.find(x => x.id === id);
-    if (!p) return;
-    
-    const name = prompt('产品名称：', p.name);
-    if (name === null) return;
-    const desc = prompt('产品描述：', p.desc);
-    if (desc === null) return;
-    
-    p.name = name;
-    p.desc = desc;
-    saveData('products', prods);
-    showToast('已更新');
-    refreshProdList();
-}
-
-function delProd(id) {
-    if (!confirm('确定删除？')) return;
-    const prods = loadData('products').filter(p => p.id !== id);
-    saveData('products', prods);
-    showToast('已删除');
-    refreshProdList();
-}
-
-function addMethodology() {
-    const title = document.getElementById('newMethodTitle').value.trim();
-    const content = document.getElementById('newMethodContent').value.trim();
-    if (!title || !content) return showToast('请填写完整');
-    
-    const methods = loadData('methodologies');
-    methods.push({ id: Date.now(), title, content, active: true, time: new Date().toISOString() });
-    saveData('methodologies', methods);
-    
-    document.getElementById('newMethodTitle').value = '';
-    document.getElementById('newMethodContent').value = '';
-    showToast('已添加');
-    refreshMethodList();
-}
-
-function refreshMethodList() {
-    const methods = loadData('methodologies');
-    document.getElementById('methodList').innerHTML = methods.map(m => `
-        <div class="data-item">
-            <div class="data-item-info">
-                <div class="data-item-title">${m.title} <span class="badge ${m.active ? 'badge-active' : 'badge-pending'}">${m.active ? '启用' : '停用'}</span></div>
-                <div class="data-item-desc" style="white-space:pre-wrap;max-height:60px;overflow:hidden">${m.content.substring(0, 100)}...</div>
-            </div>
-            <div class="data-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="toggleMethod(${m.id})">${m.active ? '停用' : '启用'}</button>
-                <button class="btn btn-sm btn-danger" onclick="delMethod(${m.id})">删除</button>
-            </div>
+        <div style="display:flex;gap:5px;flex-shrink:0;flex-direction:column">
+          ${!f.processed?`<button class="btn-sm s" onclick="processFeedback(${f.id});renderFeedbackModal()">标为已处理</button>`:''}
+          <button class="btn-sm d" onclick="deleteFeedback(${f.id});renderFeedbackModal()">删除</button>
         </div>
-    `).join('') || '<div style="color:var(--text-secondary)">暂无方法论</div>';
+      </div>
+    </div>
+  `).join('') : '<div class="no-data">暂无修改意见</div>';
 }
 
-function toggleMethod(id) {
-    const methods = loadData('methodologies');
-    const m = methods.find(x => x.id === id);
-    if (!m) return;
-    m.active = !m.active;
-    saveData('methodologies', methods);
-    showToast('状态已更新');
-    refreshMethodList();
-}
-
-function delMethod(id) {
-    if (!confirm('确定删除？')) return;
-    const methods = loadData('methodologies').filter(m => m.id !== id);
-    saveData('methodologies', methods);
-    showToast('已删除');
-    refreshMethodList();
-}
-
-function addFeedback() {
-    const prod = document.getElementById('fbProd').value.trim();
-    const plat = document.getElementById('fbPlat').value.trim();
-    const original = document.getElementById('fbOriginal').value.trim();
-    const text = document.getElementById('fbText').value.trim();
-    
-    if (!prod || !text) return showToast('请填写产品名和修改意见');
-    
-    const fbs = loadData('feedbacks');
-    fbs.push({ id: Date.now(), prod, plat, original, text, processed: false, time: new Date().toISOString() });
-    saveData('feedbacks', fbs);
-    
-    ['fbProd', 'fbPlat', 'fbOriginal', 'fbText'].forEach(id => document.getElementById(id).value = '');
-    showToast('已提交');
-    refreshFbList();
-}
-
-function refreshFbList() {
-    const fbs = loadData('feedbacks');
-    document.getElementById('fbList').innerHTML = fbs.map(f => `
-        <div class="data-item">
-            <div class="data-item-info">
-                <div class="data-item-title">${f.prod} / ${f.plat} <span class="badge ${f.processed ? 'badge-active' : 'badge-pending'}">${f.processed ? '已处理' : '待处理'}</span></div>
-                <div class="data-item-desc">
-                    <strong>原文：</strong>${f.original?.substring(0, 50) || ''}...<br>
-                    <strong>意见：</strong>${f.text}
-                </div>
-            </div>
-            <div class="data-item-actions">
-                ${!f.processed ? `<button class="btn btn-sm btn-secondary" onclick="processFb(${f.id})">标为已处理</button>` : ''}
-                <button class="btn btn-sm btn-danger" onclick="delFb(${f.id})">删除</button>
-            </div>
-        </div>
-    `).join('') || '<div style="color:var(--text-secondary)">暂无修改意见</div>';
-}
-
-function processFb(id) {
-    const fbs = loadData('feedbacks');
-    const f = fbs.find(x => x.id === id);
-    if (!f) return;
-    f.processed = true;
-    saveData('feedbacks', fbs);
-    showToast('已标记');
-    refreshFbList();
-}
-
-function delFb(id) {
-    if (!confirm('确定删除？')) return;
-    const fbs = loadData('feedbacks').filter(f => f.id !== id);
-    saveData('feedbacks', fbs);
-    showToast('已删除');
-    refreshFbList();
-}
-
-// ============ Utilities ============
-function escapeHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// ============ Init ============
-document.addEventListener('DOMContentLoaded', () => {
-    loadSettings();
-    refreshCategories();
-});
+// ================================================================
+// Init
+// ================================================================
+refreshStats();
+renderProductChips();
 </script>
 </body>
 </html>
