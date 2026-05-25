@@ -131,6 +131,21 @@ textarea{min-height:50px;resize:vertical}
 .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:500}
 .tag-a{background:#f0efff;color:var(--primary)}.tag-i{background:#fff7e6;color:#b45309}.tag-p{background:#f0fdf4;color:#166534}.tag-d{background:#fef2f2;color:#991b1b}
 .file-upload{display:flex;align-items:center;gap:8px;margin-top:6px}
+.cat-filter-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cat-filter{padding:4px 12px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text2);transition:all .2s;white-space:nowrap}
+.cat-filter:hover{border-color:#aaa;color:#333}
+.cat-filter.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* link input */
+.link-input-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.link-input-bar input{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.link-input-bar input:focus{border-color:var(--primary)}
+.link-status{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.link-status.success{color:var(--success)}.link-status.error{color:var(--danger)}
+/* attack mode */
+.attack-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
+.attack-toggle label{font-size:13px;color:#991b1b;cursor:pointer;font-weight:500}
+.attack-toggle input[type=checkbox]{accent-color:#e53e3e;width:16px;height:16px;cursor:pointer}
+.attack-hint{font-size:11px;color:#e53e3e;margin-left:4px}
 .file-upload input[type=file]{font-size:12px;border:none;background:transparent}
 .mat-list{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
 .mat-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:#f5f5f5;border-radius:20px;font-size:11px;color:#555}
@@ -206,8 +221,14 @@ textarea{min-height:50px;resize:vertical}
 
     <!-- 产品选择 -->
     <div class="select-bar">
-      <div class="select-row">
+      <div class="select-row" style="margin-bottom:8px">
         <span class="select-label">当前产品：</span>
+        <!-- 品类筛选标签 -->
+        <div class="cat-filter-bar" id="catFilterBar">
+          <span class="cat-filter active" onclick="filterByCategory('')">全部</span>
+        </div>
+      </div>
+      <div class="select-row">
         <div class="product-chips" id="productChips">
           <span class="no-product">还没有产品，点右上角「管理后台」添加</span>
         </div>
@@ -217,6 +238,16 @@ textarea{min-height:50px;resize:vertical}
 
     <!-- 控制区 -->
     <div class="card">
+      <!-- 链接智能识别 -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500">🔗 链接智能识别（粘贴小红书/B站/抖音链接，自动匹配平台和产品）</div>
+        <div class="link-input-bar">
+          <input type="text" id="linkInput" placeholder="粘贴小红书、B站、抖音链接…" onpaste="onLinkPaste(event)">
+          <button class="btn btn-p" onclick="parseLink()">识别</button>
+        </div>
+        <div class="link-status" id="linkStatus"></div>
+      </div>
+
       <div class="controls-row">
         <div class="tone-group">
           <span class="select-label" style="font-size:12px">🗣 口语</span>
@@ -226,6 +257,12 @@ textarea{min-height:50px;resize:vertical}
         <div class="purchase-toggle">
           <button class="toggle-btn active" id="btn-no" onclick="setPurchased(false)">🔍 未购（决策向）</button>
           <button class="toggle-btn" id="btn-yes" onclick="setPurchased(true)">✅ 已购（体验向）</button>
+        </div>
+        <!-- 拉踩模式 -->
+        <div class="attack-toggle">
+          <input type="checkbox" id="attackMode" onchange="updateAttackMode()">
+          <label for="attackMode">⚔ 拉踩模式</label>
+          <span class="attack-hint" id="attackHint" style="display:none">生成攻击竞品的话术</span>
         </div>
       </div>
 
@@ -506,6 +543,8 @@ let curComments = [];
 let selectedProductId = null;
 let toneLevel = 50;
 let isPurchased = false;
+let isAttackMode = false;
+let currentCatFilter = '';
 let genCount = 10;
 
 // ================================================================
@@ -566,25 +605,63 @@ function switchMgrTab(name, btn) {
 // ================================================================
 function renderProductChips() {
   const prods = S.products();
+  const cats = S.categories();
   const chips = document.getElementById('productChips');
+
+  // 更新品类筛选栏
+  const filterBar = document.getElementById('catFilterBar');
+  const usedCats = [...new Set(prods.map(p=>p.category||'未分类'))];
+  filterBar.innerHTML = `<span class="cat-filter${currentCatFilter===''?' active':''}" onclick="filterByCategory('')">全部</span>`
+    + usedCats.map(c => `<span class="cat-filter${currentCatFilter===c?' active':''}" onclick="filterByCategory('${E(c)}')">${E(c)}</span>`).join('');
+
   if(!prods.length) {
     chips.innerHTML = '<span class="no-product">还没有产品，点右上角「管理后台」添加</span>';
     document.getElementById('infoRow').style.display = 'none';
     selectedProductId = null;
     return;
   }
+
+  // 按品类筛选
+  const filtered = currentCatFilter
+    ? prods.filter(p => (p.category||'未分类') === currentCatFilter)
+    : prods;
+
+  if(!filtered.length) {
+    chips.innerHTML = `<span class="no-product">该品类暂无产品</span>`;
+    return;
+  }
+
+  // 按品类分组渲染
   let html = '';
-  prods.forEach(p => {
-    const sel = p.id===selectedProductId ? ' selected' : '';
-    html += `<span class="product-chip mine${sel}" onclick="selProduct('${p.id}')"><span class="dot"></span>${E(p.name)}<span class="tag">我品</span></span>`;
-    (p.competitors||[]).forEach(c=>{
-      const cid = p.id+'__c__'+c.id;
-      const s2 = cid===selectedProductId ? ' selected' : '';
-      html += `<span class="product-chip comp${s2}" onclick="selProduct('${cid}')"><span class="dot"></span>${E(c.name)}<span class="tag">竞品</span></span>`;
-    });
+  const groups = {};
+  filtered.forEach(p => {
+    const cat = p.category || '未分类';
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push(p);
   });
+
+  Object.keys(groups).forEach(cat => {
+    html += `<div style="font-size:11px;color:var(--text3);margin:6px 8px 2px;font-weight:600;padding:2px 0;border-bottom:1px dashed #e0e0e0">${E(cat)}</div>`;
+    html += `<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:4px">`;
+    groups[cat].forEach(p => {
+      const sel = p.id===selectedProductId ? ' selected' : '';
+      html += `<span class="product-chip mine${sel}" onclick="selProduct('${p.id}')"><span class="dot"></span>${E(p.name)}<span class="tag">我品</span></span>`;
+      (p.competitors||[]).forEach(c=>{
+        const cid = p.id+'__c__'+c.id;
+        const s2 = cid===selectedProductId ? ' selected' : '';
+        html += `<span class="product-chip comp${s2}" onclick="selProduct('${cid}')"><span class="dot"></span>${E(c.name)}<span class="tag">竞品</span></span>`;
+      });
+    });
+    html += `</div>`;
+  });
+
   chips.innerHTML = html;
   updateInfoRow();
+}
+
+function filterByCategory(cat) {
+  currentCatFilter = cat;
+  renderProductChips();
 }
 
 function selProduct(id) { selectedProductId = id; renderProductChips(); }
@@ -1281,6 +1358,228 @@ function setPurchased(val) {
   document.getElementById('btn-no').classList.toggle('active', !val);
   document.getElementById('btn-yes').classList.toggle('active', !!val);
 }
+function updateAttackMode() {
+  isAttackMode = document.getElementById('attackMode').checked;
+  document.getElementById('attackHint').style.display = isAttackMode ? 'inline' : 'none';
+}
+
+// ================================================================
+// 链接智能识别 — 粘贴链接自动匹配平台+产品+话术语境
+// ================================================================
+const LINK_PATTERNS = {
+  xhs: [
+    /xiaohongshu\.com\/discovery\/item\/([a-zA-Z0-9]+)/,
+    /xiaohongshu\.com\/explore\/([a-zA-Z0-9]+)/,
+    /xhslink\.com\/([a-zA-Z0-9]+)/,
+  ],
+  bili: [
+    /bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/,
+    /b23\.tv\/([a-zA-Z0-9]+)/,
+    /bilibili\.com\/read\/(cv\d+)/i,
+  ],
+  douyin: [
+    /douyin\.com\/video\/(\d+)/,
+    /v\.douyin\.com\/([a-zA-Z0-9]+)/,
+    /iesdouyin\.com\/share\/video\/(\d+)/,
+  ],
+};
+
+const PLATFORM_NAMES = {xhs: '小红书', bili: 'B站', douyin: '抖音'};
+const PLATFORM_ICONS = {xhs: '📕', bili: '📺', douyin: '🎵'};
+
+function detectPlatformFromLink(url) {
+  for(const [plat, patterns] of Object.entries(LINK_PATTERNS)) {
+    for(const re of patterns) {
+      if(re.test(url)) return plat;
+    }
+  }
+  return null;
+}
+
+function onLinkPaste(event) {
+  // 粘贴后自动触发识别
+  setTimeout(() => parseLink(), 100);
+}
+
+function parseLink() {
+  const input = document.getElementById('linkInput');
+  const status = document.getElementById('linkStatus');
+  const url = input.value.trim();
+  if(!url) { status.innerHTML = ''; return; }
+
+  // 1. 识别平台
+  const platform = detectPlatformFromLink(url);
+  if(!platform) {
+    status.innerHTML = '<span class="link-status error">❌ 未识别到平台，请粘贴小红书/B站/抖音链接</span>';
+    return;
+  }
+
+  // 2. 显示识别到的平台
+  status.innerHTML = `<span class="link-status success">${PLATFORM_ICONS[platform]} 已识别：${PLATFORM_NAMES[platform]}平台</span>`;
+
+  // 3. 自动切换到对应平台按钮高亮（在生成时使用该平台）
+  curPlatform = platform;
+
+  // 4. 尝试从已有产品中匹配（通过URL匹配或名称模糊匹配）
+  const prods = S.products();
+  let matched = null;
+  // 先尝试URL匹配
+  for(const p of prods) {
+    if(p.url && url.includes(p.url)) { matched = p; break; }
+  }
+  // 再尝试产品名在链接标题中（需要通过标题匹配，但纯前端无法获取页面标题，所以跳过）
+
+  if(matched) {
+    selectedProductId = matched.id;
+    renderProductChips();
+    status.innerHTML += ` <span class="link-status success">✅ 已匹配产品：${E(matched.name)}</span>`;
+  } else {
+    status.innerHTML += ` <span style="font-size:11px;color:var(--text3)">请手动选择产品，或点击下方生成按钮</span>`;
+  }
+
+  toast(`${PLATFORM_ICONS[platform]} 已识别${PLATFORM_NAMES[platform]}链接，将生成该平台话术`);
+}
+
+// ================================================================
+// 拉踩话术模板
+// ================================================================
+const ATTACK_TEMPLATES = {
+  bili: {
+    opens: [
+      '说实话，对比了一圈，{comp}真不行。',
+      '之前看了{comp}，差点被坑。',
+      '别买{comp}，真心劝退。',
+      '本来想买{comp}的，幸好做了功课。',
+    ],
+    attacks: [
+      '{comp}的{compFeat}纯属噱头，实际体验一坨。',
+      '{comp}那个{compFeat}虚标严重，对比{myName}差远了。',
+      '实测{comp}，{compFeat}完全是PPT参数。',
+      '{comp}在同价位基本没优势，{myFeat}被{myName}碾压。',
+      '看了{comp}的{compFeat}，再看看{myName}的{myFeat}，差距太明显。',
+      '{comp}用户吐槽最多的就是{compFeat}，反观{myName}的{myFeat}，稳得很。',
+      '同价位{comp}的{compFeat}就是不行，{myName}{myFeat}这才是真的香。',
+    ],
+    closes: [
+      '建议看看{myName}再决定。',
+      '别被{comp}营销骗了，{myName}才是真香。',
+      '这价位{myName}闭眼入，{comp}算了。',
+      '选{myName}不会后悔，{comp}踩坑概率太高。',
+      '{myName}和{comp}不是一个档次。',
+    ],
+  },
+  douyin: {
+    opens: [
+      '{comp}？别了吧。',
+      '差点买{comp}，幸好刷到这个。',
+      '谁还在买{comp}啊？',
+      '看过{comp}的，直接放弃。',
+    ],
+    attacks: [
+      '{comp}的{compFeat}真心拉垮，{myName}的{myFeat}强太多了。',
+      '实测{comp}，{compFeat}根本不行。{myName}{myFeat}碾压。',
+      '{comp}{compFeat}虚标，{myName}{myFeat}才是真的。',
+      '同价位{comp}和{myName}没得比，{myFeat}差距太大。',
+    ],
+    closes: [
+      '冲{myName}就完事了。',
+      '{comp}别碰，{myName}香多了。',
+      '听劝，{myName}比{comp}强。',
+      '{myName}真不亏，{comp}踩坑。',
+    ],
+  },
+  xhs: {
+    opens: [
+      '姐妹们{comp}千万别买 🙅',
+      '差点入了{comp}，还好做了功课 🙏',
+      '避雷{comp}，真实踩坑 😭',
+      '听劝！别买{comp} 💔',
+    ],
+    attacks: [
+      '{comp}的{compFeat}太拉垮了，{myName}的{myFeat}才是真的香 ✨',
+      '对比了{comp}和{myName}，{myFeat}差距太明显了，{comp}的{compFeat}完全不行 😤',
+      '{comp}{compFeat}纯属噱头，{myName}{myFeat}效果肉眼可见的好 🌟',
+      '买了{comp}后悔了，{compFeat}太差，换了{myName}{myFeat}才是真的提升幸福感 💕',
+    ],
+    closes: [
+      '姐妹们冲{myName}就对了 ✨',
+      '{comp}真的避雷，{myName}闭眼入 💕',
+      '别被{comp}骗了，{myName}才是这个价位最香的 🌟',
+      '选{myName}不后悔，{comp}太坑了 🙅',
+    ],
+  },
+};
+
+function genAttack(platform, info, idx) {
+  const tpl = ATTACK_TEMPLATES[platform];
+  if(!tpl) return '';
+
+  const myName = info.name;
+  const myFeat = (info.features||[]).length ? R(info.features) : '综合体验';
+  const comp = info.competitor || '别家';
+  const compFeat = (info.compFeatures||[]).length ? R(info.compFeatures) : '参数';
+
+  // 资料增强
+  const mat = info.matParsed;
+  const matFeatLine = mat && mat.featSentences.length ? R(mat.featSentences.slice(0,4)) : '';
+  const matDataLine = mat && mat.dataPoints.length ? R(mat.dataPoints.slice(0,3)) : '';
+  const myFeatReal = matFeatLine || matDataLine || myFeat;
+
+  const open = R(tpl.opens).replace(/{comp}/g, comp);
+  const attack = R(tpl.attacks)
+    .replace(/{comp}/g, comp)
+    .replace(/{compFeat}/g, compFeat)
+    .replace(/{myName}/g, myName)
+    .replace(/{myFeat}/g, myFeatReal);
+  const close = R(tpl.closes).replace(/{comp}/g, comp).replace(/{myName}/g, myName);
+
+  // 随机组合（不一定每次都是三段式）
+  const styles = [
+    `${open} ${attack} ${close}`,
+    `${attack} ${close}`,
+    `${open} ${attack}`,
+    `${attack}`,
+  ];
+
+  return R(styles);
+}
+
+// AI模式的拉踩Prompt
+function buildAttackPrompt(platform, info, count) {
+  const platGuide = {
+    bili: 'B站评论风格：带点硬核分析，用数据和实测说话，语气偏直男，可以适当暴躁',
+    douyin: '抖音评论风格：短平快，直接踩，情绪化强，带节奏感',
+    xhs: '小红书评论风格：用"避雷""踩坑"等词，姐妹式口吻，带emoji',
+  };
+  const platNames = {bili: 'B站', douyin: '抖音', xhs: '小红书'};
+
+  const matParsed = parseMaterials(info.materials);
+  let matBlock = '';
+  if(matParsed) {
+    const parts = [];
+    if(matParsed.dataPoints.length) parts.push(`【我方技术指标】${matParsed.dataPoints.slice(0,4).join('；')}`);
+    if(matParsed.featSentences.length) parts.push(`【我方核心卖点】${matParsed.featSentences.slice(0,4).join('；')}`);
+    if(parts.length) matBlock = `\n我方产品资料提取：\n${parts.join('\n')}`;
+  }
+
+  return `你是社交媒体运营专家，现在要生成${count}条${platNames[platform]}平台的**拉踩评论**——重点攻击竞品${info.competitor||'别家'}的不足，同时突出${info.name}的优势。
+
+我方产品：${info.name}
+我方卖点：${(info.features||[]).join('、')||'综合体验好'}
+我方价格：${info.price||'未知'}
+${matBlock}
+竞品：${info.competitor||'别家同类产品'}
+竞品卖点（作为攻击靶子）：${(info.compFeatures||[]).join('、')||'参数一般'}
+
+拉踩策略：
+1. 针对竞品的核心弱点精准打击，用具体参数或体验对比
+2. 突出我方产品在相同维度的碾压优势
+3. 语气要自然真实，像真实用户吐槽，不是黑公关
+4. ${platGuide[platform]}
+
+请严格按JSON格式返回：
+{"comments": ["评论1", "评论2", ...]}`;
+}
 
 // ================================================================
 // 评论生成引擎（修复版 + 增强版）
@@ -1914,6 +2213,55 @@ ${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
   }
 }
 
+// AI拉踩模式生成
+async function generateWithAI_Attack(platform, info, count) {
+  const key = localStorage.getItem('brg_ai_key');
+  if(!key) return null;
+
+  const userPrompt = buildAttackPrompt(platform, info, count);
+
+  const systemPrompt = `你是一名社交媒体运营专家，擅长生成"拉踩"式评论——在攻击竞品不足的同时突出我方产品优势。
+核心要求：
+1. 攻击要有理有据，不是无脑黑，要像真实用户吐槽
+2. 必须同时提到我方产品的具体优势，形成对比
+3. 每条评论角度不同：有人吐槽竞品参数虚标，有人吐槽竞品体验差，有人后悔买了竞品
+4. 如果有产品资料，引用具体技术参数作为攻击和背书的依据`;
+
+  try {
+    const resp = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {role:'system', content:systemPrompt},
+          {role:'user', content:userPrompt},
+        ],
+        temperature: 0.9,
+        max_tokens: 2000,
+      }),
+    });
+
+    if(!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const content = data.choices[0].message.content.trim();
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('AI返回格式异常');
+    const parsed = JSON.parse(jsonMatch[0]);
+    return parsed.comments || [];
+  } catch(e) {
+    console.error('AI拉踩生成失败:', e);
+    return null;
+  }
+}
+
 // ================================================================
 // 生成入口
 // ================================================================
@@ -1921,6 +2269,12 @@ async function generateFor(platform) {
   curPlatform = platform;
   const pair = getProductPair();
   if(!pair) { toast('请先选择一个产品'); return; }
+
+  // 拉踩模式必须有竞品
+  if(isAttackMode && !pair.comp) {
+    toast('拉踩模式需要选择带竞品的产品，请先添加竞品');
+    return;
+  }
 
   const info = {
     name: pair.myProduct.name,
@@ -1957,7 +2311,13 @@ async function generateFor(platform) {
   // 尝试 AI 生成
   const aiKey = localStorage.getItem('brg_ai_key');
   if(aiKey) {
-    const aiComments = await generateWithAI(platform, info, cnt);
+    // 拉踩模式使用专用Prompt
+    let aiComments;
+    if(isAttackMode && info.competitor) {
+      aiComments = await generateWithAI_Attack(platform, info, cnt);
+    } else {
+      aiComments = await generateWithAI(platform, info, cnt);
+    }
     if(aiComments && aiComments.length > 0) {
       // AI 生成成功
       curComments = aiComments.map((text, i) => ({
@@ -1978,9 +2338,26 @@ async function generateFor(platform) {
   }
 
   // 模板引擎生成
-  const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
-  curComments = [];
-  for(let i=0;i<cnt;i++) curComments.push(generators[platform](info, i));
+  if(isAttackMode && info.competitor) {
+    // 拉踩模式
+    curComments = [];
+    for(let i=0;i<cnt;i++) {
+      const text = genAttack(platform, info, i);
+      curComments.push({
+        text: text.trim(),
+        name: platform==='bili' ? R(NAMES_B) : platform==='douyin' ? R(NAMES_D) : R(NAMES_X),
+        color: AVATAR_COLORS[i%AVATAR_COLORS.length],
+        likes: RI(platform==='douyin'?20:10, platform==='douyin'?5000:platform==='bili'?3200:800),
+        hours: RI(1, platform==='xhs'?24:12),
+        platform,
+      });
+    }
+  } else {
+    // 正常模式
+    const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
+    curComments = [];
+    for(let i=0;i<cnt;i++) curComments.push(generators[platform](info, i));
+  }
   renderComments();
   document.getElementById('resultActions').style.display = 'flex';
 }
@@ -2009,8 +2386,21 @@ function regenOne(idx) {
     info.features = [...new Set([...info.features, ...matFeats])];
     info.matParsed = matParsed;
   }
-  const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
-  curComments[idx] = generators[curPlatform](info, idx+Math.floor(Math.random()*100));
+  // 拉踩模式
+  if(isAttackMode && info.competitor) {
+    const text = genAttack(curPlatform, info, idx+Math.floor(Math.random()*100));
+    curComments[idx] = {
+      text: text.trim(),
+      name: curComments[idx].name,
+      color: curComments[idx].color,
+      likes: curComments[idx].likes,
+      hours: curComments[idx].hours,
+      platform: curPlatform,
+    };
+  } else {
+    const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
+    curComments[idx] = generators[curPlatform](info, idx+Math.floor(Math.random()*100));
+  }
   renderComments();
   toast('已重新生成此条');
 }
@@ -2030,8 +2420,9 @@ function renderComments() {
     : '<span style="font-size:11px;color:#f59e0b;margin-left:8px">🔍 未购 · 决策向</span>';
   const tone = `<span style="font-size:11px;color:#888;margin-left:4px">语调${toneLevel<35?'偏口语':toneLevel>65?'偏专业':'适中'}</span>`;
   const aiTag = curComments[0]?.aiGenerated ? '<span class="badge b-green" style="margin-left:6px">✨ AI生成</span>' : '';
+  const attackTag = isAttackMode ? '<span class="badge" style="background:#e53e3e;margin-left:6px">⚔ 拉踩模式</span>' : '';
 
-  area.innerHTML = `<div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${badges[curPlatform]}${stat}${tone}${aiTag}</div>`
+  area.innerHTML = `<div style="margin-bottom:12px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">${badges[curPlatform]}${stat}${tone}${aiTag}${attackTag}</div>`
     + renderers[curPlatform](curComments);
 }
 
