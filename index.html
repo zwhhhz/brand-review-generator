@@ -1197,6 +1197,79 @@ function setPurchased(val) {
 // 评论生成引擎（修复版 + 增强版）
 // ================================================================
 
+// ================================================================
+// 资料深度解析器 — 从 PDF/TXT 内容中提取结构化话术素材
+// ================================================================
+function parseMaterials(materials) {
+  if(!materials || !materials.length) return null;
+
+  // 合并所有资料文本（最多 6000 字用于解析）
+  const raw = materials.map(m => m.text).join('\n').substring(0, 6000);
+
+  // 1. 提取数字指标（亮度、功耗、续航、像素等带数字的句子）
+  const dataPoints = [];
+  const numRe = /([^\n。！？]{2,20}[\d]+[^\n。！？]{1,25})/g;
+  let m;
+  while((m = numRe.exec(raw)) !== null) {
+    const s = m[1].trim();
+    if(s.length >= 6 && s.length <= 40 && /[\u4e00-\u9fff]/.test(s)) dataPoints.push(s);
+    if(dataPoints.length >= 12) break;
+  }
+
+  // 2. 提取核心卖点句子（短于40字、含关键技术词汇的句子）
+  const featSentences = raw
+    .split(/[。！？\n]/)
+    .map(s => s.trim().replace(/^[-•·\s*#]+/, ''))
+    .filter(s => s.length >= 8 && s.length <= 50)
+    .filter(s => /[\u4e00-\u9fff]{3,}/.test(s))
+    .filter(s => !/http|www|版权|出版|第\d+页|目录/.test(s))
+    .slice(0, 20);
+
+  // 3. 提取使用场景（含"场景/使用/适合/适用/满足"等词的句子）
+  const sceneSentences = raw
+    .split(/[。！？\n]/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 8 && s.length <= 60)
+    .filter(s => /场景|使用|适合|适用|满足|需求|用户|家庭|办公|户外|出行|游戏|影音|影片|观影/.test(s))
+    .slice(0, 8);
+
+  // 4. 提取用户评价/体验类句子（含"感受/体验/效果/实测/真实"等词）
+  const expSentences = raw
+    .split(/[。！？\n]/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 10 && s.length <= 60)
+    .filter(s => /感受|体验|效果|实测|真实|反馈|满意|清晰|流畅|稳定|惊喜|推荐|值得/.test(s))
+    .slice(0, 8);
+
+  // 5. 提取亮点短语（2-10字的名词短语，通常是产品卖点标签）
+  const tagPhrases = raw
+    .split(/[，、；\n]/)
+    .map(s => s.trim().replace(/^[-•·\s*#]+/, ''))
+    .filter(s => s.length >= 4 && s.length <= 14)
+    .filter(s => /[\u4e00-\u9fff]{2,}/.test(s))
+    .filter(s => !/http|版权|出版/.test(s))
+    .slice(0, 15);
+
+  // 6. 生成"资料摘要"用于 AI Prompt（精简版，不超过1500字）
+  const summary = raw
+    .split(/[。！？]/)
+    .filter(s => s.trim().length >= 8 && s.trim().length <= 80)
+    .filter(s => /[\u4e00-\u9fff]{4,}/.test(s.trim()))
+    .filter(s => !/http|www|版权|mailto/.test(s))
+    .slice(0, 30)
+    .join('。') + '。';
+
+  return {
+    dataPoints,      // 带数字的技术指标
+    featSentences,   // 核心卖点句子
+    sceneSentences,  // 使用场景句子
+    expSentences,    // 体验评价句子
+    tagPhrases,      // 亮点短语标签
+    summary,         // AI用的摘要
+    raw,             // 原始全文备用
+  };
+}
+
 // ---- 通用分析 ----
 function analyzeProduct(info) {
   const {name, category, features, price} = info;
@@ -1294,6 +1367,12 @@ function analyzeProduct(info) {
 }
 
 function pickScene(info, a) {
+  // 优先从资料中提取真实场景
+  if(info.matParsed && info.matParsed.sceneSentences.length) {
+    const matScenes = info.matParsed.sceneSentences.map(s => ({s: '日常使用', d: s}));
+    if(matScenes.length) return R(matScenes);
+  }
+
   const {isProj, isTV, isAudio, isAc, isPhone, isPC, isFloor} = a;
   const scenes = [];
   if(isProj){
@@ -1390,6 +1469,15 @@ function genBili(info, idx) {
   const methodHint = getMethodHints('bili');
   const fbHint = getFeedbackHints(info.name, 'bili');
 
+  // 从资料中提取可用于话术的数据指标和体验描述
+  const mat = info.matParsed;
+  const matDataLine = mat && mat.dataPoints.length ? R(mat.dataPoints.slice(0, 6)) : '';
+  const matExpLine  = mat && mat.expSentences.length ? R(mat.expSentences.slice(0, 5)) : '';
+  const matFeatLine = mat && mat.featSentences.length ? R(mat.featSentences.slice(0, 6)) : '';
+  // 组合：资料描述 > 分析提取的hp
+  const mainPoint = matFeatLine || matDataLine || featLine;
+  const expDesc   = matExpLine  || `${scene.d}`;
+
   // 权重选风格
   const weights = isPurchased
     ? {declare:.22,share:.28,evaluate:.30,compare:.15,ask:.05}
@@ -1408,15 +1496,17 @@ function genBili(info, idx) {
 
   if(style==='declare') {
     text = R([
-      `${priceHint} ${featLine} ${a.priceSeg}可以说是真香机 ${compRef}`,
-      `冲了！${priceHint}有${featLine} ${R(['基本家用完全够了','这个配置真不赖','还要什么自行车'])} ${R(['目前入门最香的了','横向比了一圈没对手','冲就完事了'])}`,
-      `${featLine} ${priceHint} ${R(['别家同价位基本没有','性价比拉满了','闭眼入'])} ${compRef}`,
+      `${priceHint} ${mainPoint} ${a.priceSeg}可以说是真香机 ${compRef}`,
+      `冲了！${priceHint}${mainPoint ? '，' + mainPoint : '，' + featLine} ${R(['基本家用完全够了','这个配置真不赖','还要什么自行车'])} ${R(['目前入门最香的了','横向比了一圈没对手','冲就完事了'])}`,
+      `${mainPoint || featLine} ${priceHint} ${R(['别家同价位基本没有','性价比拉满了','闭眼入'])} ${compRef}`,
     ]);
   } else if(style==='ask_budget') {
     const p = parseInt((info.price||'').replace(/[^0-9]/g,''))||3000;
     const k = Math.round(p/1000);
     const bs = R([`${k-1}千多`,`${k}千左右`,`${k}千价位`,`预算${Math.round(p*0.8/100)*100}-${Math.round(p*1.2/100)*100}`]);
-    const usage = R([`主要卧室接${R(['switch','PS5','电脑'])}玩游戏加看综艺`, `就想下班躺着看`, `家用一般的使用`]);
+    const usage = mat && mat.sceneSentences.length
+      ? R(mat.sceneSentences.slice(0, 3))
+      : R([`主要卧室接${R(['switch','PS5','电脑'])}玩游戏加看综艺`, `就想下班躺着看`, `家用一般的使用`]);
     text = R([
       `${bs}有推荐不？${usage}`,
       `${bs} ${usage} 到手的兄弟说下真实感受`,
@@ -1440,33 +1530,42 @@ function genBili(info, idx) {
     ]);
   } else if(style==='compare') {
     const them = info.competitor || R(['极米','坚果','当贝','小明','海信']);
+    const myAdv = matFeatLine || a.hp;
     text = R([
       `${info.name} vs ${them} ${R(['价格差不太多','预算都能接受'])} 哪款更推荐`,
-      `在${info.name}和${them}之间纠结 ${a.hp}我比较看重 ${R(['求真实建议','再看看 但倾向这个'])}`,
+      `在${info.name}和${them}之间纠结 ${myAdv ? myAdv + '这点' : a.hp}我比较看重 ${R(['求真实建议','再看看 但倾向这个'])}`,
     ]);
   } else if(style==='share') {
     const days = R(['两周','一个月','半个多月','一周多']);
-    const detail = R([
-      `${scene.s} ${scene.d}`,
-      `到手就试了${R(['投白墙','接设备'])} ${R(['效果比想象中好','没翻车','确实不错'])}`,
-      `之前那台${R(['亮度完全不够','效果糊'])} 换了${info.name} ${R(['差距太明显了','提升明显'])}`,
-    ]);
+    const detail = mat && (matExpLine || matFeatLine)
+      ? R([
+          `到手${R(['马上测试了','用起来'])}，${expDesc}`,
+          `${matFeatLine || scene.s}，${matExpLine || scene.d}`,
+          `之前那台${R(['效果差远了','完全不够用'])}，换了${info.name}，${expDesc}`,
+        ])
+      : R([
+          `${scene.s} ${scene.d}`,
+          `到手就试了${R(['投白墙','接设备'])} ${R(['效果比想象中好','没翻车','确实不错'])}`,
+          `之前那台${R(['亮度完全不够','效果糊'])} 换了${info.name} ${R(['差距太明显了','提升明显'])}`,
+        ]);
     text = R([
-      `用了${days}说说感受 ${a.hp}确实不错 ${detail} ${compRef?compRef+' ':''} 没选错`,
-      `${info.price?info.price+'入的':'花了点钱买的'} 用了${days} ${detail} ${R(['可以放心冲','基本没槽点'])}`,
+      `用了${days}说说感受，${mainPoint || a.hp}确实不错，${detail} ${compRef?compRef+' ':''} 没选错`,
+      `${info.price?info.price+'入的':'花了点钱买的'}，用了${days}，${detail} ${R(['可以放心冲','基本没槽点'])}`,
     ]);
   } else if(style==='evaluate') {
     const dur = isPurchased ? `用了${R(['两周','一个月','半个多月','一周'])} ` : '';
     const conc = isPurchased ? R(['整体满意','没选错','可以入','不后悔']) : R(['看着挺香','准备冲','大概率选这个了','再看看 但倾向这个']);
+    const evalPoint = matDataLine || matFeatLine || featLine;
     text = R([
-      `${dur}${featLine} ${a.priceSeg} ${R(['横向看了一圈确实能打','参数没虚标'])} ${scene.s}时${scene.d} ${compRef} ${conc}`,
-      `${dur}说下${featLine}真实感受 ${R(['用起来和参数符合','不是参数党但感受明显'])} ${scene.d} ${compRef} ${conc}`,
+      `${dur}${evalPoint}，${a.priceSeg}，${R(['横向看了一圈确实能打','参数没虚标'])}，${expDesc} ${compRef} ${conc}`,
+      `${dur}说下${evalPoint}真实感受，${R(['用起来和参数符合','不是参数党但感受明显'])}，${expDesc} ${compRef} ${conc}`,
     ]);
     if(!isPurchased && Math.random()>.3) text += ' '+R(['有到手的兄弟说下','在线等一个真实评价']);
   } else {
+    const qPoint = matFeatLine || a.hp;
     text = R([
-      `${info.name}的${a.hp}怎么样 ${R(['有没有用过的','到手的说说','求真实评价'])}`,
-      `有没有懂哥 ${info.name}${a.hp}什么水平 ${info.competitor?`和${info.competitor}比呢`:''}`,
+      `${info.name}的${qPoint}怎么样 ${R(['有没有用过的','到手的说说','求真实评价'])}`,
+      `有没有懂哥 ${info.name}${qPoint ? '这个' + qPoint : a.hp}什么水平 ${info.competitor?`和${info.competitor}比呢`:''}`,
     ]);
   }
 
@@ -1512,6 +1611,14 @@ function genDouyin(info, idx) {
   const featLine = a.hp + (a.hp2 ? `+${a.hp2}` : '');
   const compRef = info.competitor ? R([`比${info.competitor}强多了`, `${info.competitor}看完直接放弃`]) : '';
 
+  // 资料增强
+  const mat = info.matParsed;
+  const matDataLine = mat && mat.dataPoints.length ? R(mat.dataPoints.slice(0, 5)) : '';
+  const matExpLine  = mat && mat.expSentences.length ? R(mat.expSentences.slice(0, 4)) : '';
+  const matFeatLine = mat && mat.featSentences.length ? R(mat.featSentences.slice(0, 5)) : '';
+  const mainPoint   = matFeatLine || matDataLine || featLine;
+  const expDesc     = matExpLine || `${scene.s}时${scene.d}`;
+
   const opens = isPurchased ? [
     `${per.o}。`,
     `用了${R(['两周','一个月','半个月'])}，来说说真实感受。`,
@@ -1523,10 +1630,10 @@ function genDouyin(info, idx) {
   ];
 
   const insights = [
-    `${a.hp}在这价位${R(['香麻了','太能打了','真的顶'])}，${scene.s}时${scene.d}。`,
-    `就冲${a.hp}这一点，${R(['值了','够了','比想的好'])}。${compRef}`,
-    `${featLine}，这配置${R(['真卷','杀疯了'])}。${R(['冲不冲？','闭眼入了'])}`,
-    `${a.hp}实测没虚标，${scene.d}。${compRef}`,
+    `${mainPoint}在这价位${R(['香麻了','太能打了','真的顶'])}，${expDesc}。`,
+    `就冲${mainPoint}这一点，${R(['值了','够了','比想的好'])}。${compRef}`,
+    `${mainPoint}，这配置${R(['真卷','杀疯了'])}。${R(['冲不冲？','闭眼入了'])}`,
+    `${mainPoint}实测没虚标，${expDesc}。${compRef}`,
   ];
 
   const closes = isPurchased
@@ -1566,9 +1673,17 @@ function genXhs(info, idx) {
   const a = analyzeProduct(info);
   const per = PX_PROFILES[idx % PX_PROFILES.length];
   const casual = toneLevel < 35, pro = toneLevel > 65;
-  const featLine = a.hp + (a.hp2 ? `配合${a.hp2}` : '');
-  const compRef = info.competitor ? `对比${info.competitor}，${R(['${info.name}更值得入','还是选了这个'])}` : '';
+  const compRef = info.competitor ? `对比${info.competitor}，${R([`${info.name}更值得入`,'还是选了这个'])}` : '';
   const scene = pickScene(info, a);
+
+  // 资料增强
+  const mat = info.matParsed;
+  const matDataLine = mat && mat.dataPoints.length ? R(mat.dataPoints.slice(0, 5)) : '';
+  const matExpLine  = mat && mat.expSentences.length ? R(mat.expSentences.slice(0, 4)) : '';
+  const matFeatLine = mat && mat.featSentences.length ? R(mat.featSentences.slice(0, 5)) : '';
+  const mainPoint   = matFeatLine || matDataLine || a.hp;
+  const expDesc     = matExpLine  || `${scene.s}时${scene.d}`;
+  const featLine    = mainPoint + (a.hp2 ? `配合${a.hp2}` : '');
 
   const opens = isPurchased ? [
     `用了${R(['两周','一个月'])}，来repo一下真实感受 ✨`,
@@ -1581,10 +1696,10 @@ function genXhs(info, idx) {
   ];
 
   const insights = [
-    `${a.hp}这个体验${R(['太加分了','提升幸福感','每天都用'])}，${featLine}${R(['绝绝子','太舒服了','爱了爱了'])} ✨`,
-    `对比了${info.competitor||'别家'}，${a.hp}确实是${info.name}的亮点。${compRef}`,
-    `${a.hp}${R(['真不是参数党','用起来才知道多香','解决了最大痛点'])}，${a.priceSeg}能有这个真的可以 🌟`,
-    `${scene.s}时${scene.d}，${featLine}效果很惊喜 💕`,
+    `${mainPoint}这个体验${R(['太加分了','提升幸福感','每天都用'])}，${featLine}${R(['绝绝子','太舒服了','爱了爱了'])} ✨`,
+    `对比了${info.competitor||'别家'}，${mainPoint}确实是${info.name}的亮点。${compRef}`,
+    `${mainPoint}${R(['真不是参数党','用起来才知道多香','解决了最大痛点'])}，${a.priceSeg}能有这个真的可以 🌟`,
+    `${expDesc}，${featLine}效果很惊喜 💕`,
   ];
 
   const closes = isPurchased
@@ -1627,25 +1742,46 @@ async function generateWithAI(platform, info, count) {
   const userState = isPurchased ? '已购买用户（侧重使用体验分享）' : '潜在购买用户（侧重购买决策、对比、发问）';
   const toneDesc = toneLevel < 35 ? '偏口语（真实感强，接地气）' : toneLevel > 65 ? '偏专业（硬核评测风格）' : '适中（平衡口语和专业性）';
 
-  const systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。每条评论都要有独特的用户角色和视角，避免雷同。`;
+  // 解析产品资料
+  const matParsed = parseMaterials(info.materials);
+
+  // 构建资料注入块
+  let matBlock = '';
+  if(matParsed) {
+    const parts = [];
+    if(matParsed.dataPoints.length)   parts.push(`【技术指标】${matParsed.dataPoints.slice(0,6).join('；')}`);
+    if(matParsed.featSentences.length) parts.push(`【核心卖点】${matParsed.featSentences.slice(0,6).join('；')}`);
+    if(matParsed.sceneSentences.length) parts.push(`【使用场景】${matParsed.sceneSentences.slice(0,4).join('；')}`);
+    if(matParsed.expSentences.length)  parts.push(`【体验描述】${matParsed.expSentences.slice(0,4).join('；')}`);
+    if(matParsed.tagPhrases.length)    parts.push(`【亮点标签】${matParsed.tagPhrases.slice(0,8).join('、')}`);
+    if(parts.length) matBlock = `\n产品白皮书/资料提取内容（请重点引用这些真实信息生成话术）：\n${parts.join('\n')}`;
+  }
+
+  const systemPrompt = `你是一名社交媒体运营专家，专门生成真实、多样、自然的用户评论。
+核心要求：
+1. 每条评论都要有独特的用户角色和视角，避免雷同
+2. 如果提供了产品资料/白皮书内容，必须优先引用其中的真实技术参数、具体场景描述、体验词汇，不能只用泛泛而谈的通用话术
+3. 技术参数要具体（如"2000CVIA亮度"而不是"亮度很高"），场景要真实（如"客厅3米投白墙"而不是"使用体验好"）`;
 
   const userPrompt = `为以下产品生成 ${count} 条${platNames[platform]}平台的真实评论：
 
 产品信息：
 - 名称：${info.name}
 - 品类：${info.category||'未分类'}
-- 核心卖点：${(info.features||[]).join('、')}
+- 核心卖点：${(info.features||[]).join('、') || '（见资料）'}
 - 价格区间：${info.price||'未知'}
 - 产品描述：${info.desc||'无'}
-${info.competitor ? `- 竞品：${info.competitor}（${(info.compFeatures||[]).join('、')||'无卖点'}）` : ''}
-${info.materials?.length ? `- 产品资料摘要：${info.materials.map(m=>m.text.substring(0,200)).join(' | ')}` : ''}
+${info.competitor ? `- 竞品对比：${info.competitor}（对方卖点：${(info.compFeatures||[]).join('、')||'无'}）` : ''}
+${matBlock}
 
 生成要求：
 - ${platGuide[platform]}
 - 用户状态：${userState}
 - 语调：${toneDesc}
 ${methodHints ? `- 风格指导：${methodHints}` : ''}
-${fbHints ? `- 避免以下问题（用户反馈）：${fbHints}` : ''}
+${fbHints ? `- 避免以下问题（用户修改意见）：${fbHints}` : ''}
+- 若有资料内容，每条评论至少引用1个具体的技术参数或场景描述，让评论有说服力和真实感
+- 不同评论的角度要多样：有人关注参数，有人关注使用场景，有人关注和竞品的对比，有人分享具体体验
 
 请严格按照以下JSON格式返回（不要有其他文字）：
 {"comments": ["评论1", "评论2", ...]}`;
@@ -1708,11 +1844,17 @@ async function generateFor(platform) {
     compPrice: pair.comp ? (pair.comp.price||'') : '',
   };
 
-  // 从资料中提取卖点
-  if(info.materials.length) {
-    const matText = info.materials.map(m=>m.text.substring(0,300)).join('\n');
-    const matFeatures = matText.split(/[，。\n]/).filter(s=>s.length>5&&s.length<30).slice(0,5);
-    info.features = [...new Set([...info.features, ...matFeatures])];
+  // 深度解析资料
+  const matParsed = parseMaterials(info.materials);
+  if(matParsed) {
+    // 1. 从资料中补充卖点（加入dataPoints和featSentences中的短语）
+    const matFeats = [
+      ...matParsed.tagPhrases.slice(0, 6),
+      ...matParsed.dataPoints.slice(0, 4),
+    ].filter(f => f.length <= 30);
+    info.features = [...new Set([...info.features, ...matFeats])];
+    // 2. 将解析后的资料挂到 info 上供生成器使用
+    info.matParsed = matParsed;
   }
 
   const cnt = Math.min(genCount, 15);
@@ -1769,6 +1911,13 @@ function regenOne(idx) {
     compFeatures: pair.comp ? (pair.comp.features||[]) : [],
     compPrice: pair.comp ? (pair.comp.price||'') : '',
   };
+  // 单条重生成也要带资料解析
+  const matParsed = parseMaterials(info.materials);
+  if(matParsed) {
+    const matFeats = [...matParsed.tagPhrases.slice(0,6), ...matParsed.dataPoints.slice(0,4)].filter(f=>f.length<=30);
+    info.features = [...new Set([...info.features, ...matFeats])];
+    info.matParsed = matParsed;
+  }
   const generators = {bili:genBili, douyin:genDouyin, xhs:genXhs};
   curComments[idx] = generators[curPlatform](info, idx+Math.floor(Math.random()*100));
   renderComments();
