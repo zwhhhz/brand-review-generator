@@ -181,18 +181,14 @@ textarea{min-height:50px;resize:vertical}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* AI chat panel */
 .ai-chat-panel{border:1px solid var(--primary);border-radius:12px;overflow:hidden;margin-bottom:16px;background:#fff;transition:all .3s}
-.ai-chat-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(135deg,#f0efff,#ede9fe);cursor:pointer;user-select:none}
-.ai-chat-hdr:hover{background:linear-gradient(135deg,#e8e7ff,#ddd6fe)}
+.ai-chat-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:linear-gradient(135deg,#f0efff,#ede9fe);user-select:none}
 .ai-chat-hdr-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--primary)}
 .ai-chat-hdr-left .pulse{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse-dot 1.5s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 .ai-chat-hdr-right{display:flex;align-items:center;gap:8px}
 .ai-chat-badge{padding:2px 8px;border-radius:10px;font-size:11px;background:var(--primary);color:#fff}
-.ai-chat-toggle{font-size:18px;color:var(--primary);transition:transform .3s}
-.ai-chat-toggle.collapsed{transform:rotate(180deg)}
-.ai-chat-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
-.ai-chat-body.open{max-height:600px}
-.ai-chat-messages{padding:12px 16px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.ai-chat-body{display:flex;flex-direction:column;min-height:400px;max-height:calc(100vh - 300px)}
+.ai-chat-messages{flex:1;padding:12px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:calc(100vh - 480px)}
 .ai-chat-msg{display:flex;gap:8px;align-items:flex-start;animation:fadeIn .3s}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .ai-chat-msg.user{flex-direction:row-reverse}
@@ -204,17 +200,17 @@ textarea{min-height:50px;resize:vertical}
 .ai-chat-msg.user .ai-chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
 .ai-chat-rules{margin:6px 0;padding:6px 10px;background:#fffbeb;border:1px dashed var(--warning);border-radius:8px;font-size:12px;color:#92400e}
 .ai-chat-rules-title{font-weight:600;margin-bottom:3px}
-.ai-chat-input-area{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:#fafafa;align-items:flex-end}
+.ai-chat-input-area{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:#fafafa;align-items:flex-end;flex-shrink:0}
 .ai-chat-input-area textarea{flex:1;resize:none;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;min-height:38px;max-height:80px;font-family:inherit;line-height:1.4}
 .ai-chat-input-area textarea:focus{border-color:var(--primary)}
 .ai-chat-send{padding:8px 14px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .2s}
 .ai-chat-send:hover{background:var(--primary-h)}
 .ai-chat-send:disabled{opacity:.5;cursor:not-allowed}
-.ai-chat-quick{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap}
+.ai-chat-quick{display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap;flex-shrink:0}
 .ai-chat-quick button{padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:11px;color:#666;cursor:pointer;transition:all .2s}
 .ai-chat-quick button:hover{border-color:var(--primary);color:var(--primary)}
 .ai-chat-empty{text-align:center;padding:20px;color:#ccc;font-size:13px}
-.ai-chat-rules-list{padding:0 16px 12px}
+.ai-chat-rules-list{padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
 .ai-chat-rule-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fffbeb;border-radius:6px;margin-bottom:6px;font-size:12px;color:#92400e;border:1px dashed #fde68a}
 .ai-chat-rule-item .del{color:#ccc;cursor:pointer;margin-left:auto;flex-shrink:0}.ai-chat-rule-item .del:hover{color:var(--danger)}
 /* comp edit modal */
@@ -330,40 +326,6 @@ textarea{min-height:50px;resize:vertical}
       <button class="btn btn-o" onclick="saveToHistory()">💾 保存到历史</button>
     </div>
 
-    <!-- AI 对话面板 -->
-    <div class="ai-chat-panel" id="aiChatPanel">
-      <div class="ai-chat-hdr" onclick="toggleAiChat()">
-        <div class="ai-chat-hdr-left">
-          <span class="pulse"></span>
-          🤖 AI 助手 — 跟我提意见，我会记住并应用
-        </div>
-        <div class="ai-chat-hdr-right">
-          <span class="ai-chat-badge" id="aiRuleCount">0 条规则</span>
-          <span class="ai-chat-toggle" id="aiChatToggle">▼</span>
-        </div>
-      </div>
-      <div class="ai-chat-body" id="aiChatBody">
-        <div class="ai-chat-messages" id="aiChatMessages">
-          <div class="ai-chat-empty" id="aiChatEmpty">👋 跟我说说你希望话术怎么改，我会记住你的意见并应用到所有话术生成中</div>
-        </div>
-        <div class="ai-chat-rules-list" id="aiRuleListArea" style="display:none">
-          <div style="font-size:12px;color:var(--warning);font-weight:600;margin-bottom:6px;padding:0 2px">📌 已记住的规则：</div>
-          <div id="aiRuleList"></div>
-        </div>
-        <div class="ai-chat-quick" id="aiChatQuick">
-          <button onclick="quickChat('话术太假了，像机器人写的')">话术太假</button>
-          <button onclick="quickChat('评论不要出现品牌名全称')">不加品牌全称</button>
-          <button onclick="quickChat('多加一些具体使用场景')">多用场景</button>
-          <button onclick="quickChat('评论要更短更简洁')">更短更简洁</button>
-          <button onclick="quickChat('不要用感叹号')">不用感叹号</button>
-          <button onclick="quickChat('抖音的话术要更口语化')">抖音更口语</button>
-        </div>
-        <div class="ai-chat-input-area">
-          <textarea id="aiChatInput" placeholder="输入你的修改意见，比如"话术太假了""不要出现品牌名"…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChat()}" oninput="autoResizeChat(this)"></textarea>
-          <button class="ai-chat-send" id="aiChatSendBtn" onclick="sendAiChat()">发送</button>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- ===== 历史记录 ===== -->
@@ -383,6 +345,7 @@ textarea{min-height:50px;resize:vertical}
       <button class="mgr-tab" onclick="switchMgrTab('methods',this)">📖 方法论</button>
       <button class="mgr-tab" onclick="switchMgrTab('feedbacks',this)">💬 修改意见</button>
       <button class="mgr-tab" onclick="switchMgrTab('categories',this)">🏷 品类管理</button>
+      <button class="mgr-tab" onclick="switchMgrTab('aichat',this)">🤖 AI助手</button>
     </div>
 
     <!-- 产品管理 -->
@@ -480,6 +443,42 @@ textarea{min-height:50px;resize:vertical}
         </div>
       </div>
       <div id="categoryList"></div>
+    </div>
+
+    <!-- AI 助手 -->
+    <div id="mgr-aichat" style="display:none">
+      <div class="ai-chat-panel" id="aiChatPanel">
+        <div class="ai-chat-hdr" style="cursor:default">
+          <div class="ai-chat-hdr-left">
+            <span class="pulse"></span>
+            🤖 AI 助手 — 跟我提意见，我会记住并应用到所有话术
+          </div>
+          <div class="ai-chat-hdr-right">
+            <span class="ai-chat-badge" id="aiRuleCount">0 条规则</span>
+          </div>
+        </div>
+        <div class="ai-chat-body open" id="aiChatBody" style="max-height:none">
+          <div class="ai-chat-rules-list" id="aiRuleListArea" style="display:none">
+            <div style="font-size:12px;color:var(--warning);font-weight:600;margin-bottom:6px;padding:0 2px">📌 已记住的规则（自动应用到所有话术生成）：</div>
+            <div id="aiRuleList"></div>
+          </div>
+          <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="ai-chat-empty" id="aiChatEmpty">👋 跟我说说你希望话术怎么改，我会记住你的意见并应用到所有话术生成中</div>
+          </div>
+          <div class="ai-chat-quick" id="aiChatQuick">
+            <button onclick="quickChat('话术太假了，像机器人写的')">话术太假</button>
+            <button onclick="quickChat('评论不要出现品牌名全称')">不加品牌全称</button>
+            <button onclick="quickChat('多加一些具体使用场景')">多用场景</button>
+            <button onclick="quickChat('评论要更短更简洁')">更短更简洁</button>
+            <button onclick="quickChat('不要用感叹号')">不用感叹号</button>
+            <button onclick="quickChat('抖音的话术要更口语化')">抖音更口语</button>
+          </div>
+          <div class="ai-chat-input-area">
+            <textarea id="aiChatInput" placeholder="输入你的修改意见，比如"话术太假了""不要出现品牌名"…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChat()}" oninput="autoResizeChat(this)"></textarea>
+            <button class="ai-chat-send" id="aiChatSendBtn" onclick="sendAiChat()">发送</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -671,12 +670,17 @@ function switchTab(name, btn) {
 }
 
 function switchMgrTab(name, btn) {
-  ['products','methods','feedbacks','categories'].forEach(n=>{
+  ['products','methods','feedbacks','categories','aichat'].forEach(n=>{
     document.getElementById('mgr-'+n).style.display = 'none';
   });
   document.querySelectorAll('.mgr-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('mgr-'+name).style.display = 'block';
   btn.classList.add('active');
+  // 切换到AI助手tab时渲染
+  if(name === 'aichat') {
+    renderChatMessages();
+    renderAiRuleList();
+  }
 }
 
 // ================================================================
@@ -2522,69 +2526,125 @@ function getFeedbackHints(prodName, platform) {
     .join('\n');
 }
 
+// ---- AI规则辅助函数 ----
+function getAiRuleTags() {
+  // 将AI规则分类为标签，供模板引擎使用
+  const rules = S.aiRules();
+  if(!rules.length) return {};
+  const tags = {};
+  const ruleTexts = rules.map(r=>r.text.toLowerCase());
+  if(ruleTexts.some(r=>r.includes('感叹号')||r.includes('不用！')||r.includes('不用感叹')||r.includes('不要感叹'))) tags.noExclaim = true;
+  if(ruleTexts.some(r=>r.includes('更短')||r.includes('更简洁')||r.includes('简洁')||r.includes('短一点'))) tags.shorter = true;
+  if(ruleTexts.some(r=>r.includes('品牌全称')||r.includes('品牌名')||r.includes('不加品牌')||r.includes('不要品牌'))) tags.noBrandFull = true;
+  if(ruleTexts.some(r=>r.includes('口语')||r.includes('更口语')||r.includes('口语化'))) tags.moreCasual = true;
+  if(ruleTexts.some(r=>r.includes('场景')||r.includes('使用场景')||r.includes('具体场景'))) tags.moreScene = true;
+  if(ruleTexts.some(r=>r.includes('太假')||r.includes('机器人')||r.includes('像广告')||r.includes('不真实')||r.includes('太假了'))) tags.lessFake = true;
+  if(ruleTexts.some(r=>r.includes('不要emoji')||r.includes('不加emoji')||r.includes('不用emoji')||r.includes('减少emoji'))) tags.noEmoji = true;
+  if(ruleTexts.some(r=>r.includes('emoji')||r.includes('表情'))) tags.emojiRelated = true;
+  if(ruleTexts.some(r=>r.includes('抖音'))) tags.douyinSpecific = true;
+  if(ruleTexts.some(r=>r.includes('小红书')||r.includes('xhs'))) tags.xhsSpecific = true;
+  if(ruleTexts.some(r=>r.includes('b站')||r.includes('bili'))) tags.biliSpecific = true;
+  return tags;
+}
+
 // ---- AI规则后处理（模板引擎生成后应用） ----
 function applyAiRules(text, platform) {
   const rules = S.aiRules();
   if(!rules.length) return text;
-
+  const tags = getAiRuleTags();
   let result = text;
-  const ruleTexts = rules.map(r=>r.text.toLowerCase());
 
-  // 规则：不要感叹号
-  if(ruleTexts.some(r=>r.includes('感叹号')||r.includes('不用！')||r.includes('不用感叹'))) {
+  // 1. 不要感叹号
+  if(tags.noExclaim) {
     result = result.replace(/！/g, '').replace(/!/g, '');
   }
-  // 规则：更短/更简洁
-  if(ruleTexts.some(r=>r.includes('更短')||r.includes('更简洁')||r.includes('简洁'))) {
-    // 截取到第一个句号后的内容，减少到约70%长度
-    const maxLen = platform === 'douyin' ? 40 : platform === 'xhs' ? 70 : 90;
+  // 2. 更短更简洁
+  if(tags.shorter) {
+    const maxLen = platform === 'douyin' ? 35 : platform === 'xhs' ? 60 : 80;
     if(result.length > maxLen) {
-      // 找最近的断句点截断
       const truncated = result.substring(0, maxLen);
       const lastPunc = Math.max(truncated.lastIndexOf('。'), truncated.lastIndexOf('，'), truncated.lastIndexOf('、'), truncated.lastIndexOf(' '));
       result = lastPunc > maxLen * 0.5 ? truncated.substring(0, lastPunc + 1) : truncated;
     }
   }
-  // 规则：不用品牌全称
-  if(ruleTexts.some(r=>r.includes('品牌全称')||r.includes('品牌名'))) {
+  // 3. 不用品牌全称（保留首次出现，后续替换）
+  if(tags.noBrandFull) {
     const products = S.products();
     products.forEach(p => {
-      if(p.name && p.name.length > 2) {
-        // 只替换非句首位置的品牌名
-        const regex = new RegExp(p.name, 'g');
-        const matches = result.match(regex);
-        if(matches && matches.length > 1) {
-          // 保留第一次出现，后续替换为品类名或"这款"
-          let count = 0;
-          result = result.replace(regex, () => {
-            count++;
-            return count === 1 ? p.name : (p.category || '这款');
-          });
-        }
+      if(p.name && p.name.length > 1) {
+        const regex = new RegExp(p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        let count = 0;
+        result = result.replace(regex, () => {
+          count++;
+          return count === 1 ? p.name : (p.category || '这款');
+        });
       }
     });
   }
-  // 规则：更口语化
-  if(ruleTexts.some(r=>r.includes('口语')||r.includes('更口语'))) {
-    result = result.replace(/确实/g, '真的').replace(/非常/g, '特别').replace(/此外/g, '而且').replace(/因此/g, '所以').replace(/综上所述/g, '');
-    result = result.replace(/极其/g, '超').replace(/较为/g, '挺').replace(/尤为/g, '特别');
+  // 4. 更口语化 — 扩大替换范围
+  if(tags.moreCasual) {
+    const formalToCasual = [
+      ['确实','真的'],['非常','特别'],['此外','而且'],['因此','所以'],
+      ['极其','超'],['较为','挺'],['尤为','特别'],['然而','但是'],
+      ['同时','而且'],['并且','而且'],['整体来说','总的来说'],
+      ['综上所述',''],['值得注意的是',''],['不可否认',''],
+      ['堪称','算得上'],['显著','明显'],['卓越','厉害'],
+      ['优异','不错'],['优异的','好的'],['出色的','给力的'],
+    ];
+    formalToCasual.forEach(([from, to]) => {
+      result = result.replace(new RegExp(from, 'g'), to);
+    });
   }
-  // 规则：多加场景
-  if(ruleTexts.some(r=>r.includes('场景')||r.includes('使用场景'))) {
-    const scenes = ['家里用', '平时用', '日常场景', '生活中', '实际用时'];
-    if(!result.includes('用') && !result.includes('场景')) {
-      result += '，' + R(scenes) + '感受很深';
+  // 5. 多加场景
+  if(tags.moreScene) {
+    const scenes = ['家里用', '平时用', '日常场景', '生活中', '实际用时', '周末在家', '平时下班'];
+    if(!result.match(/场景|日常|平时|在家|用时/)) {
+      result = result.replace(/。$/, '') + '，' + R(scenes) + '感受很深。';
     }
   }
-  // 规则：不要太假/像机器人
-  if(ruleTexts.some(r=>r.includes('太假')||r.includes('机器人')||r.includes('像广告'))) {
-    result = result.replace(/绝绝子/g, '真的不错').replace(/太绝了/g, '挺好的').replace(/yyds/g, '真心推荐');
-    result = result.replace(/强烈推荐/g, '感觉可以入').replace(/必须入手/g, '可以考虑');
+  // 6. 不要太假/像机器人
+  if(tags.lessFake) {
+    const fakeToReal = [
+      ['绝绝子','真的不错'],['太绝了','挺好的'],['yyds','真心推荐'],
+      ['强烈推荐','感觉可以入'],['必须入手','可以考虑'],['闭眼入','可以试试'],
+      ['天花板','很高水准'],['吊打','比...强'],['碾压','赢过'],
+      ['秒杀','轻松超过'],['无敌','很厉害'],['封神','很出色'],
+    ];
+    fakeToReal.forEach(([from, to]) => {
+      result = result.replace(new RegExp(from, 'g'), to);
+    });
   }
-  // 规则：不要emoji
-  if(ruleTexts.some(r=>r.includes('不要emoji')||r.includes('不加emoji')||r.includes('不用emoji'))) {
-    result = result.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✨|💕|🌟|🔥|💡|🙅|🙋|🔍|📊|🥺/gu, '');
+  // 7. 不要emoji
+  if(tags.noEmoji) {
+    result = result.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|✨|💕|🌟|🔥|💡|🙅|🙋|🔍|📊|🥺|😍|👍|👏|💪|🎉|✅|❤️|🫶/gu, '');
+    result = result.replace(/\s{2,}/g, ' '); // 清理多余空格
   }
+  // 8. 平台特定规则 — 如果规则只指定了某平台，只在对应平台应用
+  rules.forEach(rule => {
+    const rt = rule.text.toLowerCase();
+    // 抖音专属规则
+    if(rt.includes('抖音') && platform !== 'douyin') return;
+    // 小红书专属规则
+    if((rt.includes('小红书') || rt.includes('红书')) && platform !== 'xhs') return;
+    // B站专属规则
+    if((rt.includes('b站') || rt.includes('bilibili')) && platform !== 'bili') return;
+
+    // 通用规则（上面tags已经覆盖了大部分，这里处理一些额外模式）
+    if(rt.includes('不要问句') || rt.includes('不用问句')) {
+      result = result.replace(/吗[？?]$/g, '。').replace(/呢[？?]$/g, '。');
+    }
+    if(rt.includes('加数据') || rt.includes('用数据') || rt.includes('具体数字')) {
+      // 如果文本中没有数字，尝试从产品特征中找一个加入
+      if(!result.match(/\d/)) {
+        const products = S.products();
+        const prod = products.find(p => result.includes(p.name) || result.includes(p.category || ''));
+        if(prod && prod.features && prod.features.length) {
+          const dataFeature = prod.features.find(f => /\d/.test(f));
+          if(dataFeature) result = result.replace(/。$/, '') + '，' + dataFeature + '。';
+        }
+      }
+    }
+  });
 
   return result.trim();
 }
@@ -2784,6 +2844,20 @@ function genBili(info, idx) {
     }
   }
 
+  // 🔥 AI规则深度注入
+  const aiTags = getAiRuleTags();
+  if(aiTags.moreScene && !text.match(/场景|日常|平时|在家|用时/)) {
+    const scenes = ['家里日常用', '平时下班用', '周末在家', '日常场景'];
+    text += ` ${R(scenes)}感受很深。`;
+  }
+  if(aiTags.moreCasual) {
+    text = text.replace(/确实/g,'真的').replace(/非常/g,'特别').replace(/此外/g,'而且').replace(/因此/g,'所以');
+    text = text.replace(/极其/g,'超').replace(/较为/g,'挺');
+  }
+  if(aiTags.lessFake) {
+    text = text.replace(/强烈推荐/g,'感觉可以入').replace(/必须入手/g,'可以考虑').replace(/天花板/g,'很高水准');
+  }
+
   return {text:applyAiRules(text.trim(),'bili'), name:R(NAMES_B), color:AVATAR_COLORS[idx%AVATAR_COLORS.length], likes:RI(50,3200), hours:RI(1,12), platform:'bili'};
 }
 
@@ -2861,6 +2935,25 @@ function genDouyin(info, idx) {
     if(hasCautionMethod) {
       insights.push(`${methodPhrase}，这点${info.name}${R(['做到了','没问题'])}，别踩坑。`);
     }
+  }
+
+  // 🔥 AI规则深度注入：根据用户定制规则调整模板
+  const aiTags = getAiRuleTags();
+  if(aiTags.moreScene) {
+    insights.push(`${scene.s}时${mainPoint}，${R(['真的实用','帮了大忙','体验很到位'])}。`);
+    insights.push(`${R(['周末在家','平时下班','日常用'])}，${expDesc}，${R(['方便多了','太合适了'])}。`);
+  }
+  if(aiTags.moreCasual) {
+    opens.push(`${R(['哎','咱就是说','说真的'])}，${per.o}。`);
+    insights.push(`${mainPoint}，${R(['真的挺香','说实话不亏','反正我满意'])}。`);
+  }
+  if(aiTags.lessFake) {
+    insights.push(`${mainPoint}，${R(['用了一段时间','实测下来'])}，${R(['还可以','过得去','确实有提升'])}。`);
+    insights.push(`${R(['不吹不黑','说实话'])}，${mainPoint}${R(['还行','确实可以','没踩坑'])}。`);
+  }
+  if(aiTags.noBrandFull) {
+    // 品牌名替换在applyAiRules中统一处理，这里加入不含品牌名的模板
+    insights.push(`${mainPoint}${R(['确实能打','真的行','这配置够了'])}，${expDesc}。`);
   }
 
   const closes = isPurchased
@@ -2970,6 +3063,29 @@ function genXhs(info, idx) {
     if(hasCautionMethod) {
       insights.push(`${methodPhrase}，这点${info.name}${R(['没踩坑','做到了'])}，姐妹们放心 🙅`);
     }
+  }
+
+  // 🔥 AI规则深度注入：根据用户定制规则调整模板
+  const aiTags = getAiRuleTags();
+  if(aiTags.moreScene) {
+    insights.push(`${scene.s}用${mainPoint}，${R(['真的太方便了','幸福感直接拉满','日常超实用'])} ✨`);
+    insights.push(`${R(['周末在家','平时下班','新家配的'])}，${expDesc} 💕`);
+  }
+  if(aiTags.moreCasual) {
+    opens.push(`${R(['哎','咱就是说','说真的'])}，${per.o} ～`);
+    insights.push(`${mainPoint}，${R(['真的挺香的','说实话很满意','反正我入了对了'])} ✨`);
+  }
+  if(aiTags.lessFake) {
+    insights.push(`${R(['不吹不黑','客观说'])}，${mainPoint}${R(['还可以','确实有提升','实测有效'])} ✨`);
+    insights.push(`${mainPoint}，${R(['用了一段时间','实测下来'])}，${R(['真心推荐','可以入'])} 💕`);
+  }
+  if(aiTags.noBrandFull) {
+    insights.push(`${mainPoint}${R(['真的可以','确实不错','这个体验加分'])}，${expDesc} ✨`);
+  }
+  if(aiTags.noEmoji) {
+    opens.push(`${per.o}，${per.a}。`);
+    insights.push(`${mainPoint}体验很加分，${featLine}真的不错。`);
+    insights.push(`${expDesc}，${featLine}效果很惊喜。`);
   }
 
   const closes = isPurchased
@@ -3474,22 +3590,12 @@ function renderFeedbackModal() {
 // ================================================================
 // AI 对话系统 — 用户提意见，AI记住并应用
 // ================================================================
-let aiChatOpen = false;
 
-function toggleAiChat() {
-  aiChatOpen = !aiChatOpen;
-  const body = document.getElementById('aiChatBody');
-  const toggle = document.getElementById('aiChatToggle');
-  if(aiChatOpen) {
-    body.classList.add('open');
-    toggle.classList.add('collapsed');
-    renderChatMessages();
-    renderAiRuleList();
-    setTimeout(()=>{ const msgEl = document.getElementById('aiChatMessages'); if(msgEl) msgEl.scrollTop = msgEl.scrollHeight; }, 100);
-  } else {
-    body.classList.remove('open');
-    toggle.classList.remove('collapsed');
-  }
+function scrollChatToBottom() {
+  setTimeout(()=>{
+    const msgEl = document.getElementById('aiChatMessages');
+    if(msgEl) msgEl.scrollTop = msgEl.scrollHeight;
+  }, 50);
 }
 
 function autoResizeChat(el) {
@@ -3527,7 +3633,7 @@ function renderChatMessages() {
     div.innerHTML = `<div class="ai-chat-avatar">${avatarText}</div><div class="ai-chat-bubble">${bubbleHtml}</div>`;
     container.appendChild(div);
   });
-  container.scrollTop = container.scrollHeight;
+  scrollChatToBottom();
 }
 
 function renderAiRuleList() {
@@ -3695,8 +3801,20 @@ ${rulesText}
 function getAiRulesHints(prodName, platform) {
   const rules = S.aiRules();
   if(!rules.length) return '';
-  // 可以按产品和平台筛选（如果规则有标记的话），目前全部应用
-  return rules.map(r=>r.text).join('\n');
+  // 智能筛选：通用规则 + 对应平台规则
+  const platNames = {bili:'B站',douyin:'抖音',xhs:'小红书'};
+  const platName = platNames[platform] || '';
+  return rules
+    .filter(r => {
+      const rt = r.text.toLowerCase();
+      // 如果规则指定了特定平台，只在该平台生效
+      if(rt.includes('抖音') && platform !== 'douyin') return false;
+      if((rt.includes('小红书') || rt.includes('红书')) && platform !== 'xhs') return false;
+      if((rt.includes('b站') || rt.includes('bilibili')) && platform !== 'bili') return false;
+      return true;
+    })
+    .map(r => r.text)
+    .join('\n');
 }
 
 function clearAiChat() {
