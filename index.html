@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>口碑评论生成器</title>
+    <style>
+/* ============ CSS ============ */
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius: 12px;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+header { text-align: center; margin-bottom: 32px; }
+header h1 { font-size: 2rem; margin-bottom: 8px; }
+.subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+/* Nav Tabs */
+.nav-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+}
+.nav-tab {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+}
+.nav-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Sections */
+.section { display: none; }
+.section.active { display: block; }
+
+/* Steps */
+.step { margin-bottom: 24px; }
+.step h3 { font-size: 1.1rem; margin-bottom: 12px; }
+
+/* Grids */
+.grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.grid-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+.grid-btn:hover { border-color: var(--primary); color: var(--primary); }
+.grid-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Platform */
+.platform-row { display: flex; gap: 12px; }
+.platform-btn {
+    flex: 1;
+    padding: 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    cursor: pointer;
+    text-align: center;
+    font-size: 1rem;
+}
+.platform-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Inputs */
+.input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+input, textarea, select {
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    outline: none;
+    font-family: inherit;
+    width: 100%;
+}
+input:focus, textarea:focus { border-color: var(--primary); }
+textarea { resize: vertical; min-height: 60px; }
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+.btn-danger { background: white; color: var(--danger); border: 1px solid var(--danger); }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+.btn-generate {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    box-shadow: var(--shadow-lg);
+}
+.btn-generate:hover { transform: translateY(-1px); }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+/* Results */
+.results { margin-top: 24px; }
+.result-meta { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px; }
+.comment-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+}
+.comment-text { line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
+.comment-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Admin Forms */
+.admin-form {
+    background: var(--card);
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+.admin-form h4 { margin-bottom: 12px; }
+.form-row { margin-bottom: 10px; }
+.form-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* Data List */
+.data-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+.data-item-info { flex: 1; }
+.data-item-title { font-weight: 600; margin-bottom: 4px; }
+.data-item-desc { color: var(--text-secondary); font-size: 0.85rem; }
+.data-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Status Badge */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+.badge-active { background: #dcfce7; color: #166534; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: transform 0.3s;
+    z-index: 1000;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Settings */
+.settings-box {
+    background: #fff7ed;
+    border: 2px solid var(--warning);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+.settings-box h4 { color: var(--warning); margin-bottom: 8px; }
+
+/* Material */
+.material-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .platform-row { flex-direction: column; }
+    .input-row { flex-direction: column; }
+}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🔥 口碑评论生成器</h1>
+        <p class="subtitle">一键生成小红书 / B站 / 抖音真实口碑文案</p>
+    </header>
+
+    <!-- Nav Tabs -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="showSection('main')">生成文案</button>
+        <button class="nav-tab" onclick="showSection('admin')">后台管理</button>
+        <button class="nav-tab" onclick="showSection('settings')">设置</button>
+    </nav>
+
+    <!-- ========== Main Section ========== -->
+    <section class="section active" id="section-main">
+        <!-- Step 1: Category -->
+        <div class="step">
+            <h3>① 选择品类</h3>
+            <div class="grid" id="catGrid"></div>
+        </div>
+
+        <!-- Step 2: Product -->
+        <div class="step" id="prodStep" style="display:none">
+            <h3>② 选择产品</h3>
+            <div class="grid" id="prodGrid"></div>
+        </div>
+
+        <!-- Step 3: Platform -->
+        <div class="step" id="platStep" style="display:none">
+            <h3>③ 选择平台</h3>
+            <div class="platform-row">
+                <button class="platform-btn" data-p="xiaohongshu" onclick="selectPlatform('xiaohongshu')">📕 小红书</button>
+                <button class="platform-btn" data-p="bilibili" onclick="selectPlatform('bilibili')">📺 B站</button>
+                <button class="platform-btn" data-p="douyin" onclick="selectPlatform('douyin')">🎵 抖音</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Link (optional) -->
+        <div class="step" id="linkStep" style="display:none">
+            <h3>④ 粘贴链接（可选）</h3>
+            <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:8px">粘贴小红书/B站文章链接，AI将自动识别内容</p>
+            <div class="input-row">
+                <input type="url" id="linkInput" placeholder="https://www.xiaohongshu.com/...">
+                <button class="btn btn-secondary" onclick="analyzeLink()">识别</button>
+            </div>
+            <div id="linkStatus" style="font-size:0.85rem;color:var(--text-secondary)"></div>
+        </div>
+
+        <!-- Generate -->
+        <div class="step" id="genStep" style="display:none">
+            <button class="btn btn-generate" onclick="generate()">✨ 生成口碑文案</button>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="resultsBox" style="display:none">
+            <h3>📝 生成结果</h3>
+            <div class="result-meta" id="resultMeta"></div>
+            <div id="resultsList"></div>
+            <button class="btn btn-secondary" style="width:100%;margin-top:16px" onclick="generate()">🔄 重新生成</button>
+        </div>
+    </section>
+
+    <!-- ========== Admin Section ========== -->
+    <section class="section" id="section-admin">
+        <!-- Categories -->
+        <div class="admin-form">
+            <h4>品类管理</h4>
+            <div class="form-row">
+                <input type="text" id="newCatName" placeholder="新品类名称">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-sm" onclick="addCategory()">添加</button>
+            </div>
+        </div>
+        <div id="catList"></div>
+
+        <!-- Products -->
+        <div class="admin-form">
+            <h4>产品管理</h4>
+            <div class="form-row">
+                <select id="prodCatSelect"><option value="">选择品类</option></select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="newProdName" placeholder="产品名称">
+            </div>
+            <div class="form-row">
+                <textarea id="newProdDesc" placeholder="产品描述"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-sm" onclick="addProduct()">添加</button>
+            </div>
+        </div>
+        <div id="prodList"></div>
+
+        <!-- Methodology -->
+        <div class="admin-form">
+            <h4>口碑方法论</h4>
+            <div class="form-row">
+                <input type="text" id="newMethodTitle" placeholder="方法论标题">
+            </div>
+            <div class="form-row">
+                <textarea id="newMethodContent" placeholder="方法论内容：指导口碑文案生成的策略、风格、注意事项" style="min-height:100px"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-sm" onclick="addMethodology()">添加</button>
+            </div>
+        </div>
+        <div id="methodList"></div>
+
+        <!-- Feedback -->
+        <div class="admin-form">
+            <h4>修改意见收集</h4>
+            <div class="form-row">
+                <input type="text" id="fbProd" placeholder="产品名称">
+                <input type="text" id="fbPlat" placeholder="平台">
+            </div>
+            <div class="form-row">
+                <textarea id="fbOriginal" placeholder="原始评论"></textarea>
+            </div>
+            <div class="form-row">
+                <textarea id="fbText" placeholder="修改意见"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-sm" onclick="addFeedback()">提交</button>
+            </div>
+        </div>
+        <div id="fbList"></div>
+    </section>
+
+    <!-- ========== Settings Section ========== -->
+    <section class="section" id="section-settings">
+        <div class="settings-box">
+            <h4>⚠️ API 配置（必须）</h4>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px">
+                本工具需要 OpenAI 兼容 API，请填写你的 API Key。
+            </p>
+            <div class="form-row">
+                <input type="text" id="apiKey" placeholder="API Key (如: sk-xxx)">
+            </div>
+            <div class="form-row">
+                <input type="text" id="apiBase" placeholder="API Base URL (默认: https://api.openai.com/v1)">
+            </div>
+            <div class="form-row">
+                <input type="text" id="apiModel" placeholder="模型名称 (默认: gpt-4o-mini)">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+            </div>
+        </div>
+        <div style="color:var(--text-secondary);font-size:0.85rem">
+            <p>💡 提示：设置保存在浏览器本地存储，不会上传到服务器。</p>
+        </div>
+    </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ Data Storage (localStorage) ============
+const STORAGE = {
+    categories: 'review_cats',
+    products: 'review_prods',
+    methodologies: 'review_methods',
+    feedbacks: 'review_fbs',
+    settings: 'review_settings',
+};
+
+function loadData(key) {
+    try { return JSON.parse(localStorage.getItem(STORAGE[key]) || '[]'); } catch { return []; }
+}
+function saveData(key, data) {
+    localStorage.setItem(STORAGE[key], JSON.stringify(data));
+}
+
+// ============ Settings ============
+function loadSettings() {
+    try {
+        const s = JSON.parse(localStorage.getItem(STORAGE.settings) || '{}');
+        document.getElementById('apiKey').value = s.key || '';
+        document.getElementById('apiBase').value = s.base || '';
+        document.getElementById('apiModel').value = s.model || '';
+        return s;
+    } catch { return {}; }
+}
+function saveSettings() {
+    const s = {
+        key: document.getElementById('apiKey').value.trim(),
+        base: document.getElementById('apiBase').value.trim() || 'https://api.openai.com/v1',
+        model: document.getElementById('apiModel').value.trim() || 'gpt-4o-mini',
+    };
+    saveData('settings', s);
+    showToast('设置已保存');
+}
+
+// ============ Section Navigation ============
+function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (name === 'main') refreshCategories();
+    if (name === 'admin') refreshAdmin();
+}
+
+// ============ State ============
+let selectedCat = null;
+let selectedProd = null;
+let selectedPlat = null;
+
+// ============ Categories ============
+function refreshCategories() {
+    const cats = loadData('categories');
+    const grid = document.getElementById('catGrid');
+    if (!cats.length) {
+        grid.innerHTML = '<div style="color:var(--text-secondary)">暂无品类，请先在后台添加</div>';
+        return;
+    }
+    grid.innerHTML = cats.map(c => 
+        `<button class="grid-btn" onclick="selectCat(${c.id})">${c.name}</button>`
+    ).join('');
+    
+    // Reset selections
+    selectedCat = null;
+    selectedProd = null;
+    selectedPlat = null;
+    document.getElementById('prodStep').style.display = 'none';
+    document.getElementById('platStep').style.display = 'none';
+    document.getElementById('linkStep').style.display = 'none';
+    document.getElementById('genStep').style.display = 'none';
+    document.getElementById('resultsBox').style.display = 'none';
+}
+
+function selectCat(id) {
+    const cats = loadData('categories');
+    selectedCat = cats.find(c => c.id === id);
+    selectedProd = null;
+    
+    document.querySelectorAll('#catGrid .grid-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Show products
+    refreshProducts();
+    document.getElementById('prodStep').style.display = 'block';
+    document.getElementById('platStep').style.display = 'none';
+    document.getElementById('linkStep').style.display = 'none';
+    document.getElementById('genStep').style.display = 'none';
+    document.getElementById('resultsBox').style.display = 'none';
+}
+
+function refreshProducts() {
+    const prods = loadData('products').filter(p => p.catId === selectedCat.id);
+    const grid = document.getElementById('prodGrid');
+    if (!prods.length) {
+        grid.innerHTML = '<div style="color:var(--text-secondary)">该品类暂无产品</div>';
+        return;
+    }
+    grid.innerHTML = prods.map(p => 
+        `<button class="grid-btn" onclick="selectProd(${p.id})">${p.name}</button>`
+    ).join('');
+}
+
+function selectProd(id) {
+    const prods = loadData('products');
+    selectedProd = prods.find(p => p.id === id);
+    
+    document.querySelectorAll('#prodGrid .grid-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.getElementById('platStep').style.display = 'block';
+    document.getElementById('linkStep').style.display = 'block';
+    selectedPlat = null;
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('genStep').style.display = 'none';
+}
+
+function selectPlatform(p) {
+    selectedPlat = p;
+    document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('genStep').style.display = 'block';
+}
+
+// ============ Link Analysis ============
+async function analyzeLink() {
+    const url = document.getElementById('linkInput').value.trim();
+    if (!url) return;
+    
+    document.getElementById('linkStatus').textContent = '正在分析链接...';
+    
+    try {
+        // Fetch link content (via CORS proxy if needed)
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const resp = await fetch(proxyUrl);
+        const html = await resp.text();
+        
+        // Simple extraction
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const title = titleMatch ? titleMatch[1].trim() : '';
+        
+        // Try to detect product from content
+        const prods = loadData('products');
+        let matchedProd = null;
+        
+        for (const p of prods) {
+            if (html.includes(p.name) || title.includes(p.name)) {
+                matchedProd = p;
+                break;
+            }
+        }
+        
+        if (matchedProd) {
+            document.getElementById('linkStatus').textContent = `✅ 已识别：${matchedProd.name}`;
+            
+            // Auto select
+            const cats = loadData('categories');
+            const cat = cats.find(c => c.id === matchedProd.catId);
+            if (cat) {
+                selectedCat = cat;
+                refreshProducts();
+                document.getElementById('prodStep').style.display = 'block';
+                setTimeout(() => {
+                    selectProd(matchedProd.id);
+                    document.querySelectorAll('#prodGrid .grid-btn').forEach(b => {
+                        if (b.textContent === matchedProd.name) b.classList.add('active');
+                    });
+                }, 100);
+            }
+            
+            // Auto platform
+            if (url.includes('xiaohongshu')) selectPlatform('xiaohongshu');
+            else if (url.includes('bilibili')) selectPlatform('bilibili');
+            else if (url.includes('douyin')) selectPlatform('douyin');
+        } else {
+            document.getElementById('linkStatus').textContent = '⚠️ 未自动识别，请手动选择';
+        }
+    } catch (e) {
+        document.getElementById('linkStatus').textContent = '❌ 链接分析失败';
+    }
+}
+
+// ============ Generate ============
+async function generate() {
+    if (!selectedProd || !selectedPlat) {
+        showToast('请选择产品和平台');
+        return;
+    }
+    
+    const settings = loadSettings();
+    if (!settings.key) {
+        showToast('请先在设置中配置 API Key');
+        showSection('settings');
+        return;
+    }
+    
+    const btn = document.querySelector('.btn-generate');
+    btn.disabled = true;
+    btn.textContent = '⏳ 生成中...';
+    
+    // Build prompt
+    const methods = loadData('methodologies');
+    const activeMethod = methods.find(m => m.active) || methods[0];
+    const methodContent = activeMethod ? activeMethod.content : '';
+    
+    const fbs = loadData('feedbacks');
+    const pendingFbs = fbs.filter(f => !f.processed && f.prod === selectedProd.name);
+    const fbHints = pendingFbs.map(f => f.text).join('\n');
+    
+    const platStyles = {
+        xiaohongshu: '小红书风格：使用emoji，语气活泼可爱，善用"绝绝子""yyds"等流行语，段落简短，感叹号多，像闺蜜推荐',
+        bilibili: 'B站风格：幽默中带点犀利或真诚，善用B站梗，偶尔冒出"前方高能""泪目"等用语，真实不做作',
+        douyin: '抖音风格：简短有力，接地气，善用"冲了""闭眼入""真香"等短视频平台用语',
+    };
+    
+    const prompt = `你是一个真实互联网用户，为产品"${selectedProd.name}"写口碑评论文案。
+
+产品描述：${selectedProd.desc || '暂无'}
+
+方法论指导：${methodContent || '用真实用户视角，避免广告感'}
+
+平台风格：${platStyles[selectedPlat]}
+
+历史修改意见：${fbHints || '无'}
+
+要求：
+1. 生成5条不同风格角度的评论
+2. 像真人写的，有个人使用场景和感受
+3. 可使用emoji但不过度
+4. 长度适中：小红书80-200字，B站50-150字，抖音30-100字
+5. 偶尔加入中性评价更真实
+
+严格输出JSON数组格式：
+["评论1", "评论2", "评论3", "评论4", "评论5"]`;
+
+    try {
+        const resp = await fetch(`${settings.base}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.key}`,
+            },
+            body: JSON.stringify({
+                model: settings.model,
+                messages: [
+                    { role: 'system', content: '你是专业的口碑评论文案创作助手。' },
+                    { role: 'user', content: prompt },
+                ],
+                temperature: 0.9,
+                max_tokens: 2000,
+            }),
+        });
+        
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error?.message || 'API调用失败');
+        }
+        
+        const data = await resp.json();
+        const raw = data.choices[0].message.content;
+        
+        // Parse JSON
+        let comments;
+        try {
+            comments = JSON.parse(raw.match(/\[.*\]/s)?.[0] || raw);
+        } catch {
+            comments = raw.split('\n').filter(l => l.trim()).slice(0, 5);
+        }
+        
+        showResults(comments);
+    } catch (e) {
+        showToast('生成失败：' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ 生成口碑文案';
+    }
+}
+
+function showResults(comments) {
+    const platNames = { xiaohongshu: '小红书', bilibili: 'B站', douyin: '抖音' };
+    document.getElementById('resultMeta').textContent = 
+        `产品：${selectedProd.name} | 平台：${platNames[selectedPlat]}`;
+    
+    document.getElementById('resultsList').innerHTML = comments.map((c, i) => `
+        <div class="comment-card">
+            <div class="comment-text">${escapeHtml(c)}</div>
+            <div class="comment-actions">
+                <button class="btn btn-sm btn-secondary" onclick="submitFb(${i})">📝 提意见</button>
+                <button class="btn btn-sm btn-primary" onclick="copyText(${i})">📋 复制</button>
+            </div>
+            <textarea style="display:none" id="c${i}">${escapeHtml(c)}</textarea>
+        </div>
+    `).join('');
+    
+    document.getElementById('resultsBox').style.display = 'block';
+    document.getElementById('resultsBox').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyText(i) {
+    const text = document.getElementById('c' + i).value;
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('已复制');
+    }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('已复制');
+    });
+}
+
+function submitFb(i) {
+    const text = document.getElementById('c' + i).value;
+    const fb = prompt('请输入修改意见：');
+    if (!fb) return;
+    
+    const fbs = loadData('feedbacks');
+    fbs.push({
+        id: Date.now(),
+        prod: selectedProd.name,
+        plat: selectedPlat,
+        original: text,
+        text: fb,
+        processed: false,
+        time: new Date().toISOString(),
+    });
+    saveData('feedbacks', fbs);
+    showToast('感谢反馈');
+}
+
+// ============ Admin Functions ============
+function refreshAdmin() {
+    refreshCatList();
+    refreshProdList();
+    refreshMethodList();
+    refreshFbList();
+}
+
+function addCategory() {
+    const name = document.getElementById('newCatName').value.trim();
+    if (!name) return showToast('请输入名称');
+    
+    const cats = loadData('categories');
+    if (cats.find(c => c.name === name)) return showToast('品类已存在');
+    
+    cats.push({ id: Date.now(), name, time: new Date().toISOString() });
+    saveData('categories', cats);
+    document.getElementById('newCatName').value = '';
+    showToast('已添加');
+    refreshCatList();
+    refreshProdCatSelect();
+}
+
+function refreshCatList() {
+    const cats = loadData('categories');
+    document.getElementById('catList').innerHTML = cats.map(c => `
+        <div class="data-item">
+            <div class="data-item-info">
+                <div class="data-item-title">${c.name}</div>
+                <div class="data-item-desc">${new Date(c.time).toLocaleDateString()}</div>
+            </div>
+            <div class="data-item-actions">
+                <button class="btn btn-sm btn-danger" onclick="delCat(${c.id})">删除</button>
+            </div>
+        </div>
+    `).join('') || '<div style="color:var(--text-secondary)">暂无品类</div>';
+    refreshProdCatSelect();
+}
+
+function delCat(id) {
+    if (!confirm('删除品类会同时删除其下所有产品')) return;
+    const cats = loadData('categories').filter(c => c.id !== id);
+    saveData('categories', cats);
+    const prods = loadData('products').filter(p => p.catId !== id);
+    saveData('products', prods);
+    showToast('已删除');
+    refreshCatList();
+}
+
+function refreshProdCatSelect() {
+    const cats = loadData('categories');
+    document.getElementById('prodCatSelect').innerHTML = 
+        '<option value="">选择品类</option>' + 
+        cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function addProduct() {
+    const catId = parseInt(document.getElementById('prodCatSelect').value);
+    const name = document.getElementById('newProdName').value.trim();
+    const desc = document.getElementById('newProdDesc').value.trim();
+    
+    if (!catId || !name) return showToast('请选择品类并输入产品名');
+    
+    const prods = loadData('products');
+    prods.push({ id: Date.now(), catId, name, desc, materials: [], time: new Date().toISOString() });
+    saveData('products', prods);
+    
+    document.getElementById('newProdName').value = '';
+    document.getElementById('newProdDesc').value = '';
+    showToast('已添加');
+    refreshProdList();
+}
+
+function refreshProdList() {
+    const prods = loadData('products');
+    const cats = loadData('categories');
+    const catMap = {}; cats.forEach(c => catMap[c.id] = c.name);
+    
+    document.getElementById('prodList').innerHTML = prods.map(p => `
+        <div class="data-item">
+            <div class="data-item-info">
+                <div class="data-item-title">${p.name} <span class="badge badge-active">${catMap[p.catId] || '未知'}</span></div>
+                <div class="data-item-desc">${p.desc || '暂无描述'}</div>
+                <div class="material-item" style="margin-top:8px">
+                    <input type="file" accept=".pdf,.txt" onchange="uploadMat(${p.id}, this)" style="font-size:0.8rem">
+                </div>
+                ${p.materials?.length ? `
+                    <div style="margin-top:6px;font-size:0.8rem;color:var(--text-secondary)">
+                        资料：${p.materials.map(m => m.name).join(', ')}
+                    </div>
+                ` : ''}
+            </div>
+            <div class="data-item-actions">
+                <button class="btn btn-sm btn-secondary" onclick="editProd(${p.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="delProd(${p.id})">删除</button>
+            </div>
+        </div>
+    `).join('') || '<div style="color:var(--text-secondary)">暂无产品</div>';
+}
+
+function uploadMat(prodId, input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = () => {
+        const text = reader.result;
+        const prods = loadData('products');
+        const prod = prods.find(p => p.id === prodId);
+        if (!prod) return;
+        
+        prod.materials = prod.materials || [];
+        prod.materials.push({ name: file.name, text: text.substring(0, 5000) });
+        saveData('products', prods);
+        showToast('资料已添加');
+        refreshProdList();
+    };
+    reader.readAsText(file);
+}
+
+function editProd(id) {
+    const prods = loadData('products');
+    const p = prods.find(x => x.id === id);
+    if (!p) return;
+    
+    const name = prompt('产品名称：', p.name);
+    if (name === null) return;
+    const desc = prompt('产品描述：', p.desc);
+    if (desc === null) return;
+    
+    p.name = name;
+    p.desc = desc;
+    saveData('products', prods);
+    showToast('已更新');
+    refreshProdList();
+}
+
+function delProd(id) {
+    if (!confirm('确定删除？')) return;
+    const prods = loadData('products').filter(p => p.id !== id);
+    saveData('products', prods);
+    showToast('已删除');
+    refreshProdList();
+}
+
+function addMethodology() {
+    const title = document.getElementById('newMethodTitle').value.trim();
+    const content = document.getElementById('newMethodContent').value.trim();
+    if (!title || !content) return showToast('请填写完整');
+    
+    const methods = loadData('methodologies');
+    methods.push({ id: Date.now(), title, content, active: true, time: new Date().toISOString() });
+    saveData('methodologies', methods);
+    
+    document.getElementById('newMethodTitle').value = '';
+    document.getElementById('newMethodContent').value = '';
+    showToast('已添加');
+    refreshMethodList();
+}
+
+function refreshMethodList() {
+    const methods = loadData('methodologies');
+    document.getElementById('methodList').innerHTML = methods.map(m => `
+        <div class="data-item">
+            <div class="data-item-info">
+                <div class="data-item-title">${m.title} <span class="badge ${m.active ? 'badge-active' : 'badge-pending'}">${m.active ? '启用' : '停用'}</span></div>
+                <div class="data-item-desc" style="white-space:pre-wrap;max-height:60px;overflow:hidden">${m.content.substring(0, 100)}...</div>
+            </div>
+            <div class="data-item-actions">
+                <button class="btn btn-sm btn-secondary" onclick="toggleMethod(${m.id})">${m.active ? '停用' : '启用'}</button>
+                <button class="btn btn-sm btn-danger" onclick="delMethod(${m.id})">删除</button>
+            </div>
+        </div>
+    `).join('') || '<div style="color:var(--text-secondary)">暂无方法论</div>';
+}
+
+function toggleMethod(id) {
+    const methods = loadData('methodologies');
+    const m = methods.find(x => x.id === id);
+    if (!m) return;
+    m.active = !m.active;
+    saveData('methodologies', methods);
+    showToast('状态已更新');
+    refreshMethodList();
+}
+
+function delMethod(id) {
+    if (!confirm('确定删除？')) return;
+    const methods = loadData('methodologies').filter(m => m.id !== id);
+    saveData('methodologies', methods);
+    showToast('已删除');
+    refreshMethodList();
+}
+
+function addFeedback() {
+    const prod = document.getElementById('fbProd').value.trim();
+    const plat = document.getElementById('fbPlat').value.trim();
+    const original = document.getElementById('fbOriginal').value.trim();
+    const text = document.getElementById('fbText').value.trim();
+    
+    if (!prod || !text) return showToast('请填写产品名和修改意见');
+    
+    const fbs = loadData('feedbacks');
+    fbs.push({ id: Date.now(), prod, plat, original, text, processed: false, time: new Date().toISOString() });
+    saveData('feedbacks', fbs);
+    
+    ['fbProd', 'fbPlat', 'fbOriginal', 'fbText'].forEach(id => document.getElementById(id).value = '');
+    showToast('已提交');
+    refreshFbList();
+}
+
+function refreshFbList() {
+    const fbs = loadData('feedbacks');
+    document.getElementById('fbList').innerHTML = fbs.map(f => `
+        <div class="data-item">
+            <div class="data-item-info">
+                <div class="data-item-title">${f.prod} / ${f.plat} <span class="badge ${f.processed ? 'badge-active' : 'badge-pending'}">${f.processed ? '已处理' : '待处理'}</span></div>
+                <div class="data-item-desc">
+                    <strong>原文：</strong>${f.original?.substring(0, 50) || ''}...<br>
+                    <strong>意见：</strong>${f.text}
+                </div>
+            </div>
+            <div class="data-item-actions">
+                ${!f.processed ? `<button class="btn btn-sm btn-secondary" onclick="processFb(${f.id})">标为已处理</button>` : ''}
+                <button class="btn btn-sm btn-danger" onclick="delFb(${f.id})">删除</button>
+            </div>
+        </div>
+    `).join('') || '<div style="color:var(--text-secondary)">暂无修改意见</div>';
+}
+
+function processFb(id) {
+    const fbs = loadData('feedbacks');
+    const f = fbs.find(x => x.id === id);
+    if (!f) return;
+    f.processed = true;
+    saveData('feedbacks', fbs);
+    showToast('已标记');
+    refreshFbList();
+}
+
+function delFb(id) {
+    if (!confirm('确定删除？')) return;
+    const fbs = loadData('feedbacks').filter(f => f.id !== id);
+    saveData('feedbacks', fbs);
+    showToast('已删除');
+    refreshFbList();
+}
+
+// ============ Utilities ============
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============ Init ============
+document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+    refreshCategories();
+});
+</script>
+</body>
+</html>
