@@ -1,26 +1,7 @@
 {
-  "_updatedAt": "2026-05-26T10:30:00.000Z",
-  "products": [
-    {
-      "id": "test1",
-      "name": "测试产品",
-      "category": "测试品类",
-      "features": [
-        "卖点1"
-      ],
-      "price": "1000",
-      "competitors": [],
-      "materials": [],
-      "time": "2026-05-26T10:30:00.000Z"
-    }
-  ],
-  "categories": [
-    {
-      "id": "cat1",
-      "name": "测试品类",
-      "time": "2026-05-26T10:30:00.000Z"
-    }
-  ],
+  "_updatedAt": "2025-01-01T00:00:00.000Z",
+  "products": [],
+  "categories": [],
   "methods": [],
   "aiRules": []
 }
