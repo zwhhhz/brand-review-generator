@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:55:58.878Z",
+  "_updatedAt": "2026-05-27T02:56:05.886Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -65,7 +65,14 @@
       "price": "",
       "url": "",
       "desc": "",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnh2isy",
+          "name": "极米T10",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T02:55:55.331Z"
     }
