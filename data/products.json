@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:05:33.813Z",
+  "_updatedAt": "2026-05-27T03:05:44.391Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -323,7 +323,14 @@
       "price": "",
       "url": "",
       "desc": "年轻爱玩 多场景用户\n画质最好的户外三色激光投影",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhex36",
+          "name": "极米Play6",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:05:30.018Z"
     }
