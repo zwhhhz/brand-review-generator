@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:58:29.339Z",
+  "_updatedAt": "2026-05-27T02:58:37.856Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -117,6 +117,12 @@
         {
           "id": "mpnh5lj9",
           "name": "极米Z9X 4K",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh5sa1",
+          "name": "坚果N1S4k特别版",
           "features": [],
           "price": ""
         }
