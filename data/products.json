@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:08:38.347Z",
+  "_updatedAt": "2026-05-27T03:08:53.194Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -454,6 +454,12 @@
         {
           "id": "mpnhin17",
           "name": "98英寸 红米 X 26款（RC-RX）",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhiz1p",
+          "name": "98英寸 小米MAX（RC-AP）",
           "features": [],
           "price": ""
         }
