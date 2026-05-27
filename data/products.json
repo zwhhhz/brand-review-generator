@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:06:18.009Z",
+  "_updatedAt": "2026-05-27T03:06:24.116Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -360,6 +360,12 @@
         {
           "id": "mpnhfnk4",
           "name": "TCL T7M Pro",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhfs8j",
+          "name": "小米S26款LMC-S",
           "features": [],
           "price": ""
         }
