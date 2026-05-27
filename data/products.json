@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:09:46.979Z",
+  "_updatedAt": "2026-05-27T03:09:52.855Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -504,6 +504,12 @@
         {
           "id": "mpnhk4wr",
           "name": "米家智能音频眼镜2",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhk94q",
+          "name": "华为智能眼镜2",
           "features": [],
           "price": ""
         }
