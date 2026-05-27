@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:58:17.477Z",
+  "_updatedAt": "2026-05-27T02:58:22.393Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -107,7 +107,14 @@
       "price": "",
       "url": "",
       "desc": "",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnh5fp7",
+          "name": "当贝D7X Pro",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T02:58:13.844Z"
     }
