@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:07:06.279Z",
+  "_updatedAt": "2026-05-27T03:07:17.333Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -388,7 +388,14 @@
       "price": "",
       "url": "",
       "desc": "想打游戏的，家里有ps等主机的必选Vidda 大玩家G7:搭载极致亮度、超低延迟、流畅的画质还有专业的游戏调校。同时它也是万元档最顶的旗舰电视:同档分区/亮度最高、唯一独立画质芯片，只卷核心配置不加技术溢价，同价你找不到第二台。",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhgwr1",
+          "name": "Q9L PRO/ Q9M PRO",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:07:02.429Z"
     }
