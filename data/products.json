@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:06:11.236Z",
+  "_updatedAt": "2026-05-27T03:06:18.009Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -356,7 +356,14 @@
       "price": "",
       "url": "",
       "desc": "Vidda 发现X 2027，把万元旗舰级的高分区高亮度、低反屏、画质芯片、好音质全拉满。同档无对手，真正做到音画全面越级，是当之无愧的旗舰MiniLED性能卷王。",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhfnk4",
+          "name": "TCL T7M Pro",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:06:06.900Z"
     }
