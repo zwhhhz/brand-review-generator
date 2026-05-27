@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:07:17.333Z",
+  "_updatedAt": "2026-05-27T03:07:23.003Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -392,6 +392,12 @@
         {
           "id": "mpnhgwr1",
           "name": "Q9L PRO/ Q9M PRO",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhh150",
+          "name": "雷鸟鹤7 Pro 26款",
           "features": [],
           "price": ""
         }
