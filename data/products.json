@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:07:23.003Z",
+  "_updatedAt": "2026-05-27T03:07:27.194Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -398,6 +398,12 @@
         {
           "id": "mpnhh150",
           "name": "雷鸟鹤7 Pro 26款",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhh4rj",
+          "name": "索尼XR70",
           "features": [],
           "price": ""
         }
