@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:58:22.393Z",
+  "_updatedAt": "2026-05-27T02:58:29.339Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -111,6 +111,12 @@
         {
           "id": "mpnh5fp7",
           "name": "当贝D7X Pro",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh5lj9",
+          "name": "极米Z9X 4K",
           "features": [],
           "price": ""
         }
