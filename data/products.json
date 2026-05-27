@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:56:21.028Z",
+  "_updatedAt": "2026-05-27T02:56:28.499Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -81,6 +81,12 @@
         {
           "id": "mpnh2ugq",
           "name": "极米RS 20 Ultra Max",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh30ud",
+          "name": "坚果 N5 Ultra MAX",
           "features": [],
           "price": ""
         }
