@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:08:26.689Z",
+  "_updatedAt": "2026-05-27T03:08:38.347Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -448,6 +448,12 @@
         {
           "id": "mpnhiemd",
           "name": "55英寸/65英寸/75英寸 酷开K6 Mini（P5）",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhin17",
+          "name": "98英寸 红米 X 26款（RC-RX）",
           "features": [],
           "price": ""
         }
