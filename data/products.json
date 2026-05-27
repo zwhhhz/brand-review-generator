@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:56:28.499Z",
+  "_updatedAt": "2026-05-27T02:58:17.477Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -93,6 +93,23 @@
       ],
       "materials": [],
       "time": "2026-05-27T02:55:55.331Z"
+    },
+    {
+      "id": "mpnh5cr8yd4g",
+      "name": "Vidda 大眼睛 M2Pro高亮",
+      "category": "投影",
+      "features": [
+        "0.47DMD vs 0.39DMD，原生矩形像素，久看更舒适",
+        "四单元双分频杜比HIFI扬声器 20W扬声器",
+        "认证更多更专业：电影制作人 、莱茵护眼、腾讯云游戏认证",
+        "运存更大4G vs 3G，处理速度更快"
+      ],
+      "price": "",
+      "url": "",
+      "desc": "",
+      "competitors": [],
+      "materials": [],
+      "time": "2026-05-27T02:58:13.844Z"
     }
   ],
   "categories": [
