@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:04:54.346Z",
+  "_updatedAt": "2026-05-27T03:05:02.340Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -281,6 +281,12 @@
         {
           "id": "mpnhdulh",
           "name": "极米 RS30 Pro",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhe09z",
+          "name": "坚果 N5S ProMax",
           "features": [],
           "price": ""
         }
