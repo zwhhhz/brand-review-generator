@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:07:59.335Z",
+  "_updatedAt": "2026-05-27T03:08:13.391Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -438,7 +438,14 @@
       "price": "",
       "url": "",
       "desc": "2026年选电视，抗光屏、MiniLED、好音质已成三大刚需。但中端MiniLED往往被迫做取舍:要么屏幕反光刺眼，要么画质音质难两全。Vidda小钢炮S Mini打破常规，它不仅搭载旗舰级AG+LR无倒影低反屏，配合MiniLED独立分区让画质通透无干扰;更配备同档唯一的独立低音炮，再加上180Hz超高刷、96%DCI-P3电影级广色域，影音体验一步到位。年轻人的第一台MiniLED电视，就该这样不妥协。",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhi3zh",
+          "name": "55英寸/65英寸/75英寸 创维A4F",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:07:55.258Z"
     }
