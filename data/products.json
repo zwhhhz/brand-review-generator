@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:04:36.285Z",
+  "_updatedAt": "2026-05-27T03:04:47.189Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -271,7 +271,14 @@
       "price": "",
       "url": "",
       "desc": "都市青年家庭多空间\n影音游性能标杆",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhdorm",
+          "name": "极米 RS30 ProMax",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:04:32.420Z"
     }
