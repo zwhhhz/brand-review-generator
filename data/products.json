@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:05:02.340Z",
+  "_updatedAt": "2026-05-27T03:05:08.915Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -287,6 +287,12 @@
         {
           "id": "mpnhe09z",
           "name": "坚果 N5S ProMax",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhe67q",
+          "name": "坚果 N5S Pro",
           "features": [],
           "price": ""
         }
