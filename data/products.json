@@ -1,45 +1,6 @@
 {
-  "_updatedAt": "2026-05-27T02:15:22.015Z",
-  "products": [
-    {
-      "id": "mpnezn4jty7n",
-      "name": "11",
-      "category": "电视",
-      "features": [],
-      "price": "",
-      "url": "",
-      "desc": "",
-      "competitors": [
-        {
-          "id": "mpnflnpk",
-          "name": "12",
-          "features": [],
-          "price": ""
-        }
-      ],
-      "materials": [],
-      "time": "2026-05-27T01:57:48.115Z"
-    },
-    {
-      "id": "mpnflzpw01pj",
-      "name": "122",
-      "category": "投影",
-      "features": [],
-      "price": "",
-      "url": "",
-      "desc": "",
-      "competitors": [
-        {
-          "id": "mpnfm5mt",
-          "name": "12312",
-          "features": [],
-          "price": ""
-        }
-      ],
-      "materials": [],
-      "time": "2026-05-27T02:15:10.868Z"
-    }
-  ],
+  "_updatedAt": "2026-05-27T02:46:49.351Z",
+  "products": [],
   "categories": [
     {
       "id": 1779848075585,
