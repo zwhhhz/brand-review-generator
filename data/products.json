@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:56:13.480Z",
+  "_updatedAt": "2026-05-27T02:56:21.028Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -75,6 +75,12 @@
         {
           "id": "mpnh2p42",
           "name": "当贝S7Ultra Max",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh2ugq",
+          "name": "极米RS 20 Ultra Max",
           "features": [],
           "price": ""
         }
