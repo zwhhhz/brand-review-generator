@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:04:02.170Z",
+  "_updatedAt": "2026-05-27T03:04:07.276Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -238,6 +238,12 @@
         {
           "id": "mpnhcq8e",
           "name": "极米RS30 Ultra",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhcuth",
+          "name": "坚果N5S Ultra",
           "features": [],
           "price": ""
         }
