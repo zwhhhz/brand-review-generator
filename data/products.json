@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:58:37.856Z",
+  "_updatedAt": "2026-05-27T02:58:43.077Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -123,6 +123,12 @@
         {
           "id": "mpnh5sa1",
           "name": "坚果N1S4k特别版",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh5wop",
+          "name": "坚果N3",
           "features": [],
           "price": ""
         }
