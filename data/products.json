@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:14:58.726Z",
+  "_updatedAt": "2026-05-27T02:15:14.345Z",
   "products": [
     {
       "id": "mpnezn4jty7n",
@@ -19,6 +19,18 @@
       ],
       "materials": [],
       "time": "2026-05-27T01:57:48.115Z"
+    },
+    {
+      "id": "mpnflzpw01pj",
+      "name": "122",
+      "category": "投影",
+      "features": [],
+      "price": "",
+      "url": "",
+      "desc": "",
+      "competitors": [],
+      "materials": [],
+      "time": "2026-05-27T02:15:10.868Z"
     }
   ],
   "categories": [
