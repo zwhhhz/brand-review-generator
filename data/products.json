@@ -1,6 +1,19 @@
 {
-  "_updatedAt": "2025-01-01T00:00:00.000Z",
-  "products": [],
+  "_updatedAt": "2026-05-27T01:57:52.089Z",
+  "products": [
+    {
+      "id": "mpnezn4jty7n",
+      "name": "11",
+      "category": "",
+      "features": [],
+      "price": "",
+      "url": "",
+      "desc": "",
+      "competitors": [],
+      "materials": [],
+      "time": "2026-05-27T01:57:48.115Z"
+    }
+  ],
   "categories": [],
   "methods": [],
   "aiRules": []
