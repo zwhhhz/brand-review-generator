@@ -1,15 +1,22 @@
 {
-  "_updatedAt": "2026-05-27T02:14:44.314Z",
+  "_updatedAt": "2026-05-27T02:14:58.726Z",
   "products": [
     {
       "id": "mpnezn4jty7n",
       "name": "11",
-      "category": "",
+      "category": "电视",
       "features": [],
       "price": "",
       "url": "",
       "desc": "",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnflnpk",
+          "name": "12",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T01:57:48.115Z"
     }
