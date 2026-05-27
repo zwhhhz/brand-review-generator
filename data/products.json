@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:08:13.391Z",
+  "_updatedAt": "2026-05-27T03:08:26.689Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -442,6 +442,12 @@
         {
           "id": "mpnhi3zh",
           "name": "55英寸/65英寸/75英寸 创维A4F",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhiemd",
+          "name": "55英寸/65英寸/75英寸 酷开K6 Mini（P5）",
           "features": [],
           "price": ""
         }
