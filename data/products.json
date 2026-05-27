@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T02:59:34.896Z",
+  "_updatedAt": "2026-05-27T02:59:42.676Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -162,6 +162,12 @@
         {
           "id": "mpnh70ib",
           "name": "极米 X50 Ultra Max",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnh76jt",
+          "name": "极米 X50 Ultra",
           "features": [],
           "price": ""
         }
