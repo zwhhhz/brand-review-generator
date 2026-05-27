@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:03:52.973Z",
+  "_updatedAt": "2026-05-27T03:04:02.170Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -234,7 +234,14 @@
       "price": "",
       "url": "",
       "desc": "数码爱好者家庭C位观影\n万元档超旗舰行业机皇",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnhcq8e",
+          "name": "极米RS30 Ultra",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:03:48.743Z"
     }
