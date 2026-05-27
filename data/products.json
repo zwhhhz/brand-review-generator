@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:04:47.189Z",
+  "_updatedAt": "2026-05-27T03:04:54.346Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -275,6 +275,12 @@
         {
           "id": "mpnhdorm",
           "name": "极米 RS30 ProMax",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhdulh",
+          "name": "极米 RS30 Pro",
           "features": [],
           "price": ""
         }
