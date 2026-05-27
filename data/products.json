@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:05:44.391Z",
+  "_updatedAt": "2026-05-27T03:05:49.294Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -327,6 +327,12 @@
         {
           "id": "mpnhex36",
           "name": "极米Play6",
+          "features": [],
+          "price": ""
+        },
+        {
+          "id": "mpnhf1ck",
+          "name": "极米Z9X",
           "features": [],
           "price": ""
         }
