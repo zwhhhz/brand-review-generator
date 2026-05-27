@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-05-27T03:00:55.152Z",
+  "_updatedAt": "2026-05-27T03:01:09.163Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -197,7 +197,14 @@
       "price": "",
       "url": "",
       "desc": "数码爱好者家庭C位观影\t\n全景音画影院旗舰",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mpnh90p1",
+          "name": "极米 RS30 UltraMax",
+          "features": [],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-05-27T03:00:51.474Z"
     }
