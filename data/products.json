@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-10-16T01:31:25.250Z",
+  "_updatedAt": "2026-10-16T01:33:05.112Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -527,6 +527,16 @@
             "QD-MiniLED(旧日技术)",
             "4K 150Hz,HSR 300HZ",
             "2+64GB（才2g运行内存，最大缺陷）"
+          ],
+          "price": ""
+        },
+        {
+          "id": "mvaamqnx",
+          "name": "创维A6H Pro",
+          "features": [
+            "2.0声道",
+            "4K 150HZ,HSR 300HZ",
+            "WIFI5"
           ],
           "price": ""
         }
