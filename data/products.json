@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-10-16T01:33:28.466Z",
+  "_updatedAt": "2026-10-16T01:36:57.009Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -544,6 +544,17 @@
           "id": "mvaan8mn",
           "name": "T7M PRO",
           "features": [],
+          "price": ""
+        },
+        {
+          "id": "mvaarpix",
+          "name": "红米X RGB",
+          "features": [
+            "芯片A55，芯片落后",
+            "2.0声道",
+            "1300nits，亮度低",
+            "柔光屏(仅AG层)"
+          ],
           "price": ""
         }
       ],
