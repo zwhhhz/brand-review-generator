@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-10-16T01:33:05.112Z",
+  "_updatedAt": "2026-10-16T01:33:28.466Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -538,6 +538,12 @@
             "4K 150HZ,HSR 300HZ",
             "WIFI5"
           ],
+          "price": ""
+        },
+        {
+          "id": "mvaan8mn",
+          "name": "T7M PRO",
+          "features": [],
           "price": ""
         }
       ],
