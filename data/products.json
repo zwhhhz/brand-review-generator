@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-10-16T01:44:19.487Z",
+  "_updatedAt": "2026-10-16T09:40:36.575Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -111,32 +111,7 @@
       "price": "",
       "url": "",
       "desc": "",
-      "competitors": [
-        {
-          "id": "mpnh5fp7",
-          "name": "当贝D7X Pro",
-          "features": [],
-          "price": ""
-        },
-        {
-          "id": "mpnh5lj9",
-          "name": "极米Z9X 4K",
-          "features": [],
-          "price": ""
-        },
-        {
-          "id": "mpnh5sa1",
-          "name": "坚果N1S4k特别版",
-          "features": [],
-          "price": ""
-        },
-        {
-          "id": "mpnh5wop",
-          "name": "坚果N3",
-          "features": [],
-          "price": ""
-        }
-      ],
+      "competitors": [],
       "materials": [],
       "time": "2026-05-27T02:58:13.844Z"
     },
