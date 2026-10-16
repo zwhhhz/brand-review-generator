@@ -1,5 +1,5 @@
 {
-  "_updatedAt": "2026-10-16T01:28:16.634Z",
+  "_updatedAt": "2026-10-16T01:31:25.250Z",
   "products": [
     {
       "id": "mpngz7gbeqrr",
@@ -518,7 +518,19 @@
       "price": "",
       "url": "",
       "desc": "",
-      "competitors": [],
+      "competitors": [
+        {
+          "id": "mvaaklmi",
+          "name": "鹤6 Ultra 27款",
+          "features": [
+            "蝶翼星曜屛(仅LR层)",
+            "QD-MiniLED(旧日技术)",
+            "4K 150Hz,HSR 300HZ",
+            "2+64GB（才2g运行内存，最大缺陷）"
+          ],
+          "price": ""
+        }
+      ],
       "materials": [],
       "time": "2026-10-16T01:28:12.808Z"
     }
